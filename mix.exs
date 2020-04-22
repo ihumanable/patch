@@ -24,6 +24,7 @@ defmodule Patch.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:meck, "~> 0.8.13", only: [:dev, :test]}
     ]
   end
@@ -35,7 +36,7 @@ defmodule Patch.MixProject do
   defp docs do
     [
       name: "Patch",
-      extras: "README.md",
+      extras: ["README.md"],
       main: "readme",
       source_url: "https://github.com/ihumanable/patch"
     ]
