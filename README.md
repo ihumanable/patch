@@ -13,7 +13,7 @@ Add patch to your mix.exs
 ```elixir
 def deps do
   [
-    {:patch, "~> 0.1", only: [:test]}
+    {:patch, "~> 0.1.1", only: [:test]}
   ]
 end
 ```
