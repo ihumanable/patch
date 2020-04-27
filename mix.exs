@@ -4,7 +4,7 @@ defmodule Patch.MixProject do
   def project do
     [
       app: :patch,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.10",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -25,7 +25,7 @@ defmodule Patch.MixProject do
   defp deps do
     [
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
-      {:meck, "~> 0.8.13", only: [:dev, :test]}
+      {:meck, "~> 0.8.13"}
     ]
   end
 
