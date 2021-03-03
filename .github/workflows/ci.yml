@@ -18,34 +18,34 @@ jobs:
             otp-version: 19.3
           - elixir-version: 1.7.4
             otp-version: 20.3
-          - elixir-version: 1.7.4
-            otp-version: 21.3
-          - elixir-version: 1.7.4
-            otp-version: 22.3
-          - elixir-version: 1.8.2
-            otp-version: 20.3
-          - elixir-version: 1.8.2
-            otp-version: 21.3
-          - elixir-version: 1.8.2
-            otp-version: 22.3
-          - elixir-version: 1.9.4
-            otp-version: 20.3
-          - elixir-version: 1.9.4
-            otp-version: 21.3
-          - elixir-version: 1.9.4
-            otp-version: 22.3
-          - elixir-version: 1.10.4
-            otp-version: 21.3
-          - elixir-version: 1.10.4
-            otp-version: 22.3
-          - elixir-version: 1.10.4
-            otp-version: 23.2
-          - elixir-version: 1.11.3
-            otp-version: 21.3
-          - elixir-version: 1.11.3
-            otp-version: 22.3
-          - elixir-version: 1.11.3
-            otp-version: 23.2
+          # - elixir-version: 1.7.4
+          #   otp-version: 21.3
+          # - elixir-version: 1.7.4
+          #   otp-version: 22.3
+          # - elixir-version: 1.8.2
+          #   otp-version: 20.3
+          # - elixir-version: 1.8.2
+          #   otp-version: 21.3
+          # - elixir-version: 1.8.2
+          #   otp-version: 22.3
+          # - elixir-version: 1.9.4
+          #   otp-version: 20.3
+          # - elixir-version: 1.9.4
+          #   otp-version: 21.3
+          # - elixir-version: 1.9.4
+          #   otp-version: 22.3
+          # - elixir-version: 1.10.4
+          #   otp-version: 21.3
+          # - elixir-version: 1.10.4
+          #   otp-version: 22.3
+          # - elixir-version: 1.10.4
+          #   otp-version: 23.2
+          # - elixir-version: 1.11.3
+          #   otp-version: 21.3
+          # - elixir-version: 1.11.3
+          #   otp-version: 22.3
+          # - elixir-version: 1.11.3
+          #   otp-version: 23.2
 
     steps:
     - uses: actions/checkout@v2
