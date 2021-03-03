@@ -18,8 +18,8 @@ jobs:
             otp-version: 19.3
           - elixir-version: 1.7.4
             otp-version: 20.3
-          # - elixir-version: 1.7.4
-          #   otp-version: 21.3
+          - elixir-version: 1.7.4
+            otp-version: 21.3
           # - elixir-version: 1.7.4
           #   otp-version: 22.3
           # - elixir-version: 1.8.2
