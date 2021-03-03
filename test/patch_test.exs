@@ -89,6 +89,40 @@ defmodule PatchTest do
         refute_called Example.double(:_)
       end
     end
+
+    test "functions of large arities can be patched" do
+      patch(Example, :function_with_26_arguments, :patched_result)
+
+      assert :patched_result ==
+               Example.function_with_26_arguments(
+                 :a,
+                 :b,
+                 :c,
+                 :d,
+                 :e,
+                 :f,
+                 :g,
+                 :h,
+                 :i,
+                 :j,
+                 :k,
+                 :l,
+                 :m,
+                 :n,
+                 :o,
+                 :p,
+                 :q,
+                 :r,
+                 :s,
+                 :t,
+                 :u,
+                 :v,
+                 :w,
+                 :x,
+                 :y,
+                 :z
+               )
+    end
   end
 
   describe "restore/1" do
@@ -206,6 +240,144 @@ defmodule PatchTest do
       assert_raise Patch.UnexpectedCall, fn ->
         refute_called Example.double(:_)
       end
+    end
+  end
+
+  describe "assert_any_call/2" do
+    test "does not raise if a patched function has a call of any arity (/1)" do
+      patch(Example, :function_with_multiple_arities, :patched_result)
+
+      assert :patched_result == Example.function_with_multiple_arities(1)
+
+      assert_any_call Example, :function_with_multiple_arities
+    end
+
+    test "does not raise if a patched function has a call of any arity (/2)" do
+      patch(Example, :function_with_multiple_arities, :patched_result)
+
+      assert :patched_result == Example.function_with_multiple_arities(1, 2)
+
+      assert_any_call Example, :function_with_multiple_arities
+    end
+
+    test "does not raise if a patched function has a call of any arity (/3)" do
+      patch(Example, :function_with_multiple_arities, :patched_result)
+
+      assert :patched_result == Example.function_with_multiple_arities(1, 2, 3)
+
+      assert_any_call Example, :function_with_multiple_arities
+    end
+
+    test "does not raise if a spied module has a call of any arity (/1)" do
+      spy(Example)
+
+      assert {1, 1} == Example.function_with_multiple_arities(1)
+
+      assert_any_call Example, :function_with_multiple_arities
+    end
+
+    test "does not raise if a spied module has a call of any arity (/2)" do
+      spy(Example)
+
+      assert {{1, 2}, 2} == Example.function_with_multiple_arities(1, 2)
+
+      assert_any_call Example, :function_with_multiple_arities
+    end
+
+    test "does not raise if a spied module has a call of any arity (/3)" do
+      spy(Example)
+
+      assert {{1, 2, 3}, 3} == Example.function_with_multiple_arities(1, 2, 3)
+
+      assert_any_call Example, :function_with_multiple_arities
+    end
+
+    test "raises if a patched function has no calls" do
+      patch(Example, :function_with_multiple_arities, :patched_result)
+
+      assert_raise Patch.MissingCall, fn ->
+        assert_any_call Example, :function_with_multiple_arities
+      end
+    end
+
+    test "raises if a spied module function has no calls" do
+      spy(Example)
+
+      assert_raise Patch.MissingCall, fn ->
+        assert_any_call Example, :function_with_multiple_arities
+      end
+    end
+  end
+
+  describe "refute_any_call/2" do
+    test "raises if a patched function has a call of any arity (/1)" do
+      patch(Example, :function_with_multiple_arities, :patched_result)
+
+      assert :patched_result == Example.function_with_multiple_arities(1)
+
+      assert_raise Patch.UnexpectedCall, fn ->
+        refute_any_call Example, :function_with_multiple_arities
+      end
+    end
+
+    test "raises if a patched function has a call of any arity (/2)" do
+      patch(Example, :function_with_multiple_arities, :patched_result)
+
+      assert :patched_result == Example.function_with_multiple_arities(1, 2)
+
+      assert_raise Patch.UnexpectedCall, fn ->
+        refute_any_call Example, :function_with_multiple_arities
+      end
+    end
+
+    test "raises if a patched function has a call of any arity (/3)" do
+      patch(Example, :function_with_multiple_arities, :patched_result)
+
+      assert :patched_result == Example.function_with_multiple_arities(1, 2, 3)
+
+      assert_raise Patch.UnexpectedCall, fn ->
+        refute_any_call Example, :function_with_multiple_arities
+      end
+    end
+
+    test "raises if a spied module has a call of any arity (/1)" do
+      spy(Example)
+
+      assert {1, 1} == Example.function_with_multiple_arities(1)
+
+      assert_raise Patch.UnexpectedCall, fn ->
+        refute_any_call Example, :function_with_multiple_arities
+      end
+    end
+
+    test "raises if a spied module has a call of any arity (/2)" do
+      spy(Example)
+
+      assert {{1, 2}, 2} == Example.function_with_multiple_arities(1, 2)
+
+      assert_raise Patch.UnexpectedCall, fn ->
+        refute_any_call Example, :function_with_multiple_arities
+      end
+    end
+
+    test "raises if a spied module has a call of any arity (/3)" do
+      spy(Example)
+
+      assert {{1, 2, 3}, 3} == Example.function_with_multiple_arities(1, 2, 3)
+
+      assert_raise Patch.UnexpectedCall, fn ->
+        refute_any_call Example, :function_with_multiple_arities
+      end
+    end
+
+    test "does not raise if a patched function has no calls" do
+      patch(Example, :function_with_multiple_arities, :patched_result)
+      refute_any_call Example, :function_with_multiple_arities
+    end
+
+    test "does not raise if a spied module function has no calls" do
+      spy(Example)
+      refute_any_call Example, :function_with_multiple_arities
     end
   end
 end
