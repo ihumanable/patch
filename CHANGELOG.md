@@ -69,7 +69,7 @@ None
 
 **Improvements**
 
-- :up_arrow: : Patch released to the world.  Easy to use and ergonomic Mocking for Elixir.
+- :arrow_up: : Patch released to the world.  Easy to use and ergonomic Mocking for Elixir.
 
 **Features**
 
