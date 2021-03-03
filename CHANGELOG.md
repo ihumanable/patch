@@ -46,7 +46,7 @@ None
 
 **Improvements**
 
-- :up_arrow: : Made the library actually work
+- :arrow_up: : Made the library actually work
 
 **Features**
 
