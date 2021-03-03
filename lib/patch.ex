@@ -74,11 +74,6 @@ defmodule Patch do
   behavior of the module it can simply `spy/1` the module.  Spies behave identically to the
   original module but all calls and return values are recorded so assert_called and refute_called
   work as expected.
-
-  ## Limitations
-
-  Patch currently can only mock out functions of arity /0 - /10.  If a function with greater arity
-  needs to be patched this module will need to be updated.
   """
 
   defmodule MissingCall do
@@ -112,13 +107,13 @@ defmodule Patch do
           |> :meck.history()
           |> Enum.with_index(1)
           |> Enum.map(fn {{_, {m, f, a}, ret}, i} ->
-            "#{i}. #{inspect(m)}.#{f}(#{a |> Enum.map(&Kernel.inspect/1) |> Enum.join(",")}) -> #{
+            "#{i}. #{inspect(m)}.#{f}(#{a |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")}) -> #{
               inspect(ret)
             }"
           end)
           |> Enum.join("\n")
 
-        call_args = unquote(args) |> Enum.map(&Kernel.inspect/1) |> Enum.join(",")
+        call_args = unquote(args) |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")
 
         message = """
         \n
@@ -146,13 +141,13 @@ defmodule Patch do
           |> :meck.history()
           |> Enum.with_index(1)
           |> Enum.map(fn {{_, {m, f, a}, ret}, i} ->
-            "#{i}. #{inspect(m)}.#{f}(#{a |> Enum.map(&Kernel.inspect/1) |> Enum.join(",")}) -> #{
+            "#{i}. #{inspect(m)}.#{f}(#{a |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")}) -> #{
               inspect(ret)
             }"
           end)
           |> Enum.join("\n")
 
-        call_args = unquote(args) |> Enum.map(&Kernel.inspect/1) |> Enum.join(",")
+        call_args = unquote(args) |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")
 
         message = """
         \n
@@ -171,12 +166,80 @@ defmodule Patch do
   end
 
   @doc """
+  Asserts that the function has been called with any arity call
+  """
+  @spec assert_any_call(module :: module(), function :: atom()) :: nil
+  def assert_any_call(module, function) do
+    calls =
+      module
+      |> :meck.history()
+      |> Enum.filter(fn
+        {_, {^module, ^function, _}, _} -> true
+        _ -> false
+      end)
+
+    if Enum.empty?(calls) do
+      message = """
+      \n
+      Expected any call received:
+
+        #{inspect(module)}.#{to_string(function)}
+
+      No calls found
+      """
+
+      raise MissingCall, message: message
+    end
+  end
+
+  @doc """
+  Refutes that the function has been called with any arity call
+  """
+  @spec refute_any_call(module :: module(), function :: atom()) :: nil
+  def refute_any_call(module, function) do
+    calls =
+      module
+      |> :meck.history()
+      |> Enum.filter(fn
+        {_, {^module, ^function, _}, _} -> true
+        _ -> false
+      end)
+      |> Enum.map(fn {_, {_, _, args}, ret} ->
+        {args, ret}
+      end)
+
+    unless Enum.empty?(calls) do
+      formatted_calls =
+        calls
+        |> Enum.with_index(1)
+        |> Enum.map(fn {{args, ret}, i} ->
+          "#{i}. #{inspect(module)}.#{to_string(function)}(#{
+            args |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")
+          }) -> #{inspect(ret)}"
+        end)
+
+      message = """
+      \n
+      Unexpected call received, expected no calls:
+
+        #{inspect(module)}.#{to_string(function)}
+
+      Calls which were received:
+
+      #{formatted_calls}
+      """
+
+      raise UnexpectedCall, message: message
+    end
+  end
+
+  @doc """
   Spies on the provided module
 
   Once a module has been spied on the calls to that module can be asserted / refuted without
   changing the behavior of the module.
   """
-  @spec spy(module) :: :ok
+  @spec spy(module :: module()) :: :ok
   def spy(module) do
     ensure_mocked(module)
     :ok
@@ -188,7 +251,7 @@ defmodule Patch do
   The patched function will either always return the provided value or if a function is provided
   then the function will be called and its result returned.
   """
-  @spec patch(module, function, mock) :: mock when mock: function
+  @spec patch(module :: module(), function :: atom(), mock) :: mock when mock: fun()
   def patch(module, function, mock) when is_function(mock) do
     ensure_mocked(module)
 
@@ -197,19 +260,24 @@ defmodule Patch do
     mock
   end
 
-  @spec patch(module, function, return_value) :: return_value when return_value: term
+  @spec patch(module :: module(), function :: atom(), return_value) :: return_value
+        when return_value: term()
   def patch(module, function, return_value) do
     ensure_mocked(module)
 
     module
     |> find_arities(function)
     |> Enum.each(fn arity ->
-      :meck.expect(module, function, func(arity, return_value))
+      :meck.expect(module, function, Patch.Function.for_arity(arity, return_value))
     end)
 
     return_value
   end
 
+  @doc """
+  Remove any mocks or spies from the given module
+  """
+  @spec restore(module :: module()) :: :ok
   def restore(module) do
     if :meck.validate(module), do: :meck.unload(module)
   rescue
@@ -228,50 +296,7 @@ defmodule Patch do
 
   defp find_arities(module, function) do
     Code.ensure_loaded(module)
-    Enum.filter(0..10, &function_exported?(module, function, &1))
+    Enum.filter(0..255, &function_exported?(module, function, &1))
   end
 
-  defp func(0, return_value) do
-    fn -> return_value end
-  end
-
-  defp func(1, return_value) do
-    fn _ -> return_value end
-  end
-
-  defp func(2, return_value) do
-    fn _, _ -> return_value end
-  end
-
-  defp func(3, return_value) do
-    fn _, _, _ -> return_value end
-  end
-
-  defp func(4, return_value) do
-    fn _, _, _, _ -> return_value end
-  end
-
-  defp func(5, return_value) do
-    fn _, _, _, _, _ -> return_value end
-  end
-
-  defp func(6, return_value) do
-    fn _, _, _, _, _, _ -> return_value end
-  end
-
-  defp func(7, return_value) do
-    fn _, _, _, _, _, _, _ -> return_value end
-  end
-
-  defp func(8, return_value) do
-    fn _, _, _, _, _, _, _, _ -> return_value end
-  end
-
-  defp func(9, return_value) do
-    fn _, _, _, _, _, _, _, _, _ -> return_value end
-  end
-
-  defp func(10, return_value) do
-    fn _, _, _, _, _, _, _, _, _, _ -> return_value end
-  end
 end
