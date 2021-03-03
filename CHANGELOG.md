@@ -1,77 +1,77 @@
 # 0.2.0 (2021-03-03)
 
-## Improvements
+**Improvements**
 
-- :arrow_up: - Removed the arity limitation, can now patch functions of any arity
+- :arrow_up:  Removed the arity limitation, can now patch functions of any arity
 
-## Features
+**Features**
 
-- :gift: - Added the `assert_any_call/2` and `refute_any_call/2` assertion functions
+- :gift:  Added the `assert_any_call/2` and `refute_any_call/2` assertion functions
 
-## Bugfixes
-
-None
-
-## Deprecations
+**Bugfixes**
 
 None
 
-## Removals
+**Deprecations**
+
+None
+
+**Removals**
 
 None
 
 # 0.1.2 (2021-01-28)
 
-## Improvements
+**Improvements**
 
-- :arrow_up: - Relaxed Elixir version requirement down to 1.7
+- :arrow_up:  Relaxed Elixir version requirement down to 1.7
 
-## Features
-
-None
-
-## Bugfixes
+**Features**
 
 None
 
-## Deprecations
+**Bugfixes**
 
 None
 
-## Removals
+**Deprecations**
+
+None
+
+**Removals**
 
 None
 
 # 0.1.1 (2020-04-27)
 
-## Improvements
+**Improvements**
 
-- :up_arrow: - Made the library actually work
+- :up_arrow:  Made the library actually work
 
-## Features
-
-None
-
-## Bugfixes
-
-- :beetle: - Bugfix to make the library actually work
-
-## Deprecations
+**Features**
 
 None
 
-## Removals
+**Bugfixes**
+
+- :beetle:  Bugfix to make the library actually work
+
+**Deprecations**
+
+None
+
+**Removals**
 
 None
 
 
 # 0.1.0 (2020-04-21)
 
-## Improvements
+**Improvements**
 
-- :up_arrow: - Patch released to the world.  Easy to use and ergonomic Mocking for Elixir.
+- :up_arrow:  Patch released to the world.  Easy to use and ergonomic Mocking for Elixir.
 
-## Features
+**Features**
 
 - :gift: - `patch/3` allows the patching of a module's function with a function.
 - :gift: - `patch/3` allows the patching of a module's function with a static return value.
@@ -80,14 +80,14 @@ None
 - :gift: - `assert_called/1` allows for asserting that a patched or spied function has been called with the expected pattern of arguments.
 - :gift: - `refute_called/1` allows for refuting that a patched or spied function has been called with the expected pattern of arguments.
 
-## Bugfixes
+**Bugfixes**
 
 None
 
-## Deprecations
+**Deprecations**
 
 None
 
-## Removals
+**Removals**
 
 None
