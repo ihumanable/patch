@@ -1,3 +1,26 @@
+# 0.3.0 (2021-07-12)
+
+**Improvements**
+
+- :arrow_up: : \[Internal\] `Patch.Function.for_arity/2` now accepts an anonymous function it will call instead of a term to return.  
+- :arrow_up: : \[Internal\] `Patch.find_functions/1` and `Patch.find_arities/2` use `__info__/1` now instead of doing 256 `function_exported?` checks per function.
+
+**Features**
+
+- :gift: : Added the `fake/2` function to add support for module fakes.
+- :gift: : Added the `real/1` function so module fakes can call the real module.
+
+**Bugfixes**
+
+None
+
+**Deprecations**
+
+None
+
+**Removals**
+
+None
 # 0.2.0 (2021-03-03)
 
 **Improvements**
