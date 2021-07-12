@@ -6,74 +6,14 @@ defmodule Patch do
   custom logic.  Patches and Spies allow tests to assert or refute that function calls have been
   made.
 
-  ## Patches
-
-  When a module is patched, the patched function will return the value provided.
+  Using Patch is as easy as adding a single line to your test case.
 
   ```elixir
-  assert "HELLO" = String.upcase("hello")                 # Assertion passes before patching
-
-  patch(String, :upcase, :patched_return_value)
-
-  assert :patched_return_value == String.upcase("hello")  # Assertion passes after patching
+  use Patch
   ```
 
-  Modules can also be patched to run custom logic instead of returning a static value
-
-  ```elixir
-  assert "HELLO" = String.upcase("hello")                 # Assertion passes before patching
-
-  patch(String, :upcase, fn s -> String.length(s) end)
-
-  assert 5 == String.upcase("hello")                      # Assertion passes after patching
-  ```
-
-  ### Patching Ergonomics
-
-  `patch/3` returns the value that the patch will return which can be useful for later on in the
-  test.  Examine this example code for an example
-
-  ```elixir
-  {:ok, expected} = patch(My.Module, :some_function, {:ok, 123})
-
-  ... additional testing code ...
-
-  assert response.some_function_result == expected
-  ```
-
-  This allows the test author to combine creating fixture data with patching.
-
-  ## Asserting / Refuting Calls
-
-  After a patch is applied, tests can assert that an expected call has occurred by using the
-  `assert_called` macro.
-
-  ```elixir
-  patch(String, :upcase, :patched_return_value)
-
-  assert :patched_return_value = String.upcase("hello")   # Assertion passes after patching
-
-  assert_called String.upcase("hello")                    # Assertion passes after call
-  ```
-
-  `assert_called` supports the `:_` wildcard atom.  In the above example the following assertion
-  would also pass.
-
-  ```elixir
-  assert_called String.upcase(:_)
-  ```
-
-  This can be useful when some of the arguments are complex or uninteresting for the unit test.
-
-  Tests can also refute that a call has occurred with the `refute_called` macro.  This macro works
-  in much the same way as `assert_called` and also supports the `:_` wildcard atom.
-
-  ## Spies
-
-  If a test wishes to assert / refute calls that happen to a module without actually changing the
-  behavior of the module it can simply `spy/1` the module.  Spies behave identically to the
-  original module but all calls and return values are recorded so assert_called and refute_called
-  work as expected.
+  After this all the patch functions will be available, see the README and function documentation
+  for more details.
   """
 
   defmodule MissingCall do
@@ -111,7 +51,15 @@ defmodule Patch do
               inspect(ret)
             }"
           end)
-          |> Enum.join("\n")
+
+        calls =
+          case calls do
+            [] ->
+              "   [No Calls Received]"
+
+            _ ->
+              Enum.join(calls, "\n")
+          end
 
         call_args = unquote(args) |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")
 
@@ -234,6 +182,45 @@ defmodule Patch do
   end
 
   @doc """
+  Fakes out a module with an alternative implementation.
+
+  The real module can still be accessed with `real/1`.
+
+  For example, if your project has the module `Example.Datastore` and there's a fake available in the testing
+  environment named `Example.Test.InMemoryDatastore`  the following table describes which calls are executed by which
+  code before and after faking with the following call.
+
+  ```elixir
+  fake(Example.Datastore, Example.Test.InMemoryDatastore)
+  ```
+
+  | Calling Code                         | Responding Module before fake/2      | Responding Module after fake/2       |
+  |--------------------------------------|--------------------------------------|--------------------------------------|
+  | Example.Datastore.get/1              | Example.Datastore.get/1              | Example.Test.InMemoryDatastore.get/1 |
+  | Example.Test.InMemoryDatastore.get/1 | Example.Test.InMemoryDatastore.get/1 | Example.Test.InMemoryDatastore.get/1 |
+  | real(Example.Datastore).get/1        | (UndefinedFunctionError)             | Example.Datastore.get/1              |
+
+  The fake module can use the renamed module to access the original implementation.
+  """
+  @spec fake(real_module :: module(), fake_module :: module()) :: :ok
+  def fake(real_module, fake_module) do
+    ensure_mocked(real_module)
+
+    real_functions = find_functions(real_module)
+    fake_functions = find_functions(fake_module)
+
+    Enum.each(fake_functions, fn {name, arity} ->
+      is_real_function? = Enum.any?(real_functions, &match?({^name, ^arity}, &1))
+
+      if is_real_function? do
+        patch(real_module, name, Patch.Function.for_arity(arity, fn args ->
+          apply(fake_module, name, args)
+        end))
+      end
+    end)
+  end
+
+  @doc """
   Spies on the provided module
 
   Once a module has been spied on the calls to that module can be asserted / refuted without
@@ -268,10 +255,15 @@ defmodule Patch do
     module
     |> find_arities(function)
     |> Enum.each(fn arity ->
-      :meck.expect(module, function, Patch.Function.for_arity(arity, return_value))
+      :meck.expect(module, function, Patch.Function.for_arity(arity, fn _ -> return_value end))
     end)
 
     return_value
+  end
+
+  @spec real(module :: Module.t()) :: Module.t()
+  def real(module) do
+    :meck_util.original_name(module)
   end
 
   @doc """
@@ -287,6 +279,7 @@ defmodule Patch do
 
   ## Private
 
+  @spec ensure_mocked(module :: module()) :: term()
   defp ensure_mocked(module) do
     :meck.validate(module)
   rescue
@@ -294,9 +287,16 @@ defmodule Patch do
       :meck.new(module, [:passthrough])
   end
 
-  defp find_arities(module, function) do
+  @spec find_functions(module :: module()) :: Keyword.t(arity())
+  defp find_functions(module) do
     Code.ensure_loaded(module)
-    Enum.filter(0..255, &function_exported?(module, function, &1))
+    module.__info__(:functions)
   end
 
+  @spec find_arities(module :: module(), function :: function()) :: [arity()]
+  defp find_arities(module, function) do
+    module
+    |> find_functions()
+    |> Keyword.get_values(function)
+  end
 end
