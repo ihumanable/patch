@@ -11,21 +11,35 @@ defmodule Patch do
   When a module is patched, the patched function will return the value provided.
 
   ```elixir
-  assert "HELLO" = String.upcase("hello")                 # Assertion passes before patching
+  defmodule PatchExample do
+    use ExUnit.Case
+    use Patch
 
-  patch(String, :upcase, :patched_return_value)
+    test "functions can be patched to return a specified value" do
+      assert "HELLO" = String.upcase("hello")                 # Assertion passes before patching
 
-  assert :patched_return_value == String.upcase("hello")  # Assertion passes after patching
+      patch(String, :upcase, :patched_return_value)
+
+      assert :patched_return_value == String.upcase("hello")  # Assertion passes after patching
+    end
+  end
   ```
 
   Modules can also be patched to run custom logic instead of returning a static value
 
   ```elixir
-  assert "HELLO" = String.upcase("hello")                 # Assertion passes before patching
+  defmodule PatchExample do
+    use ExUnit.Case
+    use Patch
 
-  patch(String, :upcase, fn s -> String.length(s) end)
+    test "functions can be patched with a replacement function" do
+      assert "HELLO" = String.upcase("hello")                 # Assertion passes before patching
 
-  assert 5 == String.upcase("hello")                      # Assertion passes after patching
+      patch(String, :upcase, fn s -> String.length(s) end)
+
+      assert 5 == String.upcase("hello")                      # Assertion passes after patching
+    end
+  end
   ```
 
   ### Patching Ergonomics
@@ -34,11 +48,18 @@ defmodule Patch do
   test.  Examine this example code for an example
 
   ```elixir
-  {:ok, expected} = patch(My.Module, :some_function, {:ok, 123})
+  defmodule PatchExample do
+    use ExUnit.Case
+    use Patch
 
-  ... additional testing code ...
+    test "patch returns the patch" do
+      {:ok, expected} = patch(My.Module, :some_function, {:ok, 123})
 
-  assert response.some_function_result == expected
+      # ... additional testing code ...
+
+      assert response.some_function_result == expected
+    end
+  end
   ```
 
   This allows the test author to combine creating fixture data with patching.
@@ -49,11 +70,18 @@ defmodule Patch do
   `assert_called` macro.
 
   ```elixir
-  patch(String, :upcase, :patched_return_value)
+  defmodule PatchExample do
+    use ExUnit.Case
+    use Patch
 
-  assert :patched_return_value = String.upcase("hello")   # Assertion passes after patching
+    test "asserting calls on a patch" do
+      patch(String, :upcase, :patched_return_value)
 
-  assert_called String.upcase("hello")                    # Assertion passes after call
+      assert :patched_return_value = String.upcase("hello")   # Assertion passes after patching
+
+      assert_called String.upcase("hello")                    # Assertion passes after call
+    end
+  end
   ```
 
   `assert_called` supports the `:_` wildcard atom.  In the above example the following assertion
@@ -67,6 +95,63 @@ defmodule Patch do
 
   Tests can also refute that a call has occurred with the `refute_called` macro.  This macro works
   in much the same way as `assert_called` and also supports the `:_` wildcard atom.
+
+  ```elixir
+  defmodule PatchExample do
+    use ExUnit.Case
+    use Patch
+
+    test "refuting calls on a patch" do
+      patch(String, :upcase, :patched_return_value)
+
+      assert "h" == String.at("hello", 0)
+
+      refute_called String.upcase("hello")
+    end
+  end
+  ```
+
+  ## Asserting / Refuting any call
+
+  If a test wants to assert or refute that a function of any arity has been called
+  `assert_any_call/2` and `refute_any_call/2` can be used.
+
+  This can be useful when a function has multiple arities and message dispatch or calling code
+  could potentially take many different paths to call the same function.
+
+  ```elixir
+  defmodule PatchExample do
+    use ExUnit.Case
+    use Patch
+
+    test "asserting any call on a patch" do
+      patch(String, :pad_leading, fn s -> s end)
+
+      # This formatting call might provide custom padding characters based on
+      # time of day.  (This is an obviously constructed example).
+      TimeOfDaySensitiveFormatter.format("Hello World")
+
+      assert_any_call String, :pad_leading
+    end
+  end
+  ```
+
+  Similarly we can refute any call
+
+  ```elixir
+  defmodule PatchExample do
+    use ExUnit.Case
+    use Patch
+
+    test "refuting any call on a patch" do
+      patch(String, :pad_leading, fn s -> s end)
+
+      assert {:error, :not_a_string} = TimeOfDaySensitiveFormatter.format(123)
+
+      refute_any_call String, :pad_leading
+    end
+  end
+  ```
 
   ## Spies
 
