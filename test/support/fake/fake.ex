@@ -3,8 +3,8 @@ defmodule Fake do
     {:fake, {:example, a}}
   end
 
-  def another_example(a) do
-    original = Patch.real(Original).another_example(a)
-    {:fake, {:another_example, original, a}}
+  def delegate(a) do
+    real = Patch.real(Real).delegate(a)
+    {:fake, real}
   end
 end

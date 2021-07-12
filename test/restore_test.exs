@@ -15,6 +15,18 @@ defmodule Patch.Test.RestoreTest do
       assert Example.double(9) == 18
     end
 
+    test "fakes can be restored to original functionality" do
+      assert Real.example(:a) == {:real, {:example, :a}}
+
+      fake(Real, Fake)
+
+      assert Real.example(:a) == {:fake, {:example, :a}}
+
+      restore(Real)
+
+      assert Real.example(:a) == {:real, {:example, :a}}
+    end
+
     test "restoring an unpatched module is a no-op" do
       assert Example.double(6) == 12
 
