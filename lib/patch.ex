@@ -30,6 +30,8 @@ defmodule Patch do
       import unquote(__MODULE__)
 
       setup do
+        start_supervised!(Patch.Listener.Supervisor)
+
         on_exit(fn ->
           :meck.unload()
         end)
@@ -213,9 +215,13 @@ defmodule Patch do
       is_real_function? = Enum.any?(real_functions, &match?({^name, ^arity}, &1))
 
       if is_real_function? do
-        patch(real_module, name, Patch.Function.for_arity(arity, fn args ->
-          apply(fake_module, name, args)
-        end))
+        patch(
+          real_module,
+          name,
+          Patch.Function.for_arity(arity, fn args ->
+            apply(fake_module, name, args)
+          end)
+        )
       end
     end)
   end
@@ -275,6 +281,51 @@ defmodule Patch do
   rescue
     _ in ErlangError ->
       :ok
+  end
+
+  @doc """
+  Starts a listener process.
+
+  When used on a named process, this is sufficient to begin intercepting all messages to the named
+  process.
+
+  When used on an unnamed process, the process that is spawned will forward any messages to the
+  caller and target process but any processes holding a reference to the old pid will need to be
+  updated.
+
+  `inject/3` can be used to inject a listener into a running process.
+  """
+  @spec listen(
+          tag :: Patch.Listener.tag(),
+          target :: Patch.Listener.target(),
+          options :: Patch.Listener.options()
+        ) :: {:ok, pid()} | {:error, :not_found}
+  def listen(tag, target, options \\ []) do
+    Patch.Listener.Supervisor.start_child(self(), tag, target, options)
+  end
+
+  @doc """
+  Convenience function for updating the state of a running process.
+
+  Uses the `Access` module to traverse the state structure according to the given `keys`.
+
+  Structs have special handling so that they can be updated without having to implement the
+  `Access` behavior.
+  """
+  @spec inject(target :: GenServer.server(), keys :: [term(), ...], value :: term()) :: term()
+  def inject(target, keys, value) do
+    :sys.replace_state(target, fn
+      %struct{} = state ->
+        updated =
+          state
+          |> Map.from_struct()
+          |> put_in(keys, value)
+
+        struct(struct, updated)
+
+      state ->
+        put_in(state, keys, value)
+    end)
   end
 
   ## Private
