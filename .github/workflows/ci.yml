@@ -36,13 +36,22 @@ jobs:
           - elixir-version: 1.10.4
             otp-version: 22.3
           - elixir-version: 1.10.4
-            otp-version: 23.2
-          - elixir-version: 1.11.3
+            otp-version: 23.3
+          - elixir-version: 1.11.4
             otp-version: 21.3
-          - elixir-version: 1.11.3
+          - elixir-version: 1.11.4
             otp-version: 22.3
-          - elixir-version: 1.11.3
-            otp-version: 23.2
+          - elixir-version: 1.11.4
+            otp-version: 23.3
+          - elixir-version: 1.11.4
+            otp-version: 24.0
+          - elixir-version: 1.12.2
+            otp-version: 22.3
+          - elixir-version: 1.12.2
+            otp-version: 23.3
+          - elixir-version: 1.12.2
+            otp-version: 24.0
+          
 
     steps:
     - uses: actions/checkout@v2

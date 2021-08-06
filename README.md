@@ -21,6 +21,7 @@ Patch provides functionality for replacing code at test time and for working wit
 - [Working with Processes](#working-with-processes)
   - [Listeners](#listeners)
   - [Injecting](#injecting)
+- [Support Matrix](#support-matrix)
 - [Limitations](#limitations)
 ## Installation
 
@@ -381,6 +382,18 @@ end
 ```
 
 `inject/3` accepts a `GenServer.server` a list of `keys` like one would use for `put_in` and then a value to inject into the processes state.
+
+## Support Matrix
+
+Tests automatically run against a matrix of OTP and Elixir Versions, see the [ci.yml](tree/master/.github/workflows/ci.yml) for details.
+
+| OTP \ Elixir | 1.7                | 1.8                | 1.9                | 1.10               | 1.11               | 1.12               |
+|:------------:|:------------------:|:------------------:|:------------------:|:------------------:|:------------------:|:------------------:|
+| 20           | :white_check_mark: | :white_check_mark: | :white_check_mark: | N/A                | N/A                | N/A                |
+| 21           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | N/A                |
+| 22           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| 23           | N/A                | N/A                | N/A                | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| 24           | N/A                | N/A                | N/A                | N/A                | :white_check_mark: | :white_check_mark: |
 
 ## Limitations
 
