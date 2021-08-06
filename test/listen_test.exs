@@ -122,7 +122,7 @@ defmodule Patch.Test.ListenTest do
 
       GenServer.call(Counter, :increment)
 
-      assert_receive {:counter, {GenServer, :call, :increment, from}}
+      assert_receive {:counter, {GenServer, :call, :increment, _}}
       refute_receive {:counter, {GenServer, :reply, _, _}}
     end
 
@@ -224,7 +224,7 @@ defmodule Patch.Test.ListenTest do
 
       GenServer.call(listener, :increment)
 
-      assert_receive {:counter, {GenServer, :call, :increment, from}}
+      assert_receive {:counter, {GenServer, :call, :increment, _}}
       refute_receive {:counter, {GenServer, :reply, _, _}}
     end
 
@@ -312,7 +312,7 @@ defmodule Patch.Test.ListenTest do
 
       GenServer.call(listener, :increment)
 
-      assert_receive {:counter, {GenServer, :call, :increment, from}}
+      assert_receive {:counter, {GenServer, :call, :increment, _}}
       refute_receive {:counter, {GenServer, :reply, _, _}}
     end
 
