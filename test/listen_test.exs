@@ -103,6 +103,8 @@ defmodule Patch.Test.ListenTest do
     test "listener call timeout is configurable" do
       {:ok, listener} = listen(:counter, Counter, timeout: 100)
 
+      ref = Process.monitor(listener)
+
       assert :ok = GenServer.call(Counter, {:sleep, 50})
 
       try do
@@ -114,6 +116,8 @@ defmodule Patch.Test.ListenTest do
       end
 
       assert_receive {:counter, {:EXIT, :timeout}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, :timeout}
+
       refute Process.alive?(listener)
     end
 
@@ -205,6 +209,8 @@ defmodule Patch.Test.ListenTest do
     test "listener call timeout is configurable" do
       {:ok, listener} = listen(:counter, Counter, timeout: 100)
 
+      ref = Process.monitor(listener)
+
       assert :ok = GenServer.call(Counter, {:sleep, 50})
 
       try do
@@ -216,6 +222,8 @@ defmodule Patch.Test.ListenTest do
       end
 
       assert_receive {:counter, {:EXIT, :timeout}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, :timeout}
+
       refute Process.alive?(listener)
     end
 
@@ -293,6 +301,8 @@ defmodule Patch.Test.ListenTest do
     test "listener call timeout is configurable", ctx do
       {:ok, listener} = listen(:counter, ctx.counter, timeout: 100)
 
+      ref = Process.monitor(listener)
+
       assert :ok = GenServer.call(listener, {:sleep, 50})
 
       try do
@@ -304,6 +314,8 @@ defmodule Patch.Test.ListenTest do
       end
 
       assert_receive {:counter, {:EXIT, :timeout}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, :timeout}
+
       refute Process.alive?(listener)
     end
 
@@ -349,6 +361,8 @@ defmodule Patch.Test.ListenTest do
     test "recipient is notified and listener exits on observed normal exit" do
       {:ok, listener} = listen(:counter, Counter)
 
+      ref = Process.monitor(listener)
+
       try do
         GenServer.call(Counter, :exit)
         flunk("GenServer failed to exit")
@@ -359,11 +373,15 @@ defmodule Patch.Test.ListenTest do
 
       assert_receive {:counter, {GenServer, :call, :exit, _}}
       assert_receive {:counter, {:EXIT, :normal}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, :normal}
+
       refute Process.alive?(listener)
     end
 
     test "recipient is notified and listener exits on out-of-band normal exit", ctx do
       {:ok, listener} = listen(:counter, Counter)
+
+      ref = Process.monitor(listener)
 
       try do
         GenServer.call(ctx.counter, :exit)
@@ -375,11 +393,15 @@ defmodule Patch.Test.ListenTest do
 
       refute_receive {:counter, {GenServer, :call, :exit}}
       assert_receive {:counter, {:DOWN, :normal}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, :normal}}}
+
       refute Process.alive?(listener)
     end
 
     test "recipient is notified and listener exits on observed crash" do
       {:ok, listener} = listen(:counter, Counter)
+
+      ref = Process.monitor(listener)
 
       try do
         GenServer.call(Counter, :crash)
@@ -391,11 +413,15 @@ defmodule Patch.Test.ListenTest do
 
       assert_receive {:counter, {GenServer, :call, :crash, _}}
       assert_receive {:counter, {:EXIT, :crash}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, :crash}
+
       refute Process.alive?(listener)
     end
 
     test "recipient is notified and listener exits on out-of-band crash", ctx do
       {:ok, listener} = listen(:counter, Counter)
+
+      ref = Process.monitor(listener)
 
       try do
         GenServer.call(ctx.counter, :crash)
@@ -407,6 +433,8 @@ defmodule Patch.Test.ListenTest do
 
       refute_receive {:counter, {GenServer, :call, :crash, _}}
       assert_receive {:counter, {:DOWN, :crash}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, :crash}}}
+
       refute Process.alive?(listener)
     end
   end
@@ -416,6 +444,8 @@ defmodule Patch.Test.ListenTest do
 
     test "recipient is notified and listener exits on observed normal exit", ctx do
       {:ok, listener} = listen(:counter, ctx.counter)
+
+      ref = Process.monitor(listener)
 
       try do
         GenServer.call(listener, :exit)
@@ -427,11 +457,15 @@ defmodule Patch.Test.ListenTest do
 
       assert_receive {:counter, {GenServer, :call, :exit, _}}
       assert_receive {:counter, {:EXIT, :normal}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, :normal}
+
       refute Process.alive?(listener)
     end
 
     test "recipient is notified and listener exits on out-of-band normal exit", ctx do
       {:ok, listener} = listen(:counter, ctx.counter)
+
+      ref = Process.monitor(listener)
 
       try do
         GenServer.call(ctx.counter, :exit)
@@ -443,11 +477,15 @@ defmodule Patch.Test.ListenTest do
 
       refute_receive {:counter, {GenServer, :call, :exit}}
       assert_receive {:counter, {:DOWN, :normal}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, :normal}}}
+
       refute Process.alive?(listener)
     end
 
     test "recipient is notified and listener exits on observed crash", ctx do
       {:ok, listener} = listen(:counter, ctx.counter)
+
+      ref = Process.monitor(listener)
 
       try do
         GenServer.call(listener, :crash)
@@ -459,11 +497,15 @@ defmodule Patch.Test.ListenTest do
 
       assert_receive {:counter, {GenServer, :call, :crash, _}}
       assert_receive {:counter, {:EXIT, :crash}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, :crash}
+
       refute Process.alive?(listener)
     end
 
     test "recipient is notified and listener exits on out-of-band crash", ctx do
       {:ok, listener} = listen(:counter, ctx.counter)
+
+      ref = Process.monitor(listener)
 
       try do
         GenServer.call(ctx.counter, :crash)
@@ -475,6 +517,8 @@ defmodule Patch.Test.ListenTest do
 
       refute_receive {:counter, {GenServer, :call, :crash}}
       assert_receive {:counter, {:DOWN, :crash}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, :crash}}}
+
       refute Process.alive?(listener)
     end
   end
@@ -521,20 +565,28 @@ defmodule Patch.Test.ListenTest do
     test "recipient is notified and listener exits on normal exit" do
       {:ok, listener} = listen(:target, Target)
 
+      ref = Process.monitor(listener)
+
       send(Target, :test_message)
 
       assert_receive {:target, :test_message}
       assert_receive {:target, {:DOWN, :normal}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, :normal}}}
+
       refute Process.alive?(listener)
     end
 
     test "recipient is notified and listener exits on crash" do
       {:ok, listener} = listen(:target, Target)
 
+      ref = Process.monitor(listener)
+
       send(Target, :crash)
 
       assert_receive {:target, :crash}
       assert_receive {:target, {:DOWN, :crash}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, :crash}}}
+
       refute Process.alive?(listener)
     end
   end
@@ -545,20 +597,28 @@ defmodule Patch.Test.ListenTest do
     test "recipient is notified and listener exits on normal exit", ctx do
       {:ok, listener} = listen(:target, ctx.target)
 
+      ref = Process.monitor(listener)
+
       send(listener, :test_message)
 
       assert_receive {:target, :test_message}
       assert_receive {:target, {:DOWN, :normal}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, :normal}}}
+
       refute Process.alive?(listener)
     end
 
     test "recipient is notified and listener exits on crash", ctx do
       {:ok, listener} = listen(:target, ctx.target)
 
+      ref = Process.monitor(listener)
+
       send(listener, :crash)
 
       assert_receive {:target, :crash}
       assert_receive {:target, {:DOWN, :crash}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, :crash}}}
+
       refute Process.alive?(listener)
     end
   end
