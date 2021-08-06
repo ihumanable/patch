@@ -25,7 +25,7 @@ defmodule Patch.Test.InjectTest do
       assert :injected_version == Storage.version(Storage)
     end
 
-    test "nested fields can be updated", ctx do
+    test "nested fields can be updated" do
       :ok = Storage.put(Storage, :test_key, :test_value)
 
       inject(Storage, [:store, :test_key], :injected_value)

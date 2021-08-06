@@ -118,7 +118,7 @@ defmodule Patch.Test.ListenTest do
     end
 
     test "listener reply capturing is configurable" do
-      {:ok, listener} = listen(:counter, Counter, capture_replies: false)
+      listen(:counter, Counter, capture_replies: false)
 
       GenServer.call(Counter, :increment)
 
