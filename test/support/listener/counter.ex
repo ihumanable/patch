@@ -35,11 +35,7 @@ defmodule Patch.Test.Support.Listener.Counter do
   end
 
   def handle_call(:deferred_value, from, state) do
-    {:noreply, state, {:continue, {:deferred_value, from}}}
-  end
-
-  def handle_continue({:deferred_value, from}, state) do
-    GenServer.reply(from, state)
+    send(self(), {:deferred_value, from})
     {:noreply, state}
   end
 
@@ -57,5 +53,10 @@ defmodule Patch.Test.Support.Listener.Counter do
 
   def handle_info(:decrement, state) do
     {:noreply, state - 1}
+  end
+
+  def handle_info({:deferred_value, from}, state) do
+    GenServer.reply(from, state)
+    {:noreply, state}
   end
 end
