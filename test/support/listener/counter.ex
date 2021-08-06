@@ -9,6 +9,19 @@ defmodule Patch.Test.Support.Listener.Counter do
     {:ok, 0}
   end
 
+  def handle_call({:sleep, millis}, _from, state) do
+    Process.sleep(millis)
+    {:reply, :ok, state}
+  end
+
+  def handle_call(:crash, _from, state) do
+    {:stop, :crash, state}
+  end
+
+  def handle_call(:exit, _from, state) do
+    {:stop, :normal, state}
+  end
+
   def handle_call(:increment, _from, state) do
     {:reply, state + 1, state + 1}
   end
@@ -19,6 +32,15 @@ defmodule Patch.Test.Support.Listener.Counter do
 
   def handle_call(:value, _from, state) do
     {:reply, state, state}
+  end
+
+  def handle_call(:deferred_value, from, state) do
+    {:noreply, state, {:continue, {:deferred_value, from}}}
+  end
+
+  def handle_continue({:deferred_value, from}, state) do
+    GenServer.reply(from, state)
+    {:noreply, state}
   end
 
   def handle_cast(:increment, state) do

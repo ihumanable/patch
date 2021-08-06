@@ -1,12 +1,22 @@
 defmodule Patch.Listener do
   use GenServer
 
+  @default_capture_replies true
   @default_timeout 5000
+
+  @typedoc """
+  Option to control whether or not to capture GenServer.call replies.
+
+  Defaults to #{@default_capture_replies}
+  """
+  @type capture_replies_option :: {:capture_replies, boolean()}
 
   @typedoc """
   Option to control how long the listener should wait for GenServer.call
 
   Value is either the number of milliseconds to wait or the `:infinity` atom.
+
+  If `capture_replies` is set to false this setting has no effect.
 
   Defaults to #{@default_timeout}
   """
@@ -15,7 +25,7 @@ defmodule Patch.Listener do
   @typedoc """
   Sum-type of all valid options
   """
-  @type option :: timeout_option()
+  @type option :: capture_replies_option() | timeout_option()
 
   @typedoc """
   Convenience type for list of options
@@ -23,12 +33,13 @@ defmodule Patch.Listener do
   @type options :: [option()]
 
   @type t :: %__MODULE__{
+          capture_replies: boolean(),
           recipient: pid(),
           tag: atom(),
           target: pid(),
-          timeout: timeout()
+          timeout: timeout(),
         }
-  defstruct [:recipient, :tag, :target, :timeout]
+  defstruct [:capture_replies, :recipient, :tag, :target, :timeout]
 
   ## Client
 
@@ -40,7 +51,8 @@ defmodule Patch.Listener do
 
     %{
       id: __MODULE__,
-      start: {__MODULE__, :start_link, [recipient, tag, target, options]}
+      start: {__MODULE__, :start_link, [recipient, tag, target, options]},
+      restart: :temporary
     }
   end
 
@@ -63,9 +75,10 @@ defmodule Patch.Listener do
   end
 
   def start_link(recipient, tag, target, options) when is_pid(target) do
-    timeout = options[:timeout] || @default_timeout
+    capture_replies = Keyword.get(options, :capture_replies, @default_capture_replies)
+    timeout = Keyword.get(options, :timeout, @default_timeout)
 
-    state = %__MODULE__{recipient: recipient, tag: tag, target: target, timeout: timeout}
+    state = %__MODULE__{capture_replies: capture_replies, recipient: recipient, tag: tag, target: target, timeout: timeout}
 
     GenServer.start_link(__MODULE__, state)
   end
@@ -86,11 +99,24 @@ defmodule Patch.Listener do
     {:reply, state.target, state}
   end
 
-  def handle_call(message, _from, state) do
-    send(state.recipient, {state.tag, {GenServer, :call, message}})
-    response = GenServer.call(state.target, message, state.timeout)
-    send(state.recipient, {state.tag, {GenServer, :reply, response}})
-    {:reply, response, state}
+  def handle_call(message, from, %__MODULE__{capture_replies: false} = state) do
+    send(state.recipient, {state.tag, {GenServer, :call, message, from}})
+    send(state.target, {:"$gen_call", from, message})
+    {:noreply, state}
+  end
+
+  def handle_call(message, from, state) do
+    send(state.recipient, {state.tag, {GenServer, :call, message, from}})
+
+    try do
+      response = GenServer.call(state.target, message, state.timeout)
+      send(state.recipient, {state.tag, {GenServer, :reply, response, from}})
+      {:reply, response, state}
+    catch
+      :exit, {reason, _call} ->
+        send(state.recipient, {state.tag, {:EXIT, reason}})
+        Process.exit(self(), reason)
+    end
   end
 
   def handle_cast(message, state) do
@@ -100,7 +126,8 @@ defmodule Patch.Listener do
   end
 
   def handle_info({:DOWN, _, :process, pid, reason}, %__MODULE__{target: pid} = state) do
-    {:stop, {:shutdown, {:target_down, reason}}, state}
+    send(state.recipient, {state.tag, {:DOWN, reason}})
+    {:stop, {:shutdown, {:DOWN, reason}}, state}
   end
 
   def handle_info(message, state) do

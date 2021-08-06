@@ -4,25 +4,66 @@ defmodule Patch.Test.ListenTest do
 
   alias Patch.Test.Support.Listener.Counter
 
-  def start_anonymous_process(_) do
+  def start_anonymous_gen_server(_) do
     counter = start_supervised!(Counter)
     {:ok, counter: counter}
   end
 
-  def start_named_process(_) do
+  def start_named_gen_server(_) do
     counter = start_supervised!({Counter, [name: Counter]})
     {:ok, counter: counter}
   end
 
-  describe "listen/3 with named process when messages sent to name" do
-    setup [:start_named_process]
+  def start_named_process(_) do
+    target = spawn(fn -> Process.sleep(:infinity) end)
+    Process.register(target, Target)
+    {:ok, target: target}
+  end
+
+  def start_anonymous_process(_) do
+    target = spawn(fn -> Process.sleep(:infinity) end)
+    {:ok, target: target}
+  end
+
+  def start_named_exitable_process(_) do
+    target = spawn(fn ->
+      receive do
+        :crash ->
+          Process.exit(self(), :crash)
+
+        _ ->
+          :ok
+      end
+    end)
+
+    Process.register(target, Target)
+
+    {:ok, target: target}
+  end
+
+  def start_anonymous_exitable_process(_) do
+    target = spawn(fn ->
+      receive do
+        :crash ->
+          Process.exit(self(), :crash)
+
+        _ ->
+          :ok
+      end
+    end)
+
+    {:ok, target: target}
+  end
+
+  describe "listen/3 with named GenServer when messages sent to name" do
+    setup [:start_named_gen_server]
 
     test "recipient receives GenServer.call request" do
       listen(:counter, Counter)
 
       GenServer.call(Counter, :increment)
 
-      assert_receive {:counter, {GenServer, :call, :increment}}
+      assert_receive {:counter, {GenServer, :call, :increment, _}}
     end
 
     test "recipient receives GenServer.call reply" do
@@ -30,7 +71,59 @@ defmodule Patch.Test.ListenTest do
 
       GenServer.call(Counter, :increment)
 
-      assert_receive {:counter, {GenServer, :reply, 1}}
+      assert_receive {:counter, {GenServer, :reply, 1, _}}
+    end
+
+    test "receipient can correlate calls and replies" do
+      listen(:counter, Counter)
+
+      GenServer.call(Counter, :increment)
+
+      assert_receive {:counter, {GenServer, :call, :increment, from}}
+      assert_receive {:counter, {GenServer, :reply, 1, ^from}}
+    end
+
+    test "recipient receives GenServer.call deferred reply" do
+      listen(:counter, Counter)
+
+      GenServer.call(Counter, :deferred_value)
+
+      assert_receive {:counter, {GenServer, :reply, 0, _}}
+    end
+
+    test "recipient can correlate calls and deferred replies" do
+      listen(:counter, Counter)
+
+      GenServer.call(Counter, :deferred_value)
+
+      assert_receive {:counter, {GenServer, :call, :deferred_value, from}}
+      assert_receive {:counter, {GenServer, :reply, 0, ^from}}
+    end
+
+    test "listener call timeout is configurable" do
+      {:ok, listener} = listen(:counter, Counter, timeout: 100)
+
+      assert :ok = GenServer.call(Counter, {:sleep, 50})
+
+      try do
+        GenServer.call(Counter, {:sleep, 200})
+        flunk("Listener mediated call should have timed out")
+      catch
+        :exit, {reason, _call} ->
+          assert reason == :timeout
+      end
+
+      assert_receive {:counter, {:EXIT, :timeout}}
+      refute Process.alive?(listener)
+    end
+
+    test "listener reply capturing is configurable" do
+      {:ok, listener} = listen(:counter, Counter, capture_replies: false)
+
+      GenServer.call(Counter, :increment)
+
+      assert_receive {:counter, {GenServer, :call, :increment, from}}
+      refute_receive {:counter, {GenServer, :reply, _, _}}
     end
 
     test "recipient receives GenServer.cast request" do
@@ -64,15 +157,15 @@ defmodule Patch.Test.ListenTest do
     end
   end
 
-  describe "listen/3 with named process when messages sent to listener" do
-    setup [:start_named_process]
+  describe "listen/3 with named GenServer when messages sent to listener" do
+    setup [:start_named_gen_server]
 
     test "recipient receives GenServer.call request" do
       {:ok, listener} = listen(:counter, Counter)
 
       GenServer.call(listener, :increment)
 
-      assert_receive {:counter, {GenServer, :call, :increment}}
+      assert_receive {:counter, {GenServer, :call, :increment, _}}
     end
 
     test "recipient receives GenServer.call reply" do
@@ -80,7 +173,59 @@ defmodule Patch.Test.ListenTest do
 
       GenServer.call(listener, :increment)
 
-      assert_receive {:counter, {GenServer, :reply, 1}}
+      assert_receive {:counter, {GenServer, :reply, 1, _}}
+    end
+
+    test "recipient can correlate calls and replies" do
+      {:ok, listener} = listen(:counter, Counter)
+
+      GenServer.call(listener, :increment)
+
+      assert_receive {:counter, {GenServer, :call, :increment, from}}
+      assert_receive {:counter, {GenServer, :reply, 1, ^from}}
+    end
+
+    test "recipient receives GenServer.call deferred reply" do
+      {:ok, listener} = listen(:counter, Counter)
+
+      assert 0 == GenServer.call(listener, :deferred_value)
+
+      assert_receive {:counter, {GenServer, :reply, 0, _}}
+    end
+
+    test "recipient can correlate calls and deferred replies" do
+      {:ok, listener} = listen(:counter, Counter)
+
+      GenServer.call(listener, :deferred_value)
+
+      assert_receive {:counter, {GenServer, :call, :deferred_value, from}}
+      assert_receive {:counter, {GenServer, :reply, 0, ^from}}
+    end
+
+    test "listener call timeout is configurable" do
+      {:ok, listener} = listen(:counter, Counter, timeout: 100)
+
+      assert :ok = GenServer.call(Counter, {:sleep, 50})
+
+      try do
+        GenServer.call(listener, {:sleep, 200})
+        flunk("Listener mediated call should have timed out")
+      catch
+        :exit, {reason, _call} ->
+          assert reason == :timeout
+      end
+
+      assert_receive {:counter, {:EXIT, :timeout}}
+      refute Process.alive?(listener)
+    end
+
+    test "listener reply capturing is configurable" do
+      {:ok, listener} = listen(:counter, Counter, capture_replies: false)
+
+      GenServer.call(listener, :increment)
+
+      assert_receive {:counter, {GenServer, :call, :increment, from}}
+      refute_receive {:counter, {GenServer, :reply, _, _}}
     end
 
     test "recipient receives GenServer.cast request" do
@@ -100,15 +245,15 @@ defmodule Patch.Test.ListenTest do
     end
   end
 
-  describe "listen/3 with anonymous process" do
-    setup [:start_anonymous_process]
+  describe "listen/3 with GenServer process" do
+    setup [:start_anonymous_gen_server]
 
     test "recipient receives GenServer.call request", ctx do
       {:ok, listener} = listen(:counter, ctx.counter)
 
       GenServer.call(listener, :increment)
 
-      assert_receive {:counter, {GenServer, :call, :increment}}
+      assert_receive {:counter, {GenServer, :call, :increment,_ }}
     end
 
     test "recipient receives GenServer.call reply", ctx do
@@ -116,7 +261,59 @@ defmodule Patch.Test.ListenTest do
 
       assert 1 == GenServer.call(listener, :increment)
 
-      assert_receive {:counter, {GenServer, :reply, 1}}
+      assert_receive {:counter, {GenServer, :reply, 1, _}}
+    end
+
+    test "recipient can correlate calls and replies", ctx do
+      {:ok, listener} = listen(:counter, ctx.counter)
+
+      assert 1 == GenServer.call(listener, :increment)
+
+      assert_receive {:counter, {GenServer, :call, :increment, from}}
+      assert_receive {:counter, {GenServer, :reply, 1, ^from}}
+    end
+
+    test "recipient receives GenServer.call deferred reply", ctx do
+      {:ok, listener} = listen(:counter, ctx.counter)
+
+      assert 0 == GenServer.call(listener, :deferred_value)
+
+      assert_receive {:counter, {GenServer, :reply, 0, _}}
+    end
+
+    test "recipient can correlate calls and deferred replies", ctx do
+      {:ok, listener} = listen(:counter, ctx.counter)
+
+      assert 0 == GenServer.call(listener, :deferred_value)
+
+      assert_receive {:counter, {GenServer, :call, :deferred_value, from}}
+      assert_receive {:counter, {GenServer, :reply, 0, ^from}}
+    end
+
+    test "listener call timeout is configurable", ctx do
+      {:ok, listener} = listen(:counter, ctx.counter, timeout: 100)
+
+      assert :ok = GenServer.call(listener, {:sleep, 50})
+
+      try do
+        GenServer.call(listener, {:sleep, 200}, 200)
+        flunk("Listener mediated call should have timed out")
+      catch
+        :exit, {reason, _call} ->
+          assert reason == :timeout
+      end
+
+      assert_receive {:counter, {:EXIT, :timeout}}
+      refute Process.alive?(listener)
+    end
+
+    test "listener reply capturing is configurable", ctx do
+      {:ok, listener} = listen(:counter, ctx.counter, capture_replies: false)
+
+      GenServer.call(listener, :increment)
+
+      assert_receive {:counter, {GenServer, :call, :increment, from}}
+      refute_receive {:counter, {GenServer, :reply, _, _}}
     end
 
     test "recipient receives GenServer.cast request", ctx do
@@ -143,6 +340,226 @@ defmodule Patch.Test.ListenTest do
 
       assert_receive {:counter_1, :increment}
       assert_receive {:counter_2, :increment}
+    end
+  end
+
+  describe "listen/3 when named GenServer exits" do
+    setup [:start_named_gen_server]
+
+    test "recipient is notified and listener exits on observed normal exit" do
+      {:ok, listener} = listen(:counter, Counter)
+
+      try do
+        GenServer.call(Counter, :exit)
+        flunk("GenServer failed to exit")
+      catch
+        :exit, {reason, _call} ->
+          assert reason == :normal
+      end
+
+      assert_receive {:counter, {GenServer, :call, :exit, _}}
+      assert_receive {:counter, {:EXIT, :normal}}
+      refute Process.alive?(listener)
+    end
+
+    test "recipient is notified and listener exits on out-of-band normal exit", ctx do
+      {:ok, listener} = listen(:counter, Counter)
+
+      try do
+        GenServer.call(ctx.counter, :exit)
+        flunk("GenServer failed to exit")
+      catch
+        :exit, {reason, _call} ->
+          assert reason == :normal
+      end
+
+      refute_receive {:counter, {GenServer, :call, :exit}}
+      assert_receive {:counter, {:DOWN, :normal}}
+      refute Process.alive?(listener)
+    end
+
+    test "recipient is notified and listener exits on observed crash" do
+      {:ok, listener} = listen(:counter, Counter)
+
+      try do
+        GenServer.call(Counter, :crash)
+        flunk("GenServer failed to crash")
+      catch
+        :exit, {reason, _call} ->
+          assert reason == :crash
+      end
+
+      assert_receive {:counter, {GenServer, :call, :crash, _}}
+      assert_receive {:counter, {:EXIT, :crash}}
+      refute Process.alive?(listener)
+    end
+
+    test "recipient is notified and listener exits on out-of-band crash", ctx do
+      {:ok, listener} = listen(:counter, Counter)
+
+      try do
+        GenServer.call(ctx.counter, :crash)
+        flunk("GenServer failed to crash")
+      catch
+        :exit, {reason, _call} ->
+          assert reason == :crash
+      end
+
+      refute_receive {:counter, {GenServer, :call, :crash, _}}
+      assert_receive {:counter, {:DOWN, :crash}}
+      refute Process.alive?(listener)
+    end
+  end
+
+  describe "listen/3 when anonymous GenServer exits" do
+    setup [:start_anonymous_gen_server]
+
+    test "recipient is notified and listener exits on observed normal exit", ctx do
+      {:ok, listener} = listen(:counter, ctx.counter)
+
+      try do
+        GenServer.call(listener, :exit)
+        flunk("GenServer failed to exit")
+      catch
+        :exit, {reason, _call} ->
+          assert reason == :normal
+      end
+
+      assert_receive {:counter, {GenServer, :call, :exit, _}}
+      assert_receive {:counter, {:EXIT, :normal}}
+      refute Process.alive?(listener)
+    end
+
+    test "recipient is notified and listener exits on out-of-band normal exit", ctx do
+      {:ok, listener} = listen(:counter, ctx.counter)
+
+      try do
+        GenServer.call(ctx.counter, :exit)
+        flunk("GenServer failed to exit")
+      catch
+        :exit, {reason, _call} ->
+          assert reason == :normal
+      end
+
+      refute_receive {:counter, {GenServer, :call, :exit}}
+      assert_receive {:counter, {:DOWN, :normal}}
+      refute Process.alive?(listener)
+    end
+
+    test "recipient is notified and listener exits on observed crash", ctx do
+      {:ok, listener} = listen(:counter, ctx.counter)
+
+      try do
+        GenServer.call(listener, :crash)
+        flunk("GenServer failed to crash")
+      catch
+        :exit, {reason, _call} ->
+          assert reason == :crash
+      end
+
+      assert_receive {:counter, {GenServer, :call, :crash, _}}
+      assert_receive {:counter, {:EXIT, :crash}}
+      refute Process.alive?(listener)
+    end
+
+    test "recipient is notified and listener exits on out-of-band crash", ctx do
+      {:ok, listener} = listen(:counter, ctx.counter)
+
+      try do
+        GenServer.call(ctx.counter, :crash)
+        flunk("GenServer failed to crash")
+      catch
+        :exit, {reason, _call} ->
+          assert reason == :crash
+      end
+
+      refute_receive {:counter, {GenServer, :call, :crash}}
+      assert_receive {:counter, {:DOWN, :crash}}
+      refute Process.alive?(listener)
+    end
+  end
+
+  describe "listen/3 with named process when messages sent to name" do
+    setup [:start_named_process]
+
+    test "recipient recieves message" do
+      listen(:target, Target)
+
+      send(Target, :test_message)
+
+      assert_receive {:target, :test_message}
+    end
+  end
+
+  describe "listen/3 with named process when messages sent to listener" do
+    setup [:start_named_process]
+
+    test "recipient receives message" do
+      {:ok, listener} = listen(:target, Target)
+
+      send(listener, :test_message)
+
+      assert_receive {:target, :test_message}
+    end
+  end
+
+  describe "listen/3 with anonymous process when messages sent to listener" do
+    setup [:start_anonymous_process]
+
+    test "recipient receives message", ctx do
+      {:ok, listener} = listen(:target, ctx.target)
+
+      send(listener, :test_message)
+
+      assert_receive {:target, :test_message}
+    end
+  end
+
+  describe "listen/3 when named process exits" do
+    setup [:start_named_exitable_process]
+
+    test "recipient is notified and listener exits on normal exit" do
+      {:ok, listener} = listen(:target, Target)
+
+      send(Target, :test_message)
+
+      assert_receive {:target, :test_message}
+      assert_receive {:target, {:DOWN, :normal}}
+      refute Process.alive?(listener)
+    end
+
+    test "recipient is notified and listener exits on crash" do
+      {:ok, listener} = listen(:target, Target)
+
+      send(Target, :crash)
+
+      assert_receive {:target, :crash}
+      assert_receive {:target, {:DOWN, :crash}}
+      refute Process.alive?(listener)
+    end
+  end
+
+  describe "listen/3 when anonymous process exits" do
+    setup [:start_anonymous_exitable_process]
+
+    test "recipient is notified and listener exits on normal exit", ctx do
+      {:ok, listener} = listen(:target, ctx.target)
+
+      send(listener, :test_message)
+
+      assert_receive {:target, :test_message}
+      assert_receive {:target, {:DOWN, :normal}}
+      refute Process.alive?(listener)
+    end
+
+    test "recipient is notified and listener exits on crash", ctx do
+      {:ok, listener} = listen(:target, ctx.target)
+
+      send(listener, :crash)
+
+      assert_receive {:target, :crash}
+      assert_receive {:target, {:DOWN, :crash}}
+      refute Process.alive?(listener)
     end
   end
 end

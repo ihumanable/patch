@@ -21,8 +21,8 @@ defmodule Patch.Test.ListenAndInjectTest do
 
       Storage.put(ctx.storage, :test_key, :test_value)
 
-      assert_receive {:validator, {GenServer, :call, {:validate, :test_key, :test_value}}}
-      assert_receive {:validator, {GenServer, :reply, :ok}}
+      assert_receive {:validator, {GenServer, :call, {:validate, :test_key, :test_value}, _}}
+      assert_receive {:validator, {GenServer, :reply, :ok, _}}
     end
   end
 end
