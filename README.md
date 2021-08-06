@@ -12,7 +12,7 @@ Patch makes it easy to replace functionality in tests with test specific functio
 Patch provides functionality for replacing code at test time and for working with processes.
 
 - [Installation](#installation)
-- [Quick Start](#quick-start)
+- [Quickstart](#quickstart)
 - [Patching Code](#patching-code) 
   - [Patching](#patching)
   - [Asserting / Refuting Calls](#asserting--refuting-calls)
