@@ -11,6 +11,11 @@ defmodule Patch.Listener do
   @type tag :: atom()
 
   @typedoc """
+  Listeners listen to a target.
+  """
+  @type target :: GenServer.server()
+
+  @typedoc """
   Option to control whether or not to capture GenServer.call replies.
 
   Defaults to #{@default_capture_replies}
