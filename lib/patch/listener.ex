@@ -37,7 +37,7 @@ defmodule Patch.Listener do
           recipient: pid(),
           tag: atom(),
           target: pid(),
-          timeout: timeout(),
+          timeout: timeout()
         }
   defstruct [:capture_replies, :recipient, :tag, :target, :timeout]
 
@@ -78,7 +78,13 @@ defmodule Patch.Listener do
     capture_replies = Keyword.get(options, :capture_replies, @default_capture_replies)
     timeout = Keyword.get(options, :timeout, @default_timeout)
 
-    state = %__MODULE__{capture_replies: capture_replies, recipient: recipient, tag: tag, target: target, timeout: timeout}
+    state = %__MODULE__{
+      capture_replies: capture_replies,
+      recipient: recipient,
+      tag: tag,
+      target: target,
+      timeout: timeout
+    }
 
     GenServer.start_link(__MODULE__, state)
   end
