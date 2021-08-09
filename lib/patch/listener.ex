@@ -5,6 +5,12 @@ defmodule Patch.Listener do
   @default_timeout 5000
 
   @typedoc """
+  Listeners are started with a tag so the listening process can differentiate
+  between multiple listeners.
+  """
+  @type tag :: atom()
+
+  @typedoc """
   Option to control whether or not to capture GenServer.call replies.
 
   Defaults to #{@default_capture_replies}
@@ -56,7 +62,7 @@ defmodule Patch.Listener do
     }
   end
 
-  @spec start_link(recipient :: atom(), tag :: atom(), target :: pid() | atom(), options()) ::
+  @spec start_link(recipient :: atom(), tag :: tag(), target :: pid() | atom(), options()) ::
           {:ok, pid()} | {:error, :not_found}
   def start_link(recipient, tag, target, options \\ [])
 

@@ -267,7 +267,7 @@ defmodule Patch do
     return_value
   end
 
-  @spec real(module :: Module.t()) :: Module.t()
+  @spec real(module :: module()) :: module()
   def real(module) do
     :meck_util.original_name(module)
   end
