@@ -26,15 +26,16 @@ defmodule Patch.Test.ListenTest do
   end
 
   def start_named_exitable_process(_) do
-    target = spawn(fn ->
-      receive do
-        :crash ->
-          Process.exit(self(), :crash)
+    target =
+      spawn(fn ->
+        receive do
+          :crash ->
+            Process.exit(self(), :crash)
 
-        _ ->
-          :ok
-      end
-    end)
+          _ ->
+            :ok
+        end
+      end)
 
     Process.register(target, Target)
 
@@ -42,15 +43,16 @@ defmodule Patch.Test.ListenTest do
   end
 
   def start_anonymous_exitable_process(_) do
-    target = spawn(fn ->
-      receive do
-        :crash ->
-          Process.exit(self(), :crash)
+    target =
+      spawn(fn ->
+        receive do
+          :crash ->
+            Process.exit(self(), :crash)
 
-        _ ->
-          :ok
-      end
-    end)
+          _ ->
+            :ok
+        end
+      end)
 
     {:ok, target: target}
   end
@@ -261,7 +263,7 @@ defmodule Patch.Test.ListenTest do
 
       GenServer.call(listener, :increment)
 
-      assert_receive {:counter, {GenServer, :call, :increment,_ }}
+      assert_receive {:counter, {GenServer, :call, :increment, _}}
     end
 
     test "recipient receives GenServer.call reply", ctx do
