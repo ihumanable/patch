@@ -7,10 +7,22 @@
 
 Patch - Ergonomic Mocking for Elixir
 
-Patch makes it easy to mock one or more functions in a module returning a value or executing
-custom logic.  Patches and Spies allow tests to assert or refute that function calls have been
-made.
+Patch makes it easy to replace functionality in tests with test specific functionality.  Patch augments ExUnit with several utilities that make writing tests in Elixir fast and easy.
 
+Patch provides functionality for replacing code at test time and for working with processes.
+
+- [Installation](#installation)
+- [Quickstart](#quickstart)
+- [Patching Code](#patching-code) 
+  - [Patching](#patching)
+  - [Asserting / Refuting Calls](#asserting--refuting-calls)
+  - [Spies](#spies)
+  - [Fakes](#fakes)
+- [Working with Processes](#working-with-processes)
+  - [Listeners](#listeners)
+  - [Injecting](#injecting)
+- [Support Matrix](#support-matrix)
+- [Limitations](#limitations)
 ## Installation
 
 Add patch to your mix.exs
@@ -31,7 +43,13 @@ After adding the dependency just add the following line to any test module after
 use Patch
 ```
 
-## Patches
+This library comes with a comprehensive suite of unit tests.  These tests not only verify that the library is working correctly but are designed so that for every bit of functionality there is an easy to understand example for how to use that feature.  Check out the [tests](tree/master/test) for examples of how to use each feature.
+
+## Patching Code
+
+Patch provides a number of utilities for replacing functionality at test-time.
+
+### Patching
 
 When a module is patched, the patched function will return the value provided.
 
@@ -41,11 +59,14 @@ defmodule PatchExample do
   use Patch
 
   test "functions can be patched to return a specified value" do
-    assert "HELLO" = String.upcase("hello")                 # Assertion passes before patching
+    # Assertion passes before patching
+    assert "HELLO" = String.upcase("hello")
 
+    # The function can be patched to return a static value
     patch(String, :upcase, :patched_return_value)
 
-    assert :patched_return_value == String.upcase("hello")  # Assertion passes after patching
+    # Assertion passes after patching
+    assert :patched_return_value == String.upcase("hello")  
   end
 end
 ```
@@ -58,19 +79,21 @@ defmodule PatchExample do
   use Patch
 
   test "functions can be patched with a replacement function" do
-    assert "HELLO" = String.upcase("hello")                 # Assertion passes before patching
+    # Assertion passes before patching
+    assert "HELLO" = String.upcase("hello")
 
+    # The function can be patched to run custom code
     patch(String, :upcase, fn s -> String.length(s) end)
 
-    assert 5 == String.upcase("hello")                      # Assertion passes after patching
+    # Assertion passes after patching
+    assert 5 == String.upcase("hello")
   end
 end
 ```
 
-### Patching Ergonomics
+#### Patching Ergonomics
 
-`patch/3` returns the value that the patch will return which can be useful for later on in the
-test.  Examine this example code for an example
+`patch/3` returns the value that the patch will return which can be useful for later on in the test.  Examine this example code for an example
 
 ```elixir
 defmodule PatchExample do
@@ -89,7 +112,7 @@ end
 
 This allows the test author to combine creating fixture data with patching.
 
-## Asserting / Refuting Calls
+### Asserting / Refuting Calls
 
 After a patch is applied, tests can assert that an expected call has occurred by using the `assert_called` macro.
 
@@ -133,7 +156,7 @@ defmodule PatchExample do
 end
 ```
 
-### Multiple Arities
+#### Multiple Arities
 
 If a function has multiple arities that may be called based on different conditions the test author may wish to assert or refute that a function has been called at all without regards to the number of arguments passed.
 
@@ -175,10 +198,29 @@ defmodule PatchExample do
 end
 ```
 
-## Spies
+### Spies
 
-If a test wishes to assert / refute calls that happen to a module without actually changing thebehavior of the module it can simply `spy/1` the module.  Spies behave identically to the original module but all calls and return values are recorded so `assert_called/1`, `refute_called/1`, `assert_any_called/2`, and `refute_any_called/2` work as expected.
-## Fakes
+If a test wishes to assert / refute calls that happen to a module without actually changing the behavior of the module it can simply `spy/1` the module.  Spies behave identically to the original module but all calls and return values are recorded so `assert_called/1`, `refute_called/1`, `assert_any_called/2`, and `refute_any_called/2` work as expected.
+
+```elixir
+defmodule PatchExample do
+  use ExUnit.Case
+  use Patch
+
+  def example(value) do
+    String.upcase(value)
+  end
+
+  test "spies can see what calls happen without changing functionality" do
+    spy(String)
+
+    assert "HELLO" = example("hello")
+
+    assert_called String.upcase("hello")
+  end
+end
+```
+### Fakes
 
 Sometimes we want to replace one module with another for testing, for example we might want to replace a module that connects to a real datastore with a fake that stores data in memory while providing the same API.
 
@@ -205,5 +247,156 @@ end
 
 This fake module uses the real module to actually get the record from the database and then makes sure that a minimum amount of latency, in this case 20 seconds, is introduced before returning the result.
 
+## Working with Processes
 
+Elixir code frequently runs many processes and a test author often wants to assert about the flow of messages between processes.  Patch provides some utilities that make listening to the messages between processes easy.
 
+### Listeners
+
+Listeners are processes that sit between the sender process and the target process.  The listener process will send a copy of every message to the test process so it can use ExUnit's built in `assert_receive`, `assert_received`, `refute_receive`, and `refute_received` functions.
+
+Listeners are especially useful when working with named processes since they will automatically unregister the named process and take its place.  For anonymous processes the `inject/3` function is provided to assist in injecting listeners into other processes or the listener can be used in place of the target process when starting consumer processes. 
+
+Listeners are started with the `listen/3` function and each have a `tag` so that the test process can differentiate which listener has delivered which message.
+
+```elixir
+defmodule PatchExample do
+  use ExUnit.Case
+  use Patch
+
+  test "sharded read replication" do
+    listen(:shard_a_leader, ShardALeader)
+    listen(:shard_a_replica_1, ShardAReplica1)
+    listen(:shard_a_replica_2, ShardAReplica2)
+    
+    listen(:shard_b_leader, ShardBLeader)
+    listen(:shard_b_replica_1, ShardBReplica1)
+    listen(:shard_b_replica_2, ShardBReplica2)
+
+    send(ShardALeader, {:write, :some_value})
+
+    # Assert the leader gets the message
+    assert_receive {:shard_a_leader, {:write, :some_value}}
+
+    # Assert that the replicas for Shard A get the message too
+    assert_receive {:shard_a_replica_1, {:write, :some_value}}
+    assert_receive {:shard_a_replica_2, {:write, :some_value}}
+    
+    # Assert that Shard A does not try to replicate to Shard B
+    refute_receive {:shard_b_leader, {:write, :some_value}}
+    refute_receive {:shard_b_replica_1, {:write, :some_value}}
+    refute_receive {:shard_b_replica_2, {:write, :some_value}}
+  end
+end
+```
+
+#### GenServer Support
+
+Listeners have special support for GenServers.  By default a listener will provide the test process with all calls, replies, casts, and messages. 
+
+Given a listener with the tag `:tag` the messages from a GenServer are formatted as follows.
+
+| Client Code                   | Message to Test Process                    |
+|:------------------------------|:-------------------------------------------|
+| GenServer.call(pid, :message) | {:tag, {GenServer, :call, :message, from}} |
+|  # if capture_replies = true  | {:tag, {GenServer, :reply, result, from}}  |
+| GenServer.cast(pid, :message) | {:tag, {GenServer, :cast, :message}}       |
+
+During a `GenServer.call/3` the listener sits between the client and the server and reports back information to the test process.
+
+```
+     ┌────────────┐          ┌──────┐                ┌────────┐                ┌──────┐
+     │Test Process│          │client│                │listener│                │server│
+     └─────┬──────┘          └──┬───┘                └───┬────┘                └──┬───┘
+           │                    │ GenServer.call(message)│                        │    
+           │                    │ ───────────────────────>                        │    
+           │                    │                        │                        │    
+           │      {GenServer, :call, message, from}      │                        │    
+           │ <─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─                         │    
+           │                    │                        │                        │    
+           │                    │                        │ GenServer.call(message)│    
+           │                    │                        │ ───────────────────────>    
+           │                    │                        │                        │    
+           │                    │                        │          reply         │    
+           │                    │                        │ <───────────────────────    
+           │                    │                        │                        │    
+           │       {GenServer, :reply, reply, from}      │                        │    
+           │ <─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─                         │    
+           │                    │                        │                        │    
+           │                    │          reply         │                        │    
+           │                    │ <───────────────────────                        │    
+     ┌─────┴──────┐          ┌──┴───┐                ┌───┴────┐                ┌──┴───┐
+     │Test Process│          │client│                │listener│                │server│
+     └────────────┘          └──────┘                └────────┘                └──────┘`
+```
+
+`GenServer.call/3` allows the client to set a timeout, an amount of time to wait for the server to response.  The listener does not know how long the original client will wait for a timeout, the test author can provide a `:timeout` option when spawning the listener to control how long the listener will wait for its `GenServer.call/3`.  By default the listener will wait 5000ms for each call, the default for `GenServer.call/2`.
+
+If the test doesn't require the listener to capture replies to `GenServer.call` then the `:capture_replies` option can be set to false.  When this option is false the listener will simply forward the call onto the server.  Refer to the following diagram for details on how this works.
+
+```
+     ┌────────────┐          ┌──────┐                ┌────────┐                          ┌──────┐
+     │Test Process│          │client│                │listener│                          │server│
+     └─────┬──────┘          └──┬───┘                └───┬────┘                          └──┬───┘
+           │                    │ GenServer.call(message)│                                  │    
+           │                    │ ───────────────────────>                                  │    
+           │                    │                        │                                  │    
+           │      {GenServer, :call, message, from}      │                                  │    
+           │ <─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─                                   │    
+           │                    │                        │                                  │    
+           │                    │                        │ send(:"$gen_call", from, message)│    
+           │                    │                        │ ─────────────────────────────────>    
+           │                    │                        │                                  │    
+           │                    │                        │  reply                           │    
+           │                    │ <──────────────────────────────────────────────────────────    
+     ┌─────┴──────┐          ┌──┴───┐                ┌───┴────┐                          ┌──┴───┐
+     │Test Process│          │client│                │listener│                          │server│
+     └────────────┘          └──────┘                └────────┘                          └──────┘
+```
+
+#### Target Monitoring
+
+Listeners will automatically monitor the target process they are listening to.  If the target process goes `:DOWN` the listener will deliver a tagged `{:DOWN, reason}` message to the test process and then exit.
+
+### Injecting
+
+When working with processes in test code it is sometimes necessary to change the state of a running GenServer.  Common use cases for injecting state into a GenServer are to set up some fixture data, update a configuration value, or replace a target pid with a listener from the previous section.
+
+`inject/3` is a helper that handles some common issues when updating state.
+
+```elixir
+defmodule PatchExample do
+  use ExUnit.Case
+  use Patch
+
+  test "state can be updated" do
+    {:ok, pid} = Target.start_link(:initial_value)
+    
+    assert :initial_value == Target.get_value(pid)
+
+    inject(pid, [:value], :updated_value)
+
+    assert :updated_value == Target.get_value(pid)
+  end
+end
+```
+
+`inject/3` accepts a `GenServer.server` a list of `keys` like one would use for `put_in` and then a value to inject into the processes state.
+
+## Support Matrix
+
+Tests automatically run against a matrix of OTP and Elixir Versions, see the [ci.yml](tree/master/.github/workflows/ci.yml) for details.
+
+| OTP \ Elixir | 1.7                | 1.8                | 1.9                | 1.10               | 1.11               | 1.12               |
+|:------------:|:------------------:|:------------------:|:------------------:|:------------------:|:------------------:|:------------------:|
+| 20           | :white_check_mark: | :white_check_mark: | :white_check_mark: | N/A                | N/A                | N/A                |
+| 21           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | N/A                |
+| 22           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| 23           | N/A                | N/A                | N/A                | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| 24           | N/A                | N/A                | N/A                | N/A                | :white_check_mark: | :white_check_mark: |
+
+## Limitations
+
+Patch is built on top of [meck](https://github.com/eproxus/meck) and shares many limitations with that library.  
+
+The most important limitation for ExUnit is that Patch **is not compatible with async: true**.

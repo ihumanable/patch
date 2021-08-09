@@ -54,6 +54,7 @@ defmodule Patch.Test.FakeTest do
       fake(Real, Fake)
 
       assert {:fake, {:example, :present}} == Real.example(:present)
+
       assert_raise Patch.UnexpectedCall, fn ->
         refute_called Real.example(:present)
       end
@@ -91,6 +92,7 @@ defmodule Patch.Test.FakeTest do
       fake(Real, Fake)
 
       assert {:fake, {:example, :a}} == Real.example(:a)
+
       assert_raise Patch.UnexpectedCall, fn ->
         refute_any_call Real, :example
       end

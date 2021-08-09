@@ -129,7 +129,7 @@ defmodule Patch.Test.PatchTest do
     patch(Example, :function_that_does_not_exist, :this_can_never_be_retrieved)
 
     assert_raise UndefinedFunctionError, fn ->
-      Example.function_that_does_not_exist()
+      apply(Example, :function_that_does_not_exist, [])
     end
   end
 end
