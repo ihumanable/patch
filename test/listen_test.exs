@@ -30,7 +30,7 @@ defmodule Patch.Test.ListenTest do
       spawn(fn ->
         receive do
           :crash ->
-            Process.exit(self(), :crash)
+            Process.exit(self(), {:shutdown, :crash})
 
           _ ->
             :ok
@@ -47,7 +47,7 @@ defmodule Patch.Test.ListenTest do
       spawn(fn ->
         receive do
           :crash ->
-            Process.exit(self(), :crash)
+            Process.exit(self(), {:shutdown, :crash})
 
           _ ->
             :ok
@@ -410,12 +410,12 @@ defmodule Patch.Test.ListenTest do
         flunk("GenServer failed to crash")
       catch
         :exit, {reason, _call} ->
-          assert reason == :crash
+          assert reason == {:shutdown, :crash}
       end
 
       assert_receive {:counter, {GenServer, :call, :crash, _}}
-      assert_receive {:counter, {:EXIT, :crash}}
-      assert_receive {:DOWN, ^ref, :process, ^listener, :crash}
+      assert_receive {:counter, {:EXIT, {:shutdown, :crash}}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, :crash}}
 
       refute Process.alive?(listener)
     end
@@ -430,12 +430,12 @@ defmodule Patch.Test.ListenTest do
         flunk("GenServer failed to crash")
       catch
         :exit, {reason, _call} ->
-          assert reason == :crash
+          assert reason == {:shutdown, :crash}
       end
 
       refute_receive {:counter, {GenServer, :call, :crash, _}}
-      assert_receive {:counter, {:DOWN, :crash}}
-      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, :crash}}}
+      assert_receive {:counter, {:DOWN, {:shutdown, :crash}}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, {:shutdown, :crash}}}}
 
       refute Process.alive?(listener)
     end
@@ -494,12 +494,12 @@ defmodule Patch.Test.ListenTest do
         flunk("GenServer failed to crash")
       catch
         :exit, {reason, _call} ->
-          assert reason == :crash
+          assert reason == {:shutdown, :crash}
       end
 
       assert_receive {:counter, {GenServer, :call, :crash, _}}
-      assert_receive {:counter, {:EXIT, :crash}}
-      assert_receive {:DOWN, ^ref, :process, ^listener, :crash}
+      assert_receive {:counter, {:EXIT, {:shutdown, :crash}}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, :crash}}
 
       refute Process.alive?(listener)
     end
@@ -514,12 +514,12 @@ defmodule Patch.Test.ListenTest do
         flunk("GenServer failed to crash")
       catch
         :exit, {reason, _call} ->
-          assert reason == :crash
+          assert reason == {:shutdown, :crash}
       end
 
       refute_receive {:counter, {GenServer, :call, :crash}}
-      assert_receive {:counter, {:DOWN, :crash}}
-      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, :crash}}}
+      assert_receive {:counter, {:DOWN, {:shutdown, :crash}}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, {:shutdown, :crash}}}}
 
       refute Process.alive?(listener)
     end
@@ -586,8 +586,8 @@ defmodule Patch.Test.ListenTest do
       send(Target, :crash)
 
       assert_receive {:target, :crash}
-      assert_receive {:target, {:DOWN, :crash}}
-      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, :crash}}}
+      assert_receive {:target, {:DOWN, {:shutdown, :crash}}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, {:shutdown, :crash}}}}
 
       refute Process.alive?(listener)
     end
@@ -618,8 +618,8 @@ defmodule Patch.Test.ListenTest do
       send(listener, :crash)
 
       assert_receive {:target, :crash}
-      assert_receive {:target, {:DOWN, :crash}}
-      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, :crash}}}
+      assert_receive {:target, {:DOWN, {:shutdown, :crash}}}
+      assert_receive {:DOWN, ^ref, :process, ^listener, {:shutdown, {:DOWN, {:shutdown, :crash}}}}
 
       refute Process.alive?(listener)
     end
