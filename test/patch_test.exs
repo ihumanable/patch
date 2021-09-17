@@ -2,6 +2,8 @@ defmodule Patch.Test.PatchTest do
   use ExUnit.Case
   use Patch
 
+  alias Patch.Test.Support.Example
+
   describe "patch/3" do
     test "returns the provided mock" do
       assert Example.double(5) == 10
@@ -131,5 +133,17 @@ defmodule Patch.Test.PatchTest do
     assert_raise UndefinedFunctionError, fn ->
       apply(Example, :function_that_does_not_exist, [])
     end
+  end
+
+  test "non-sticky erlang modules can be patched" do
+    patch(:cpu_sup, :avg1, :test_value)
+
+    assert :cpu_sup.avg1() == :test_value
+  end
+
+  test "sticky erlang modules can be patched" do
+    patch(:string, :is_empty, :test_value)
+
+    assert :string.is_empty("test") == :test_value
   end
 end

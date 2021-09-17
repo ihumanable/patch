@@ -1,4 +1,4 @@
-defmodule Example do
+defmodule Patch.Test.Support.Example do
   def double(value) do
     value * 2
   end

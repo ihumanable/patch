@@ -1,4 +1,4 @@
-defmodule Real do
+defmodule Patch.Test.Support.Fake.Real do
   def example(a) do
     {:real, {:example, a}}
   end

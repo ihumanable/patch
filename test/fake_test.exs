@@ -2,6 +2,9 @@ defmodule Patch.Test.FakeTest do
   use ExUnit.Case
   use Patch
 
+  alias Patch.Test.Support.Fake.Fake
+  alias Patch.Test.Support.Fake.Real
+
   describe "fake/2" do
     test "replaces the real module with a fake module" do
       assert {:real, {:example, :a}} == Real.example(:a)

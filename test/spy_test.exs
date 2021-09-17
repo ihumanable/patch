@@ -2,6 +2,8 @@ defmodule Patch.Test.SpyTest do
   use ExUnit.Case
   use Patch
 
+  alias Patch.Test.Support.Example
+
   describe "spy/1" do
     test "are transparent to the caller" do
       assert Example.double(11) == 22
