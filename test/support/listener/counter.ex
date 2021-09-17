@@ -15,7 +15,7 @@ defmodule Patch.Test.Support.Listener.Counter do
   end
 
   def handle_call(:crash, _from, state) do
-    {:stop, :crash, state}
+    {:stop, {:shutdown, :crash}, state}
   end
 
   def handle_call(:exit, _from, state) do
