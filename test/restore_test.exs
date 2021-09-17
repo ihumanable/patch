@@ -2,6 +2,10 @@ defmodule Patch.Test.RestoreTest do
   use ExUnit.Case
   use Patch
 
+  alias Patch.Test.Support.Example
+  alias Patch.Test.Support.Fake.Fake
+  alias Patch.Test.Support.Fake.Real
+
   describe "restore/1" do
     test "patches can be restored to original functionality" do
       assert Example.double(7) == 14

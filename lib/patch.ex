@@ -208,8 +208,8 @@ defmodule Patch do
   def fake(real_module, fake_module) do
     ensure_mocked(real_module)
 
-    real_functions = find_functions(real_module)
-    fake_functions = find_functions(fake_module)
+    real_functions = Patch.Reflection.find_functions(real_module)
+    fake_functions = Patch.Reflection.find_functions(fake_module)
 
     Enum.each(fake_functions, fn {name, arity} ->
       is_real_function? = Enum.any?(real_functions, &match?({^name, ^arity}, &1))
@@ -259,7 +259,7 @@ defmodule Patch do
     ensure_mocked(module)
 
     module
-    |> find_arities(function)
+    |> Patch.Reflection.find_arities(function)
     |> Enum.each(fn arity ->
       :meck.expect(module, function, Patch.Function.for_arity(arity, fn _ -> return_value end))
     end)
@@ -335,19 +335,6 @@ defmodule Patch do
     :meck.validate(module)
   rescue
     _ in ErlangError ->
-      :meck.new(module, [:passthrough])
-  end
-
-  @spec find_functions(module :: module()) :: Keyword.t(arity())
-  defp find_functions(module) do
-    Code.ensure_loaded(module)
-    module.__info__(:functions)
-  end
-
-  @spec find_arities(module :: module(), function :: function()) :: [arity()]
-  defp find_arities(module, function) do
-    module
-    |> find_functions()
-    |> Keyword.get_values(function)
+      :meck.new(module, [:passthrough, :unstick])
   end
 end

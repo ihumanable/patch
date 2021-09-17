@@ -1,4 +1,6 @@
-defmodule Fake do
+defmodule Patch.Test.Support.Fake.Fake do
+  alias Patch.Test.Support.Fake.Real
+
   def example(a) do
     {:fake, {:example, a}}
   end

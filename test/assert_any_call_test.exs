@@ -2,6 +2,8 @@ defmodule Patch.Test.AssertAnyCallTest do
   use ExUnit.Case
   use Patch
 
+  alias Patch.Test.Support.Example
+
   describe "assert_any_call/2" do
     test "does not raise if a patched function has a call of any arity (/1)" do
       patch(Example, :function_with_multiple_arities, :patched_result)

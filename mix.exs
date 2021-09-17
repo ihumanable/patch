@@ -6,6 +6,7 @@ defmodule Patch.MixProject do
       app: :patch,
       version: "0.4.0",
       elixir: "~> 1.7",
+      erlc_paths: erlc_paths(Mix.env()),
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -29,7 +30,11 @@ defmodule Patch.MixProject do
     ]
   end
 
-  # Specifies which paths to compile per environment.
+  # Specifies which erlang paths to compile per environemnt
+  defp erlc_paths(env) when env in [:dev, :test], do: ["test/support"]
+  defp erlc_paths(_), do: []
+
+  # Specifies which elixir paths to compile per environment.
   defp elixirc_paths(env) when env in [:dev, :test], do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
