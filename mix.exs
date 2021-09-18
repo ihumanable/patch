@@ -41,7 +41,7 @@ defmodule Patch.MixProject do
   defp docs do
     [
       name: "Patch",
-      extras: ["README.md"],
+      extras: ["pages/README.md"],
       main: "readme",
       source_url: "https://github.com/ihumanable/patch"
     ]

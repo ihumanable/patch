@@ -3,32 +3,52 @@
 
 **Improvements**
 
+<%= if Enum.empty?(release.improvements) do %>
+None
+<% else %>
 <%= for improvement <- release.improvements do %>
 - :arrow_up: - <%= improvement %>
+<% end %>
 <% end %>
 
 **Features**
 
+<%= if Enum.empty?(release.features) do %>
+None
+<% else %>
 <%= for feature <- release.features do %>
 - :gift: - <%= feature %>
+<% end %>
 <% end %>
 
 **Bugfixes**
 
+<%= if Enum.empty?(release.bugfixes) do %>
+None
+<% else %>
 <%= for bugfix <- release.bugfixes do %>
 - :bettle: - <%= bugfix %>
+<% end %>
 <% end %>
 
 **Deprecations**
 
+<%= if Enum.empty?(release.deprecations) do %>
+None
+<% else %>
 <%= for deprecation <- release.deprecations do %>
-- :warning: - <%= improvement %>
+- :warning: - <%= deprecation %>
+<% end %>
 <% end %>
 
 **Removals**
 
+<%= if Enum.empty?(release.removals) do %>
+None
+<% else %>
 <%= for removal <- release.removals do %>
 - :no_entry_sign: - <%= removal %>
+<% end %>
 <% end %>
 
 <% end %>

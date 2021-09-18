@@ -24,16 +24,21 @@ defmodule Mix.Tasks.Patch.Release do
 
     Mix.shell.info(["Preparing release of patch at version ", :cyan, version, :default_color])
 
-    if latest_release.version == version do
-      if Mix.shell.yes?([:red, "WARNING", :default_color, "Version", :cyan, version, :default_color, "is already defined.  If you continue this will overwrite the changelog for the version, continue?"]) do
-        prepare_release(version, previous_releases)
+    releases =
+      if latest_release.version == version do
+        if confirm?([:yellow, "WARNING ", :default_color, "Version ", :cyan, version, :default_color, " is already defined.  Overwrite?"]) do
+          prepare_release(version, previous_releases)
+        else
+          releases
+        end
+      else
+        prepare_release(version, releases)
       end
-    else
-      prepare_release(verion, releases)
-    end
+
+    render_files(version, releases)
   end
 
-  def prepare_release(version, releases)
+  def prepare_release(version, releases) do
     date = get_date()
     improvements = entries("Improvements")
     features = entries("Features")
@@ -51,7 +56,10 @@ defmodule Mix.Tasks.Patch.Release do
       removals: removals
     }
 
-    releases = [release | releases]
+    [release | releases]
+  end
+
+  def render_files(version, releases) do
     releases_binary = :erlang.term_to_binary(releases)
 
     readme_template = Path.expand("./pages/templates/README.eex")
@@ -71,7 +79,7 @@ defmodule Mix.Tasks.Patch.Release do
     File.write!(changelog_path, changelog)
     File.write!(releases_path, releases_binary)
 
-    Mix.shell.info(["Version ", :cyan, version, :default_color, " has been ", :green, "successfully", :default_color, " prepared for release. 🚀"])
+    info(["Version ", :cyan, version, :default_color, " has been ", :green, "successfully", :default_color, " prepared for release. 🚀"])
   end
 
   def get_date do
@@ -79,7 +87,7 @@ defmodule Mix.Tasks.Patch.Release do
       Date.utc_today()
       |> Date.to_string()
 
-    case Mix.shell.prompt(["Date #{today} (leave blank to use, or provide a custom date)"]) do
+    case prompt(["Date ", :cyan, today, :default_color, " (leave blank to use, or provide a custom date)"]) do
       "" ->
         today
 
@@ -89,12 +97,31 @@ defmodule Mix.Tasks.Patch.Release do
   end
 
   def entries(prompt, acc \\ []) do
-    case Mix.shell.prompt([prompt, " (leave blank when done)"]) do
+    case prompt([:cyan, prompt, :default_color, " (leave blank when done)"]) do
       "" ->
         acc
 
       entry ->
         entries(prompt, [entry | acc])
     end
+  end
+
+  def info(message) do
+    Mix.shell.info(message)
+  end
+
+  def prompt(prompt) do
+    prompt
+    |> IO.ANSI.format()
+    |> IO.iodata_to_binary()
+    |> Mix.shell.prompt()
+    |> String.trim()
+  end
+
+  def confirm?(prompt) do
+    prompt
+    |> IO.ANSI.format()
+    |> IO.iodata_to_binary()
+    |> Mix.shell.yes?()
   end
 end
