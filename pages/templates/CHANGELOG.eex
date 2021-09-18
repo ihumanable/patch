@@ -8,7 +8,7 @@
 None
 <% else %>
 <%= for improvement <- release.improvements do %>
-- <%= emojis.improvement %> - <%= improvement %>
+- ⬆️ - <%= improvement %>
 <% end %>
 <% end %>
 
@@ -18,7 +18,7 @@ None
 None
 <% else %>
 <%= for feature <- release.features do %>
-- <%= emojis.feature %> - <%= feature %>
+- 🎁 - <%= feature %>
 <% end %>
 <% end %>
 
@@ -28,7 +28,7 @@ None
 None
 <% else %>
 <%= for bugfix <- release.bugfixes do %>
-- <%= emojis.bugfix %> - <%= bugfix %>
+- 🐞 - <%= bugfix %>
 <% end %>
 <% end %>
 
@@ -38,7 +38,7 @@ None
 None
 <% else %>
 <%= for deprecation <- release.deprecations do %>
-- <%= emojis.deprecation %> - <%= deprecation %>
+- ⚠️ - <%= deprecation %>
 <% end %>
 <% end %>
 
@@ -48,7 +48,7 @@ None
 None
 <% else %>
 <%= for removal <- release.removals do %>
-- <%= emojis.removal %> - <%= removal %>
+- ⛔️ - <%= removal %>
 <% end %>
 <% end %>
 
