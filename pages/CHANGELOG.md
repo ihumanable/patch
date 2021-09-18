@@ -6,6 +6,8 @@
 
 
 
+- ⬆️ - \[Internal\] `patch.release` task to simplify releasing new versions of the library
+
 - ⬆️ - Support for mocking erlang modules (both sticky and non-sticky)
 
 

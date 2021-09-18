@@ -402,3 +402,7 @@ Tests automatically run against a matrix of OTP and Elixir Versions, see the [ci
 Patch is built on top of [meck](https://github.com/eproxus/meck) and shares many limitations with that library.  
 
 The most important limitation for ExUnit is that Patch **is not compatible with async: true**.
+
+## Changelog
+
+See the [Changelog](<%= links.changelog %>)
