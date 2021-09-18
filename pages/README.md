@@ -15,7 +15,7 @@ Patch provides functionality for replacing code at test time and for working wit
 - [Quickstart](#quickstart)
 - [Patching Code](#patching-code) 
   - [Patching](#patching)
-  - [Asserting / Refuting Calls](#asserting--refuting-calls)
+  - [Asserting / Refuting Calls](#asserting-refuting-calls)
   - [Spies](#spies)
   - [Fakes](#fakes)
 - [Working with Processes](#working-with-processes)
@@ -23,7 +23,7 @@ Patch provides functionality for replacing code at test time and for working wit
   - [Injecting](#injecting)
 - [Support Matrix](#support-matrix)
 - [Limitations](#limitations)
-- [Changelog](CHANGELOG.md)
+- [Changelog](changelog.html)
 
 ## Installation
 
@@ -405,4 +405,4 @@ The most important limitation for ExUnit is that Patch **is not compatible with 
 
 ## Changelog
 
-See the [Changelog](CHANGELOG.md)
+See the [Changelog](changelog.html)
