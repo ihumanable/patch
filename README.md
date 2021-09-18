@@ -387,13 +387,13 @@ end
 
 Tests automatically run against a matrix of OTP and Elixir Versions, see the [ci.yml](https://github.com/ihumanable/patch/tree/master/.github/workflows/ci.yml) for details.
 
-| OTP \ Elixir | 1.7                     | 1.8                     | 1.9                     | 1.10                    | 1.11                    | 1.12                    |
-|:------------:|:-----------------------:|:-----------------------:|:-----------------------:|:-----------------------:|:-----------------------:|:-----------------------:|
-| 20           | :white_checkmark: | :white_checkmark: | :white_checkmark: | N/A                     | N/A                     | N/A                     |
-| 21           | :white_checkmark: | :white_checkmark: | :white_checkmark: | :white_checkmark: | :white_checkmark: | N/A                     |
-| 22           | :white_checkmark: | :white_checkmark: | :white_checkmark: | :white_checkmark: | :white_checkmark: | :white_checkmark: |
-| 23           | N/A                     | N/A                     | N/A                     | :white_checkmark: | :white_checkmark: | :white_checkmark: |
-| 24           | N/A                     | N/A                     | N/A                     | N/A                     | :white_checkmark: | :white_checkmark: |
+| OTP \ Elixir | 1.7  | 1.8  | 1.9  | 1.10 | 1.11 | 1.12 |
+|:------------:|:----:|:----:|:----:|:----:|:----:|:----:|
+| 20           | ✅   | ✅   | ✅   | N/A  | N/A  | N/A  |
+| 21           | ✅   | ✅   | ✅   | ✅   | ✅   | N/A  |
+| 22           | ✅   | ✅   | ✅   | ✅   | ✅   | ✅   |
+| 23           | N/A  | N/A  | N/A  | ✅   | ✅   | ✅   |
+| 24           | N/A  | N/A  | N/A  | N/A  | ✅   | ✅   |
 
 ## Limitations
 

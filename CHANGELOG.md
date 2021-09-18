@@ -6,7 +6,7 @@
 
 
 
-- :arrow_up: - Support for mocking erlang modules (both sticky and non-sticky)
+- ⬆️ - Support for mocking erlang modules (both sticky and non-sticky)
 
 
 
@@ -20,7 +20,7 @@ None
 
 
 
-- :beetle: - Mocking erlang modules actually works now
+- 🐞 - Mocking erlang modules actually works now
 
 
 
@@ -43,11 +43,11 @@ None
 
 
 
-- :arrow_up: - [Testing] Testing Matrix updated to latest versions of Elixir / OTP
+- ⬆️ - [Testing] Testing Matrix updated to latest versions of Elixir / OTP
 
-- :arrow_up: - [Dependencies] `meck` updated to 0.9.2
+- ⬆️ - [Dependencies] `meck` updated to 0.9.2
 
-- :arrow_up: - [Documentation] README revamped
+- ⬆️ - [Documentation] README revamped
 
 
 
@@ -55,9 +55,9 @@ None
 
 
 
-- :gift: - Added the `listen/3` function to support listening to a process's messages
+- 🎁 - Added the `listen/3` function to support listening to a process's messages
 
-- :gift: - Added the `inject/3` function to support updating the state of a running process.
+- 🎁 - Added the `inject/3` function to support updating the state of a running process.
 
 
 
@@ -86,9 +86,9 @@ None
 
 
 
-- :arrow_up: - [Internal] `Patch.Function.for_arity/2` now accepts an anonymous function it will call instead of a term to return.
+- ⬆️ - [Internal] `Patch.Function.for_arity/2` now accepts an anonymous function it will call instead of a term to return.
 
-- :arrow_up: - [Internal] `Patch.find_functions/1` and `Patch.find_arities/2` use `__info__/1` now instead of doing 256 `function_exported?` checks per function.
+- ⬆️ - [Internal] `Patch.find_functions/1` and `Patch.find_arities/2` use `__info__/1` now instead of doing 256 `function_exported?` checks per function.
 
 
 
@@ -96,9 +96,9 @@ None
 
 
 
-- :gift: - Added the `fake/2` function to add support for module fakes.
+- 🎁 - Added the `fake/2` function to add support for module fakes.
 
-- :gift: - Added the `real/1` function so module fakes can call the real module.
+- 🎁 - Added the `real/1` function so module fakes can call the real module.
 
 
 
@@ -127,7 +127,7 @@ None
 
 
 
-- :arrow_up: - Removed the arity limitation, can now patch functions of any arity
+- ⬆️ - Removed the arity limitation, can now patch functions of any arity
 
 
 
@@ -135,7 +135,7 @@ None
 
 
 
-- :gift: - Added the `assert_any_call/2` and `refute_any_call/2` assertion functions
+- 🎁 - Added the `assert_any_call/2` and `refute_any_call/2` assertion functions
 
 
 
@@ -164,7 +164,7 @@ None
 
 
 
-- :arrow_up: - Relaxed Elixir version requirement down to 1.7
+- ⬆️ - Relaxed Elixir version requirement down to 1.7
 
 
 
@@ -199,7 +199,7 @@ None
 
 
 
-- :arrow_up: - Made the library actually work
+- ⬆️ - Made the library actually work
 
 
 
@@ -213,7 +213,7 @@ None
 
 
 
-- :beetle: - Bugfix to make the library actually work
+- 🐞 - Bugfix to make the library actually work
 
 
 
@@ -236,7 +236,7 @@ None
 
 
 
-- :arrow_up: - Patch released to the world.  Easy to use and ergonomic Mocking for Elixir.
+- ⬆️ - Patch released to the world.  Easy to use and ergonomic Mocking for Elixir.
 
 
 
@@ -244,17 +244,17 @@ None
 
 
 
-- :gift: - `patch/3` allows the patching of a module's function with a function.
+- 🎁 - `patch/3` allows the patching of a module's function with a function.
 
-- :gift: - `patch/3` allows the patching of a module's function with a static return value.
+- 🎁 - `patch/3` allows the patching of a module's function with a static return value.
 
-- :gift: - `spy/1` allows spying on a module.
+- 🎁 - `spy/1` allows spying on a module.
 
-- :gift: - `restore/1` allows removing patches and spies from a module.
+- 🎁 - `restore/1` allows removing patches and spies from a module.
 
-- :gift: - `assert_called/1` allows for asserting that a patched or spied function has been called with the expected pattern of arguments.
+- 🎁 - `assert_called/1` allows for asserting that a patched or spied function has been called with the expected pattern of arguments.
 
-- :gift: - `refute_called/1` allows for refuting that a patched or spied function has been called with the expected pattern of arguments.
+- 🎁 - `refute_called/1` allows for refuting that a patched or spied function has been called with the expected pattern of arguments.
 
 
 

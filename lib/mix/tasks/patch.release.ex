@@ -5,8 +5,7 @@ defmodule Mix.Tasks.Patch.Release do
 
   use Mix.Task
 
-  @exdocs_emojis %{
-    checkmark: "✓",
+  @emojis %{
     improvement: "⬆️",
     feature: "🎁",
     bugfix: "🐞",
@@ -14,22 +13,12 @@ defmodule Mix.Tasks.Patch.Release do
     removal: "⛔️"
   }
 
-  @github_emojis %{
-    checkmark: ":white_checkmark:",
-    improvement: ":arrow_up:",
-    feature: ":gift:",
-    bugfix: ":beetle:",
-    deprecation: ":warning:",
-    removal: ":no_entry_sign:",
-  }
-
-
   def run(_) do
     config = Mix.Project.config()
     version = config[:version]
 
     releases =
-      "./pages/releases.etf"
+      "./templates/releases.etf"
       |> Path.expand()
       |> File.read!()
       |> :erlang.binary_to_term()
@@ -76,29 +65,18 @@ defmodule Mix.Tasks.Patch.Release do
   def render_files(version, releases) do
     releases_binary = :erlang.term_to_binary(releases)
 
-    readme_template = Path.expand("./pages/templates/README.eex")
-    changelog_template = Path.expand("./pages/templates/CHANGELOG.eex")
+    readme_template = Path.expand("./templates/README.eex")
+    changelog_template = Path.expand("./templates/CHANGELOG.eex")
 
-    releases_path = Path.expand("./pages/releases.etf")
+    changelog_path = Path.expand("./CHANGELOG.md")
+    readme_path = Path.expand("./README.md")
+    releases_path = Path.expand("./templates/releases.etf")
 
-    exdocs_readme_path = Path.expand("./pages/README.md")
-    github_readme_path = Path.expand("./README.md")
+    changelog = EEx.eval_file(changelog_template, [releases: releases, emojis: @emojis])
+    readme = EEx.eval_file(readme_template, [version: version, emojis: @emojis])
 
-    exdocs_changelog_path = Path.expand("./pages/CHANGELOG.md")
-    github_changelog_path = Path.expand("./CHANGELOG.md")
-
-    exdocs_readme = EEx.eval_file(readme_template, [version: version, emojis: @exdocs_emojis])
-    github_readme = EEx.eval_file(readme_template, [version: version, emojis: @github_emojis])
-
-    exdocs_changelog = EEx.eval_file(changelog_template, [releases: releases, emojis: @exdocs_emojis])
-    github_changelog = EEx.eval_file(changelog_template, [releases: releases, emojis: @github_emojis])
-
-    File.write!(exdocs_readme_path, exdocs_readme)
-    File.write!(github_readme_path, github_readme)
-
-    File.write!(exdocs_changelog_path, exdocs_changelog)
-    File.write!(github_changelog_path, github_changelog)
-
+    File.write!(changelog_path, changelog)
+    File.write!(readme_path, readme)
     File.write!(releases_path, releases_binary)
 
     info(["Version ", :cyan, version, :default_color, " has been ", :green, "successfully", :default_color, " prepared for release. 🚀"])
