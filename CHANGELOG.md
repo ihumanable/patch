@@ -1,7 +1,8 @@
+# Change Log
 
-# 0.5.0 (2021-09-17)
+## 0.5.0 (2021-09-17)
 
-**Improvements**
+### Improvements
 
 
 
@@ -9,36 +10,36 @@
 
 
 
-**Features**
+### Features
 
 
 None
 
 
-**Bugfixes**
+### Bugfixes
 
 
 
-- :bettle: - Mocking erlang modules actually works now
+- :beetle: - Mocking erlang modules actually works now
 
 
 
-**Deprecations**
-
-
-None
-
-
-**Removals**
+### Deprecations
 
 
 None
 
 
+### Removals
 
-# 0.4.0 (2021-08-09)
 
-**Improvements**
+None
+
+
+
+## 0.4.0 (2021-08-09)
+
+### Improvements
 
 
 
@@ -50,7 +51,7 @@ None
 
 
 
-**Features**
+### Features
 
 
 
@@ -60,28 +61,28 @@ None
 
 
 
-**Bugfixes**
+### Bugfixes
 
 
 None
 
 
-**Deprecations**
+### Deprecations
 
 
 None
 
 
-**Removals**
+### Removals
 
 
 None
 
 
 
-# 0.3.0 (2021-07-12)
+## 0.3.0 (2021-07-12)
 
-**Improvements**
+### Improvements
 
 
 
@@ -91,7 +92,7 @@ None
 
 
 
-**Features**
+### Features
 
 
 
@@ -101,28 +102,28 @@ None
 
 
 
-**Bugfixes**
+### Bugfixes
 
 
 None
 
 
-**Deprecations**
+### Deprecations
 
 
 None
 
 
-**Removals**
+### Removals
 
 
 None
 
 
 
-# 0.2.0 (2021-03-03)
+## 0.2.0 (2021-03-03)
 
-**Improvements**
+### Improvements
 
 
 
@@ -130,7 +131,7 @@ None
 
 
 
-**Features**
+### Features
 
 
 
@@ -138,28 +139,28 @@ None
 
 
 
-**Bugfixes**
+### Bugfixes
 
 
 None
 
 
-**Deprecations**
+### Deprecations
 
 
 None
 
 
-**Removals**
+### Removals
 
 
 None
 
 
 
-# 0.1.2 (2021-01-28)
+## 0.1.2 (2021-01-28)
 
-**Improvements**
+### Improvements
 
 
 
@@ -167,34 +168,34 @@ None
 
 
 
-**Features**
+### Features
 
 
 None
 
 
-**Bugfixes**
+### Bugfixes
 
 
 None
 
 
-**Deprecations**
+### Deprecations
 
 
 None
 
 
-**Removals**
+### Removals
 
 
 None
 
 
 
-# 0.1.1 (2020-04-27)
+## 0.1.1 (2020-04-27)
 
-**Improvements**
+### Improvements
 
 
 
@@ -202,36 +203,36 @@ None
 
 
 
-**Features**
+### Features
 
 
 None
 
 
-**Bugfixes**
+### Bugfixes
 
 
 
-- :bettle: - Bugfix to make the library actually work
+- :beetle: - Bugfix to make the library actually work
 
 
 
-**Deprecations**
-
-
-None
-
-
-**Removals**
+### Deprecations
 
 
 None
 
 
+### Removals
 
-# 0.1.0 (2020-04-21)
 
-**Improvements**
+None
+
+
+
+## 0.1.0 (2020-04-21)
+
+### Improvements
 
 
 
@@ -239,7 +240,7 @@ None
 
 
 
-**Features**
+### Features
 
 
 
@@ -257,19 +258,19 @@ None
 
 
 
-**Bugfixes**
+### Bugfixes
 
 
 None
 
 
-**Deprecations**
+### Deprecations
 
 
 None
 
 
-**Removals**
+### Removals
 
 
 None

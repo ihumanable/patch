@@ -1,53 +1,54 @@
+# Change Log
 <%= for release <- releases do %>
-# <%= release.version %> (<%= release.date %>)
+## <%= release.version %> (<%= release.date %>)
 
-**Improvements**
+### Improvements
 
 <%= if Enum.empty?(release.improvements) do %>
 None
 <% else %>
 <%= for improvement <- release.improvements do %>
-- :arrow_up: - <%= improvement %>
+- <%= emojis.improvement %> - <%= improvement %>
 <% end %>
 <% end %>
 
-**Features**
+### Features
 
 <%= if Enum.empty?(release.features) do %>
 None
 <% else %>
 <%= for feature <- release.features do %>
-- :gift: - <%= feature %>
+- <%= emojis.feature %> - <%= feature %>
 <% end %>
 <% end %>
 
-**Bugfixes**
+### Bugfixes
 
 <%= if Enum.empty?(release.bugfixes) do %>
 None
 <% else %>
 <%= for bugfix <- release.bugfixes do %>
-- :bettle: - <%= bugfix %>
+- <%= emojis.bugfix %> - <%= bugfix %>
 <% end %>
 <% end %>
 
-**Deprecations**
+### Deprecations
 
 <%= if Enum.empty?(release.deprecations) do %>
 None
 <% else %>
 <%= for deprecation <- release.deprecations do %>
-- :warning: - <%= deprecation %>
+- <%= emojis.deprecation %> - <%= deprecation %>
 <% end %>
 <% end %>
 
-**Removals**
+### Removals
 
 <%= if Enum.empty?(release.removals) do %>
 None
 <% else %>
 <%= for removal <- release.removals do %>
-- :no_entry_sign: - <%= removal %>
+- <%= emojis.removal %> - <%= removal %>
 <% end %>
 <% end %>
 
