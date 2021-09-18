@@ -1,3 +1,24 @@
+# 0.5.0 (2021-09-17)
+
+**Improvements**
+
+- :arrow_up: - Support for mocking erlang modules (both sticky and non-sticky)
+
+**Features**
+
+None
+
+**Bugfixes**
+
+- :beetle: - Mocking erlang modules actually works now
+
+**Deprecations**
+
+None
+
+**Removals**
+
+None
 # 0.4.0 (2021-08-09)
 
 **Improvements**

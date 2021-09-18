@@ -30,7 +30,7 @@ Add patch to your mix.exs
 ```elixir
 def deps do
   [
-    {:patch, "~> 0.5.0", only: [:test]}
+    {:patch, "~> <%= version %>", only: [:test]}
   ]
 end
 ```
@@ -389,11 +389,11 @@ Tests automatically run against a matrix of OTP and Elixir Versions, see the [ci
 
 | OTP \ Elixir | 1.7                | 1.8                | 1.9                | 1.10               | 1.11               | 1.12               |
 |:------------:|:------------------:|:------------------:|:------------------:|:------------------:|:------------------:|:------------------:|
-| 20           | :white_check_mark: | :white_check_mark: | :white_check_mark: | N/A                | N/A                | N/A                |
-| 21           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | N/A                |
-| 22           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| 23           | N/A                | N/A                | N/A                | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| 24           | N/A                | N/A                | N/A                | N/A                | :white_check_mark: | :white_check_mark: |
+| 20           | <%= checkmark %>   | <%= checkmark %>   | <%= checkmark %>   | N/A                | N/A                | N/A                |
+| 21           | <%= checkmark %>   | <%= checkmark %>   | <%= checkmark %>   | <%= checkmark %>   | <%= checkmark %>   | N/A                |
+| 22           | <%= checkmark %>   | <%= checkmark %>   | <%= checkmark %>   | <%= checkmark %>   | <%= checkmark %>   | <%= checkmark %>   |
+| 23           | N/A                | N/A                | N/A                | <%= checkmark %>   | <%= checkmark %>   | <%= checkmark %>   |
+| 24           | N/A                | N/A                | N/A                | N/A                | <%= checkmark %>   | <%= checkmark %>   |
 
 ## Limitations
 

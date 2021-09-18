@@ -1,0 +1,34 @@
+<%= for release <- releases do %>
+# <%= release.version %> (<%= release.date %>)
+
+**Improvements**
+
+<%= for improvement <- release.improvements do %>
+- :arrow_up: - <%= improvement %>
+<% end %>
+
+**Features**
+
+<%= for feature <- release.features do %>
+- :gift: - <%= feature %>
+<% end %>
+
+**Bugfixes**
+
+<%= for bugfix <- release.bugfixes do %>
+- :bettle: - <%= bugfix %>
+<% end %>
+
+**Deprecations**
+
+<%= for deprecation <- release.deprecations do %>
+- :warning: - <%= improvement %>
+<% end %>
+
+**Removals**
+
+<%= for removal <- release.removals do %>
+- :no_entry_sign: - <%= removal %>
+<% end %>
+
+<% end %>
