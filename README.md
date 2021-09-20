@@ -298,11 +298,11 @@ Listeners have special support for GenServers.  By default a listener will provi
 
 Given a listener with the tag `:tag` the messages from a GenServer are formatted as follows.
 
-| Client Code                   | Message to Test Process                    |
-|:------------------------------|:-------------------------------------------|
-| GenServer.call(pid, :message) | {:tag, {GenServer, :call, :message, from}} |
-|  # if capture_replies = true  | {:tag, {GenServer, :reply, result, from}}  |
-| GenServer.cast(pid, :message) | {:tag, {GenServer, :cast, :message}}       |
+| Client Code                   | Message to Test Process                      |
+|:------------------------------|:---------------------------------------------|
+| GenServer.call(pid, :message) | `{:tag, {GenServer, :call, :message, from}}` |
+|  # if capture_replies = true  | `{:tag, {GenServer, :reply, result, from}}`  |
+| GenServer.cast(pid, :message) | `{:tag, {GenServer, :cast, :message}}`       |
 
 During a `GenServer.call/3` the listener sits between the client and the server and reports back information to the test process.
 
