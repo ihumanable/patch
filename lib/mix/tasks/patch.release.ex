@@ -39,11 +39,20 @@ defmodule Mix.Tasks.Patch.Release do
 
     [latest_release | previous_releases] = releases
 
-    Mix.shell.info(["Preparing release of patch at version ", :cyan, version, :default_color])
+    Mix.shell().info(["Preparing release of patch at version ", :cyan, version, :default_color])
 
     releases =
       if latest_release.version == version do
-        if confirm?([:yellow, "WARNING ", :default_color, "Version ", :cyan, version, :default_color, " is already defined.  Overwrite?"]) do
+        if confirm?([
+             :yellow,
+             "WARNING ",
+             :default_color,
+             "Version ",
+             :cyan,
+             version,
+             :default_color,
+             " is already defined.  Overwrite?"
+           ]) do
           prepare_release(version, previous_releases)
         else
           releases
@@ -89,12 +98,11 @@ defmodule Mix.Tasks.Patch.Release do
     exdocs_readme_path = Path.expand("./pages/README.md")
     github_readme_path = Path.expand("./README.md")
 
+    exdocs_changelog = EEx.eval_file(changelog_template, releases: releases)
+    github_changelog = EEx.eval_file(changelog_template, releases: releases)
 
-    exdocs_changelog = EEx.eval_file(changelog_template, [releases: releases])
-    github_changelog = EEx.eval_file(changelog_template, [releases: releases])
-
-    exdocs_readme = EEx.eval_file(readme_template, [version: version, links: @exdocs_links])
-    github_readme = EEx.eval_file(readme_template, [version: version, links: @github_links])
+    exdocs_readme = EEx.eval_file(readme_template, version: version, links: @exdocs_links)
+    github_readme = EEx.eval_file(readme_template, version: version, links: @github_links)
 
     File.write!(exdocs_changelog_path, exdocs_changelog)
     File.write!(github_changelog_path, github_changelog)
@@ -104,7 +112,17 @@ defmodule Mix.Tasks.Patch.Release do
 
     File.write!(releases_path, releases_binary)
 
-    info(["Version ", :cyan, version, :default_color, " has been ", :green, "successfully", :default_color, " prepared for release. 🚀"])
+    info([
+      "Version ",
+      :cyan,
+      version,
+      :default_color,
+      " has been ",
+      :green,
+      "successfully",
+      :default_color,
+      " prepared for release. 🚀"
+    ])
   end
 
   def get_date do
@@ -112,7 +130,13 @@ defmodule Mix.Tasks.Patch.Release do
       Date.utc_today()
       |> Date.to_string()
 
-    case prompt(["Date ", :cyan, today, :default_color, " (leave blank to use, or provide a custom date)"]) do
+    case prompt([
+           "Date ",
+           :cyan,
+           today,
+           :default_color,
+           " (leave blank to use, or provide a custom date)"
+         ]) do
       "" ->
         today
 
@@ -132,14 +156,14 @@ defmodule Mix.Tasks.Patch.Release do
   end
 
   def info(message) do
-    Mix.shell.info(message)
+    Mix.shell().info(message)
   end
 
   def prompt(prompt) do
     prompt
     |> IO.ANSI.format()
     |> IO.iodata_to_binary()
-    |> Mix.shell.prompt()
+    |> Mix.shell().prompt()
     |> String.trim()
   end
 
@@ -147,6 +171,6 @@ defmodule Mix.Tasks.Patch.Release do
     prompt
     |> IO.ANSI.format()
     |> IO.iodata_to_binary()
-    |> Mix.shell.yes?()
+    |> Mix.shell().yes?()
   end
 end
