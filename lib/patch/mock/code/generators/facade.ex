@@ -17,27 +17,35 @@ defmodule Patch.Mock.Code.Generators.Facade do
   @doc """
   Generates a new facade module based on the forms of the provided module.
   """
-  @spec generate(abstract_forms :: [Code.form()], module :: module(), exposes :: Transform.exposes()) :: [Code.form()]
+  @spec generate(
+          abstract_forms :: [Code.form()],
+          module :: module(),
+          exposes :: Transform.exposes()
+        ) :: [Code.form()]
   def generate(abstract_forms, module, :none) do
     exports = Query.exports(abstract_forms)
 
-    module(abstract_forms, module, exports)
+    abstract_forms
+    |> Transform.clean()
+    |> module(module, exports)
   end
 
   def generate(abstract_forms, module, :all) do
     exports = Query.functions(abstract_forms)
 
     abstract_forms
-    |> module(module, exports)
+    |> Transform.clean()
     |> Transform.expose(:all)
+    |> module(module, exports)
   end
 
   def generate(abstract_forms, module, exposes) do
     exports = exposes ++ Query.exports(abstract_forms)
 
     abstract_forms
-    |> module(module, exports)
+    |> Transform.clean()
     |> Transform.expose(exposes)
+    |> module(module, exports)
   end
 
   ## Private
@@ -49,7 +57,6 @@ defmodule Patch.Mock.Code.Generators.Facade do
   defp arguments(arity) do
     Enum.map(1..arity, &{:var, @generated, :"_arg#{&1}"})
   end
-
 
   defp body(module, name, arity) do
     delegate = Naming.delegate(module)
@@ -76,19 +83,22 @@ defmodule Patch.Mock.Code.Generators.Facade do
     {:function, @generated, name, arity, [clause]}
   end
 
-  @spec module(abstract_forms :: [Code.form()], module :: module(), exports :: Code.exports()) :: [Code.form()]
+  @spec module(abstract_forms :: [Code.form()], module :: module(), exports :: Code.exports()) ::
+          [Code.form()]
   defp module(abstract_forms, module, exports) do
-    Enum.map(abstract_forms, fn
-      {:function, _, name, arity, _} = function ->
+    abstract_forms
+    |> Enum.reduce([], fn
+      {:function, _, name, arity, _}, acc ->
         if {name, arity} in exports do
-          function(module, name, arity)
+          [function(module, name, arity) | acc]
         else
-          function
+          acc
         end
 
-      other ->
-        other
+      other, acc ->
+        [other | acc]
     end)
+    |> Enum.reverse()
   end
 
   defp patterns(0) do

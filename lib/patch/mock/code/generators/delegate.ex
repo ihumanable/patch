@@ -30,6 +30,7 @@ defmodule Patch.Mock.Code.Generators.Delegate do
       other ->
         other
     end)
+    |> Transform.clean()
     |> Transform.expose(:all)
     |> Transform.rename(delegate_name)
   end

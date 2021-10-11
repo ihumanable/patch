@@ -4,15 +4,13 @@ defmodule Patch.Mock.History do
   @type entry :: {name(), arguments()}
 
   @type t :: %__MODULE__{
-    count: non_neg_integer(),
-    entries: [entry()],
-    limit: non_neg_integer() | :infinity
-  }
-  defstruct [
-    count: 0,
-    entries: [],
-    limit: :infinity
-  ]
+          count: non_neg_integer(),
+          entries: [entry()],
+          limit: non_neg_integer() | :infinity
+        }
+  defstruct count: 0,
+            entries: [],
+            limit: :infinity
 
   def new(limit \\ :infinity) do
     %__MODULE__{limit: limit}
@@ -40,12 +38,21 @@ defmodule Patch.Mock.History do
 
   def put(%__MODULE__{limit: :infinity} = history, name, arguments) do
     # When the history is infinite just keep appending.
-    %__MODULE__{history | count: history.count + 1, entries: [{name, arguments} | history.entries]}
+    %__MODULE__{
+      history
+      | count: history.count + 1,
+        entries: [{name, arguments} | history.entries]
+    }
   end
 
-  def put(%__MODULE__{limit: limit, count: count} = history, name, arguments) when count < limit do
+  def put(%__MODULE__{limit: limit, count: count} = history, name, arguments)
+      when count < limit do
     # When there is still slack capacity in the history, do a simple append.
-    %__MODULE__{history | count: history.count + 1, entries: [{name, arguments} | history.entries]}
+    %__MODULE__{
+      history
+      | count: history.count + 1,
+        entries: [{name, arguments} | history.entries]
+    }
   end
 
   def put(%__MODULE__{} = history, name, arguments) do

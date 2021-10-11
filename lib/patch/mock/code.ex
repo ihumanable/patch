@@ -185,6 +185,18 @@ defmodule Patch.Mock.Code do
   alias Patch.Mock.Code.Generate
   alias Patch.Mock.Code.Transform
 
+  @type chunk_error ::
+          :chunk_too_big
+          | :file_error
+          | :invalid_beam_file
+          | :key_missing_or_invalid
+          | :missing_backend
+          | :missing_chunk
+          | :not_a_beam_file
+          | :unknown_chunk
+
+  @type compiler_option :: term()
+
   @type form :: term()
   @type exports :: Keyword.t(arity())
 
@@ -202,18 +214,10 @@ defmodule Patch.Mock.Code do
   """
   @type option :: expose_option()
 
-
   @spec abstract_forms(module :: module) ::
           {:ok, [form()]}
           | {:error, :abstract_forms_unavailable}
-          | {:error, :chunk_too_big}
-          | {:error, :file_error}
-          | {:error, :invalid_beam_file}
-          | {:error, :key_missing_or_invalid}
-          | {:error, :missing_backend}
-          | {:error, :missing_chunk}
-          | {:error, :not_a_beam_file}
-          | {:error, :unknown_chunk}
+          | {:error, chunk_error()}
   def abstract_forms(module) do
     with :ok <- ensure_loaded(module),
          {:ok, binary} <- binary(module) do
@@ -231,9 +235,23 @@ defmodule Patch.Mock.Code do
     end
   end
 
-  @spec compile([form()]) :: :ok | {:error, {:abstract_forms_invalid, [form()], term()}}
-  def compile(abstract_forms) do
-    case :compile.forms(abstract_forms, [:return_errors]) do
+  @spec attributes(module :: module()) :: {:ok, Keyword.t()} | {:error, :attributes_unavailable}
+  def attributes(module) do
+    with :ok <- ensure_loaded(module) do
+      try do
+        Keyword.get(module.module_info(), :attributes, [])
+      catch
+        _, _ ->
+          {:error, :attributes_unavailable}
+      end
+    end
+  end
+
+  @spec compile(abstract_forms :: [form()], compiler_options :: [compiler_option()]) ::
+          :ok
+          | {:error, {:abstract_forms_invalid, [form()], term()}}
+  def compile(abstract_forms, compiler_options \\ []) do
+    case :compile.forms(abstract_forms, [:return_errors | compiler_options]) do
       {:ok, module, binary} ->
         load_binary(module, binary)
 
@@ -245,21 +263,79 @@ defmodule Patch.Mock.Code do
     end
   end
 
+  @spec compiler_options(module :: module()) ::
+          {:ok, [compiler_option()]}
+          | {:error, :compiler_options_unavailable}
+          | {:error, chunk_error()}
+  def compiler_options(module) do
+    with :ok <- ensure_loaded(module),
+         {:ok, binary} <- binary(module) do
+      case :beam_lib.chunks(binary, [:compile_info]) do
+        {:ok, {_, [compile_info: info]}} ->
+          filtered_options =
+            case Keyword.fetch(info, :options) do
+              {:ok, options} ->
+                filter_compiler_options(options)
+
+              :error ->
+                []
+            end
+
+          {:ok, filtered_options}
+
+        {:error, :beam_lib, details} ->
+          reason = elem(details, 0)
+          {:error, reason}
+
+        _ ->
+          {:error, :compiler_options_unavailable}
+      end
+    end
+  end
+
   @doc """
   Mocks a module by generating a set of modules based on the `target` module.
+
+  The `target` module's unchanged abstract_form is returned on success.
   """
-  @spec mock(module :: module(), options :: [option()]) :: :ok | {:error, term}
+  @spec mock(module :: module(), options :: [option()]) :: {:ok, [form()]} | {:error, term}
   def mock(module, options \\ []) do
     exposes = options[:exposes] || :none
 
-    with {:ok, abstract_forms} <- abstract_forms(module),
+    with {:ok, compiler_options} <- compiler_options(module),
+         {:ok, sticky?} <- unstick_module(module),
+         {:ok, abstract_forms} <- abstract_forms(module),
          delegate_forms = Generate.delegate(abstract_forms, module),
          facade_forms = Generate.facade(abstract_forms, module, exposes),
          original_forms = Generate.original(abstract_forms, module),
          :ok <- compile(delegate_forms),
-         :ok <- compile(original_forms),
+         :ok <- compile(original_forms, compiler_options),
          :ok <- compile(facade_forms) do
-      :ok
+      {:ok, abstract_forms, sticky?, compiler_options}
+    end
+  end
+
+  def purge(module) do
+    :code.purge(module)
+    :code.delete(module)
+  end
+
+  def stick_module(module) do
+    :code.stick_mod(module)
+    ensure_loaded(module)
+  end
+
+  def unstick_module(module) do
+    :ok = ensure_loaded(module)
+
+    if :code.is_sticky(module) do
+      if :code.unstick_mod(module) do
+        {:ok, true}
+      else
+        {:error, :unable_to_unstick}
+      end
+    else
+      {:ok, false}
     end
   end
 
@@ -286,6 +362,23 @@ defmodule Patch.Mock.Code do
     with {:module, ^module} <- Code.ensure_loaded(module) do
       :ok
     end
+  end
+
+  @spec filter_compiler_options(options :: [term()]) :: [term()]
+  defp filter_compiler_options(options) do
+    Enum.filter(options, fn
+      {:parse_transform, _} ->
+        false
+
+      :makedeps_side_effects ->
+        false
+
+      :from_core ->
+        false
+
+      _ ->
+        true
+    end)
   end
 
   @spec load_binary(module :: module(), binary :: binary()) ::

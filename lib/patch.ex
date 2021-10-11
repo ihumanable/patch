@@ -16,6 +16,11 @@ defmodule Patch do
   for more details.
   """
 
+  alias Patch.Mock.Naming
+  alias Patch.Mock.Value
+  import Value
+  require Value
+
   defmodule MissingCall do
     defexception [:message]
   end
@@ -28,30 +33,29 @@ defmodule Patch do
     quote do
       require unquote(__MODULE__)
       import unquote(__MODULE__)
+      import Patch.Mock.Value
 
       setup do
-        start_supervised!(Patch.Listener.Supervisor)
-
-        on_exit(fn ->
-          :meck.unload()
-        end)
+        start_supervised!(Patch.Supervisor)
+        :ok
       end
     end
   end
 
-  defmacro assert_called({{:., _, [module, function]}, _, args}) do
-    quote do
-      value = :meck.called(unquote(module), unquote(function), unquote(args))
+  defmacro assert_called(call) do
+    {module, function, args} = Macro.decompose_call(call)
 
-      unless value do
+    quote do
+      unless Patch.Mock.called?(unquote(module), unquote(function), unquote(args)) do
         calls =
           unquote(module)
-          |> :meck.history()
+          |> Patch.Mock.history()
+          |> Patch.Mock.History.entries()
           |> Enum.with_index(1)
-          |> Enum.map(fn {{_, {m, f, a}, ret}, i} ->
-            "#{i}. #{inspect(m)}.#{f}(#{a |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")}) -> #{
-              inspect(ret)
-            }"
+          |> Enum.map(fn {{f, a}, i} ->
+            "#{i}. #{inspect(unquote(module))}.#{f}(#{
+              a |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")
+            })"
           end)
 
         calls =
@@ -81,19 +85,20 @@ defmodule Patch do
     end
   end
 
-  defmacro refute_called({{:., _, [module, function]}, _, args}) do
-    quote do
-      value = :meck.called(unquote(module), unquote(function), unquote(args))
+  defmacro refute_called(call) do
+    {module, function, args} = Macro.decompose_call(call)
 
-      if value do
+    quote do
+      if Patch.Mock.called?(unquote(module), unquote(function), unquote(args)) do
         calls =
           unquote(module)
-          |> :meck.history()
+          |> Patch.Mock.history()
+          |> Patch.Mock.History.entries()
           |> Enum.with_index(1)
-          |> Enum.map(fn {{_, {m, f, a}, ret}, i} ->
-            "#{i}. #{inspect(m)}.#{f}(#{a |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")}) -> #{
-              inspect(ret)
-            }"
+          |> Enum.map(fn {{f, a}, i} ->
+            "#{i}. #{inspect(unquote(module))}.#{f}(#{
+              a |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")
+            })"
           end)
           |> Enum.join("\n")
 
@@ -120,15 +125,7 @@ defmodule Patch do
   """
   @spec assert_any_call(module :: module(), function :: atom()) :: nil
   def assert_any_call(module, function) do
-    calls =
-      module
-      |> :meck.history()
-      |> Enum.filter(fn
-        {_, {^module, ^function, _}, _} -> true
-        _ -> false
-      end)
-
-    if Enum.empty?(calls) do
+    unless Patch.Mock.called?(module, function) do
       message = """
       \n
       Expected any call received:
@@ -147,25 +144,16 @@ defmodule Patch do
   """
   @spec refute_any_call(module :: module(), function :: atom()) :: nil
   def refute_any_call(module, function) do
-    calls =
-      module
-      |> :meck.history()
-      |> Enum.filter(fn
-        {_, {^module, ^function, _}, _} -> true
-        _ -> false
-      end)
-      |> Enum.map(fn {_, {_, _, args}, ret} ->
-        {args, ret}
-      end)
-
-    unless Enum.empty?(calls) do
-      formatted_calls =
-        calls
+    if Patch.Mock.called?(module, function) do
+      calls =
+        module
+        |> Patch.Mock.history()
+        |> Patch.Mock.History.entries()
         |> Enum.with_index(1)
-        |> Enum.map(fn {{args, ret}, i} ->
+        |> Enum.map(fn {{_, args}, i} ->
           "#{i}. #{inspect(module)}.#{to_string(function)}(#{
             args |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")
-          }) -> #{inspect(ret)}"
+          })"
         end)
 
       message = """
@@ -176,7 +164,7 @@ defmodule Patch do
 
       Calls which were received:
 
-      #{formatted_calls}
+      #{calls}
       """
 
       raise UnexpectedCall, message: message
@@ -206,7 +194,7 @@ defmodule Patch do
   """
   @spec fake(real_module :: module(), fake_module :: module()) :: :ok
   def fake(real_module, fake_module) do
-    ensure_mocked(real_module)
+    {:ok, _} = Patch.Mock.module(real_module)
 
     real_functions = Patch.Reflection.find_functions(real_module)
     fake_functions = Patch.Reflection.find_functions(fake_module)
@@ -218,9 +206,9 @@ defmodule Patch do
         patch(
           real_module,
           name,
-          Patch.Function.for_arity(arity, fn args ->
+          callable(fn args ->
             apply(fake_module, name, args)
-          end)
+          end, :list)
         )
       end
     end)
@@ -234,7 +222,7 @@ defmodule Patch do
   """
   @spec spy(module :: module()) :: :ok
   def spy(module) do
-    ensure_mocked(module)
+    {:ok, _} = Patch.Mock.module(module)
     :ok
   end
 
@@ -244,43 +232,33 @@ defmodule Patch do
   The patched function will either always return the provided value or if a function is provided
   then the function will be called and its result returned.
   """
-  @spec patch(module :: module(), function :: atom(), mock) :: mock when mock: fun()
-  def patch(module, function, mock) when is_function(mock) do
-    ensure_mocked(module)
-
-    :meck.expect(module, function, mock)
-
-    mock
+  @spec patch(module :: module(), function :: atom(), value :: Patch.Mock.Value.t()) ::
+          Patch.Mock.Value.t()
+  def patch(module, function, %module{} = value) when is_value(module) do
+    {:ok, _} = Patch.Mock.module(module)
+    :ok = Patch.Mock.returns(module, function, value)
+    value
   end
 
   @spec patch(module :: module(), function :: atom(), return_value) :: return_value
         when return_value: term()
   def patch(module, function, return_value) do
-    ensure_mocked(module)
-
-    module
-    |> Patch.Reflection.find_arities(function)
-    |> Enum.each(fn arity ->
-      :meck.expect(module, function, Patch.Function.for_arity(arity, fn _ -> return_value end))
-    end)
-
+    {:ok, _} = Patch.Mock.module(module)
+    :ok = Patch.Mock.returns(module, function, Patch.Mock.Value.scalar(return_value))
     return_value
   end
 
   @spec real(module :: module()) :: module()
   def real(module) do
-    :meck_util.original_name(module)
+    Naming.original(module)
   end
 
   @doc """
   Remove any mocks or spies from the given module
   """
-  @spec restore(module :: module()) :: :ok
+  @spec restore(module :: module()) :: :ok | {:error, term()}
   def restore(module) do
-    if :meck.validate(module), do: :meck.unload(module)
-  rescue
-    _ in ErlangError ->
-      :ok
+    Patch.Mock.restore(module)
   end
 
   @doc """
@@ -326,15 +304,5 @@ defmodule Patch do
       state ->
         put_in(state, keys, value)
     end)
-  end
-
-  ## Private
-
-  @spec ensure_mocked(module :: module()) :: term()
-  defp ensure_mocked(module) do
-    :meck.validate(module)
-  rescue
-    _ in ErlangError ->
-      :meck.new(module, [:passthrough, :unstick])
   end
 end

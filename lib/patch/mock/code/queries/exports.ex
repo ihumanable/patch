@@ -12,5 +12,4 @@ defmodule Patch.Mock.Code.Queries.Exports do
       Keyword.merge(acc, exports)
     end)
   end
-
 end

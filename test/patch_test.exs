@@ -18,7 +18,7 @@ defmodule Patch.Test.PatchTest do
 
       tripler = &(&1 * 3)
 
-      patch(Example, :double, tripler)
+      patch(Example, :double, callable(tripler))
 
       assert Example.double(5) == 15
       assert Example.double(7) == 21

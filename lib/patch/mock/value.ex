@@ -15,8 +15,10 @@ defmodule Patch.Mock.Value do
   defdelegate scalar(value), to: Values.Scalar, as: :new
   defdelegate sequence(enumerable), to: Values.Sequence, as: :new
 
+  defguard is_value(module) when module in @value_modules
+
   @spec next(value :: t(), arguments :: [term()]) :: {:ok, t(), term()} | :error
-  def next(%module{} = value, arguments) when module in @value_modules do
+  def next(%module{} = value, arguments) when is_value(module) do
     with {:ok, next_value, return_value} <- module.next(value, arguments) do
       case next(return_value, arguments) do
         {:ok, _, return_value} ->

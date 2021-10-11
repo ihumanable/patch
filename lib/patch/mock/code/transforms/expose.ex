@@ -9,7 +9,9 @@ defmodule Patch.Mock.Code.Transforms.Expose do
   Transforms the provided forms to export none, some, or all of the private
   functions.
   """
-  @spec transform(abstract_forms :: [Code.form()], exposes :: Transform.exposes()) :: [Code.form()]
+  @spec transform(abstract_forms :: [Code.form()], exposes :: Transform.exposes()) :: [
+          Code.form()
+        ]
   def transform(abstract_forms, :none) do
     abstract_forms
   end
@@ -26,7 +28,9 @@ defmodule Patch.Mock.Code.Transforms.Expose do
 
   ## Private
 
-  @spec replace_exports(abstract_forms :: [Code.form()], exports :: Code.exports()) :: [Code.form()]
+  @spec replace_exports(abstract_forms :: [Code.form()], exports :: Code.exports()) :: [
+          Code.form()
+        ]
   defp replace_exports(abstract_forms, exports) do
     abstract_forms
     |> Enum.reduce({[], false}, fn

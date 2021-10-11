@@ -18,19 +18,21 @@ defmodule Patch.Mock.Server do
   @type option :: history_limit_option()
 
   @type t :: %__MODULE__{
+          abstract_form: [Code.form()],
+          compiler_options: Code.compiler_options(),
           history: History.t(),
           mocks: %{atom() => term()},
           module: module(),
           options: [Code.option()],
-          original: module()
+          sticky?: boolean()
         }
-  defstruct [
-    history: History.new(:infinity),
-    mocks: %{},
-    module: nil,
-    options: [],
-    original: nil
-  ]
+  defstruct abstract_form: [],
+            compiler_options: [],
+            history: History.new(:infinity),
+            mocks: %{},
+            module: nil,
+            options: [],
+            sticky?: false
 
   ## Client
 
@@ -45,14 +47,14 @@ defmodule Patch.Mock.Server do
     }
   end
 
-  @spec start_link(module :: module(), options :: [Code.option | option()]) ::
+  @spec start_link(module :: module(), options :: [Code.option() | option()]) ::
           {:ok, pid()} | {:error, {:already_started, pid()}}
   def start_link(module, options \\ [])
 
   def start_link(module, options) do
     name = Naming.server(module)
 
-    {history_limit, options}= Keyword.pop(options, :history_limit, @default_history_limit)
+    {history_limit, options} = Keyword.pop(options, :history_limit, @default_history_limit)
 
     state = %__MODULE__{
       history: History.new(history_limit),
@@ -91,6 +93,28 @@ defmodule Patch.Mock.Server do
   end
 
   @doc """
+  Restores a module to its original state.
+
+  Can be called by module or by pid
+  """
+  @spec restore(pid :: pid()) :: :ok
+  def restore(pid) when is_pid(pid) do
+    GenServer.call(pid, :restore)
+  end
+
+  @spec restore(module :: module()) :: :ok
+  def restore(module) do
+    server = Naming.server(module)
+
+    try do
+      GenServer.call(server, :restore)
+    catch
+      :exit, {:noproc, _} ->
+        :ok
+    end
+  end
+
+  @doc """
   Registers a mock value to be returned whenever the specified function is
   called on the module.
   """
@@ -100,17 +124,28 @@ defmodule Patch.Mock.Server do
     GenServer.call(server, {:register, name, value})
   end
 
-
   ## Server
 
   @spec init(t()) :: {:ok, t()}
   def init(%__MODULE__{} = state) do
+    Process.flag(:trap_exit, true)
+
     case Mock.Code.mock(state.module, state.options) do
-      :ok ->
+      {:ok, abstract_form, sticky?, compiler_options} ->
+        state = %__MODULE__{
+          state
+          | abstract_form: abstract_form,
+            compiler_options: compiler_options,
+            sticky?: sticky?
+        }
+
         {:ok, state}
 
       {:error, reason} ->
         {:stop, reason}
+
+      other ->
+        {:stop, other}
     end
   end
 
@@ -130,11 +165,32 @@ defmodule Patch.Mock.Server do
     {:reply, state.history, state}
   end
 
+  def handle_call(:restore, _from, state) do
+    {:stop, {:shutdown, {:restore, do_restore(state)}}, :ok, state}
+  end
+
   def handle_call({:register, name, value}, _from, state) do
     {:reply, :ok, do_register(state, name, value)}
   end
 
+  def terminate(_, state) do
+    do_restore(state)
+  end
+
   ## Private
+
+  defp purge(%__MODULE__{} = state) do
+    [
+      &Naming.delegate/1,
+      &Naming.facade/1,
+      &Naming.original/1
+    ]
+    |> Enum.each(fn factory ->
+      state.module
+      |> factory.()
+      |> Mock.Code.purge()
+    end)
+  end
 
   @spec record(state :: t(), name :: atom(), arguments :: [term()]) :: t()
   defp record(%__MODULE__{} = state, :__info__, _) do
@@ -159,6 +215,16 @@ defmodule Patch.Mock.Server do
 
   defp do_register(%__MODULE__{} = state, name, _old_value, new_value) do
     do_register(state, name, new_value)
+  end
+
+  def do_restore(%__MODULE__{} = state) do
+    purge(state)
+
+    if state.sticky? do
+      Mock.Code.stick_module(state.module)
+    else
+      Mock.Code.compile(state.abstract_form, state.compiler_options)
+    end
   end
 
   @spec value(state :: t(), name :: atom(), arguments :: [term()]) :: {:ok, t(), term()} | :error
