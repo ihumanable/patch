@@ -142,13 +142,9 @@ defmodule Patch.Test.PatchTest do
 
 
     test "sticky erlang modules can be patched" do
-      if :erlang.system_info(:otp_release) == '23' do
-        assert true
-      else
-        patch(:string, :is_empty, :test_value)
+      patch(:array, :new, :test_value)
 
-        assert :string.is_empty("test") == :test_value
-      end
+      assert :array.new() == :test_value
     end
 
   end
