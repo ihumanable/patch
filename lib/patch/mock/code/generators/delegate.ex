@@ -18,11 +18,15 @@ defmodule Patch.Mock.Code.Generators.Delegate do
   @doc """
   Generates a new delegate module based on the forms of a provided module.
   """
-  @spec generate(abstract_forms :: [Code.form()], module :: module) :: [Code.form()]
-  def generate(abstract_forms, module) do
+  @spec generate(abstract_forms :: [Code.form()], module :: module(), exports :: Code.exports()) :: [Code.form()]
+  def generate(abstract_forms, module, exports) do
     delegate_name = Naming.delegate(module)
 
     abstract_forms
+    |> Transform.clean()
+    |> Transform.export(exports)
+    |> Transform.filter(exports)
+    |> Transform.rename(delegate_name)
     |> Enum.map(fn
       {:function, _, name, arity, _} ->
         function(module, name, arity)
@@ -30,9 +34,6 @@ defmodule Patch.Mock.Code.Generators.Delegate do
       other ->
         other
     end)
-    |> Transform.clean()
-    |> Transform.expose(:all)
-    |> Transform.rename(delegate_name)
   end
 
   ## Private

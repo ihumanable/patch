@@ -2,11 +2,14 @@ defmodule Patch.Mock.Code.Transforms.Clean do
   @moduledoc """
   Cleans abstract form to prepare it for subsequent generation.
 
-  Everything except for the module attribute, exports, and functions are removed
+  Everything except for the module attribute, exports, and functions are removed.
   """
 
-  def transform(abstract_form) do
-    Enum.filter(abstract_form, fn
+  alias Patch.Mock.Code
+
+  @spec transform(abstract_forms :: [Code.form()]) :: [Code.form()]
+  def transform(abstract_forms) do
+    Enum.filter(abstract_forms, fn
       {:attribute, _, :module, _} ->
         true
 

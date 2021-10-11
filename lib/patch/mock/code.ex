@@ -183,7 +183,8 @@ defmodule Patch.Mock.Code do
   """
 
   alias Patch.Mock.Code.Generate
-  alias Patch.Mock.Code.Transform
+  alias Patch.Mock.Code.Query
+  alias Patch.Mock.Code.Unit
 
   @type chunk_error ::
           :chunk_too_big
@@ -198,16 +199,25 @@ defmodule Patch.Mock.Code do
   @type compiler_option :: term()
 
   @type form :: term()
+  @type export_classification :: :builtin | :generated | :normal
   @type exports :: Keyword.t(arity())
+
+  @typedoc """
+  What exposures should be made in a module.
+
+
+  - `:public` will only expose the public functions
+  - `:all` will expose both public and private functions
+  - A list of exports can be provided, they will be added to the `:public` functions.
+  """
+  @type exposes :: :all | :public | exports()
 
   @typedoc """
   The expose option controls if any private functions should be exposed in the `facade` module.
 
-  The default is to leave private functions as private, but the caller can provide either the atom
-  `:all` which will expose all private functions or can provide an `t:exports/0` to define which
-  private functions should be exposed.
+  The default is `:public`.
   """
-  @type expose_option :: {:expose, Transform.exposes()}
+  @type expose_option :: {:expose, exposes()}
 
   @typedoc """
   Sum-type of all valid options
@@ -246,6 +256,25 @@ defmodule Patch.Mock.Code do
       end
     end
   end
+
+  @doc """
+  Classifies an exported mfa into one of the following classifications
+
+  - :builtin - Export is a BIF.
+  - :generated - Export is a generated function.
+  - :normal - Export is a user defined function.
+  """
+  @spec classify_export(module :: module(), function :: atom(), arity :: arity()) :: export_classification()
+  def classify_export(_, :module_info, 0), do: :generated
+  def classify_export(_, :module_info, 1), do: :generated
+  def classify_export(module, function, arity) do
+    if :erlang.is_builtin(module, function, arity) do
+      :builtin
+    else
+      :normal
+    end
+  end
+
 
   @spec compile(abstract_forms :: [form()], compiler_options :: [compiler_option()]) ::
           :ok
@@ -293,25 +322,63 @@ defmodule Patch.Mock.Code do
     end
   end
 
+  @spec exports(abstract_forms :: [form()], module :: module(), exposes :: exposes()) :: exports()
+  def exports(abstract_forms, module, :public) do
+    exports = Query.exports(abstract_forms)
+    filter_exports(module, exports, :normal)
+  end
+
+  def exports(abstract_forms, module, :all) do
+    exports = Query.functions(abstract_forms)
+    filter_exports(module, exports, :normal)
+  end
+
+  def exports(abstract_forms, module, exposes) do
+    exports = exposes ++ Query.exports(abstract_forms)
+    filter_exports(module, exports, :normal)
+  end
+
+  @doc """
+  Given a module and a list of exports filters the list of exports to those that
+  have the given classification.
+
+  See `classify_export/3` for information about export classification
+  """
+  @spec filter_exports(module :: module, exports :: exports(), classification :: export_classification()) :: exports()
+  def filter_exports(module, exports, classification) do
+    Enum.filter(exports, fn {name, arity} ->
+      classify_export(module, name, arity) == classification
+    end)
+  end
+
   @doc """
   Mocks a module by generating a set of modules based on the `target` module.
 
   The `target` module's unchanged abstract_form is returned on success.
   """
-  @spec mock(module :: module(), options :: [option()]) :: {:ok, [form()]} | {:error, term}
+  @spec mock(module :: module(), options :: [option()]) :: {:ok, Unit.t()} | {:error, term}
   def mock(module, options \\ []) do
-    exposes = options[:exposes] || :none
+    exposes = options[:exposes] || :public
 
     with {:ok, compiler_options} <- compiler_options(module),
          {:ok, sticky?} <- unstick_module(module),
          {:ok, abstract_forms} <- abstract_forms(module),
-         delegate_forms = Generate.delegate(abstract_forms, module),
-         facade_forms = Generate.facade(abstract_forms, module, exposes),
-         original_forms = Generate.original(abstract_forms, module),
+         local_exports = exports(abstract_forms, module, :all),
+         remote_exports = exports(abstract_forms, module, exposes),
+         delegate_forms = Generate.delegate(abstract_forms, module, local_exports),
+         facade_forms = Generate.facade(abstract_forms, module, remote_exports),
+         original_forms = Generate.original(abstract_forms, module, local_exports),
          :ok <- compile(delegate_forms),
          :ok <- compile(original_forms, compiler_options),
          :ok <- compile(facade_forms) do
-      {:ok, abstract_forms, sticky?, compiler_options}
+      unit = %Unit{
+        abstract_forms: abstract_forms,
+        compiler_options: compiler_options,
+        module: module,
+        sticky?: sticky?
+      }
+
+      {:ok, unit}
     end
   end
 

@@ -147,5 +147,10 @@ defmodule Patch.Test.PatchTest do
       assert :array.new() == :test_value
     end
 
+    test "sticky erlang modules with erlang builtin functions can be patched" do
+      patch(:string, :is_empty, :test_value)
+
+      assert :string.is_empty("test") == :test_value
+    end
   end
 end

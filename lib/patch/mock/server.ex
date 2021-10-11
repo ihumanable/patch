@@ -4,6 +4,7 @@ defmodule Patch.Mock.Server do
 
   alias Patch.Mock
   alias Patch.Mock.Code
+  alias Patch.Mock.Code.Unit
   alias Patch.Mock.History
   alias Patch.Mock.Naming
   alias Patch.Mock.Value
@@ -18,21 +19,17 @@ defmodule Patch.Mock.Server do
   @type option :: history_limit_option()
 
   @type t :: %__MODULE__{
-          abstract_form: [Code.form()],
-          compiler_options: Code.compiler_options(),
           history: History.t(),
           mocks: %{atom() => term()},
           module: module(),
           options: [Code.option()],
-          sticky?: boolean()
+          unit: Unit.t(),
         }
-  defstruct abstract_form: [],
-            compiler_options: [],
-            history: History.new(:infinity),
+  defstruct history: History.new(:infinity),
             mocks: %{},
             module: nil,
             options: [],
-            sticky?: false
+            unit: nil
 
   ## Client
 
@@ -131,15 +128,8 @@ defmodule Patch.Mock.Server do
     Process.flag(:trap_exit, true)
 
     case Mock.Code.mock(state.module, state.options) do
-      {:ok, abstract_form, sticky?, compiler_options} ->
-        state = %__MODULE__{
-          state
-          | abstract_form: abstract_form,
-            compiler_options: compiler_options,
-            sticky?: sticky?
-        }
-
-        {:ok, state}
+      {:ok, unit} ->
+        {:ok, %__MODULE__{state | unit: unit}}
 
       {:error, reason} ->
         {:stop, reason}
@@ -179,19 +169,6 @@ defmodule Patch.Mock.Server do
 
   ## Private
 
-  defp purge(%__MODULE__{} = state) do
-    [
-      &Naming.delegate/1,
-      &Naming.facade/1,
-      &Naming.original/1
-    ]
-    |> Enum.each(fn factory ->
-      state.module
-      |> factory.()
-      |> Mock.Code.purge()
-    end)
-  end
-
   @spec record(state :: t(), name :: atom(), arguments :: [term()]) :: t()
   defp record(%__MODULE__{} = state, :__info__, _) do
     # Elixir function dispatch calls `__info__` don't pollute the history with
@@ -218,13 +195,7 @@ defmodule Patch.Mock.Server do
   end
 
   def do_restore(%__MODULE__{} = state) do
-    purge(state)
-
-    if state.sticky? do
-      Mock.Code.stick_module(state.module)
-    else
-      Mock.Code.compile(state.abstract_form, state.compiler_options)
-    end
+    Unit.restore(state.unit)
   end
 
   @spec value(state :: t(), name :: atom(), arguments :: [term()]) :: {:ok, t(), term()} | :error

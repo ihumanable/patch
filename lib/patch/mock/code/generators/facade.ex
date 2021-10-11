@@ -9,7 +9,6 @@ defmodule Patch.Mock.Code.Generators.Facade do
   """
 
   alias Patch.Mock.Naming
-  alias Patch.Mock.Code.Query
   alias Patch.Mock.Code.Transform
 
   @generated [generated: true]
@@ -20,32 +19,14 @@ defmodule Patch.Mock.Code.Generators.Facade do
   @spec generate(
           abstract_forms :: [Code.form()],
           module :: module(),
-          exposes :: Transform.exposes()
+          exports :: Code.exports()
         ) :: [Code.form()]
-  def generate(abstract_forms, module, :none) do
-    exports = Query.exports(abstract_forms)
-
+  def generate(abstract_forms, module, exports) do
     abstract_forms
     |> Transform.clean()
-    |> module(module, exports)
-  end
-
-  def generate(abstract_forms, module, :all) do
-    exports = Query.functions(abstract_forms)
-
-    abstract_forms
-    |> Transform.clean()
-    |> Transform.expose(:all)
-    |> module(module, exports)
-  end
-
-  def generate(abstract_forms, module, exposes) do
-    exports = exposes ++ Query.exports(abstract_forms)
-
-    abstract_forms
-    |> Transform.clean()
-    |> Transform.expose(exposes)
-    |> module(module, exports)
+    |> Transform.export(exports)
+    |> Transform.filter(exports)
+    |> module(module)
   end
 
   ## Private
@@ -83,22 +64,16 @@ defmodule Patch.Mock.Code.Generators.Facade do
     {:function, @generated, name, arity, [clause]}
   end
 
-  @spec module(abstract_forms :: [Code.form()], module :: module(), exports :: Code.exports()) ::
+  @spec module(abstract_forms :: [Code.form()], module :: module()) ::
           [Code.form()]
-  defp module(abstract_forms, module, exports) do
-    abstract_forms
-    |> Enum.reduce([], fn
-      {:function, _, name, arity, _}, acc ->
-        if {name, arity} in exports do
-          [function(module, name, arity) | acc]
-        else
-          acc
-        end
+  defp module(abstract_forms, module) do
+    Enum.map(abstract_forms, fn
+      {:function, _, name, arity, _} ->
+        function(module, name, arity)
 
-      other, acc ->
-        [other | acc]
+      other ->
+        other
     end)
-    |> Enum.reverse()
   end
 
   defp patterns(0) do

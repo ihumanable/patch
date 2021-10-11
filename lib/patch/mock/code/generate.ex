@@ -12,7 +12,7 @@ defmodule Patch.Mock.Code.Generate do
 
   alias Patch.Mock.Code.Generators
 
-  defdelegate delegate(abstract_forms, module), to: Generators.Delegate, as: :generate
-  defdelegate facade(abstract_forms, module, exposes), to: Generators.Facade, as: :generate
-  defdelegate original(abstract_forms, module), to: Generators.Original, as: :generate
+  defdelegate delegate(abstract_forms, module, exports), to: Generators.Delegate, as: :generate
+  defdelegate facade(abstract_forms, module, exports), to: Generators.Facade, as: :generate
+  defdelegate original(abstract_forms, module, exports), to: Generators.Original, as: :generate
 end
