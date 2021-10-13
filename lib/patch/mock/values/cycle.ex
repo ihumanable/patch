@@ -13,7 +13,7 @@ defmodule Patch.Mock.Values.Cycle do
   end
 
   def advance(%__MODULE__{values: [head | rest]} = cycle) do
-    %__MODULE__{values: rest ++ [head]}
+    %__MODULE__{cycle | values: rest ++ [head]}
   end
 
   @spec new(values :: [term()]) :: t()
