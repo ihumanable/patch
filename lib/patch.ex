@@ -177,6 +177,18 @@ defmodule Patch do
 
   ## Functions
 
+  @doc """
+  Expose can be used to turn private functions into public functions for the
+  purpose of testing them.
+
+  To expose every private function as a public function, pass the sentinel value `:all`, otherwise
+  pass a `Keyword.t(arity)` of the functions to expose.
+
+  For example, if one wanted to expose `private_function/1` and `private_function/2` they would
+  pass `[private_function: 1, private_function: 2]`
+
+  Expose must be called before any patches or spies are applied to a module in a test.
+  """
   @spec expose(module :: module, exposes :: Patch.Mock.Code.exposes()) :: :ok
   def expose(module, exposes) do
     {:ok, _} = Patch.Mock.module(module, exposes: exposes)
