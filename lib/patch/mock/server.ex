@@ -74,6 +74,12 @@ defmodule Patch.Mock.Server do
       {:ok, reply} ->
         reply
 
+      {:raise, exception} ->
+        raise exception
+
+      {:throw, value} ->
+        throw value
+
       :error ->
         original_module = Naming.original(module)
         apply(original_module, name, arguments)
@@ -143,8 +149,8 @@ defmodule Patch.Mock.Server do
     state = record(state, name, arguments)
 
     case value(state, name, arguments) do
-      {:ok, state, value} ->
-        {:reply, {:ok, value}, state}
+      {:ok, state, reply} ->
+        {:reply, reply, state}
 
       :error ->
         {:reply, :error, state}
@@ -198,10 +204,23 @@ defmodule Patch.Mock.Server do
     Unit.restore(state.unit)
   end
 
-  @spec value(state :: t(), name :: atom(), arguments :: [term()]) :: {:ok, t(), term()} | :error
+  @spec value(state :: t(), name :: atom(), arguments :: [term()]) :: {:ok, t(), term()} | {:raise, t(), term()} | {:throw, t(), term()} | :error
   defp value(state, name, arguments) do
-    with {:ok, value} <- Map.fetch(state.mocks, name),
-         {:ok, next, reply} <- Value.next(value, arguments) do
+    with {:ok, value} <- Map.fetch(state.mocks, name) do
+      {next, reply} =
+        try do
+          {next, reply} = Value.next(value, arguments)
+          {next, {:ok, reply}}
+        rescue
+          exception ->
+            next = Value.advance(value)
+            {next, {:raise, exception}}
+        catch
+          :throw, thrown ->
+            next = Value.advance(value)
+            {next, {:throw, thrown}}
+        end
+
       {:ok, do_register(state, name, value, next), reply}
     end
   end

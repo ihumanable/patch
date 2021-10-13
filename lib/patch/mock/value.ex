@@ -17,20 +17,44 @@ defmodule Patch.Mock.Value do
 
   defguard is_value(module) when module in @value_modules
 
-  @spec next(value :: t(), arguments :: [term()]) :: {:ok, t(), term()} | :error
-  def next(%module{} = value, arguments) when is_value(module) do
-    with {:ok, next_value, return_value} <- module.next(value, arguments) do
-      case next(return_value, arguments) do
-        {:ok, _, return_value} ->
-          {:ok, next_value, return_value}
 
-        :error ->
-          {:ok, next_value, return_value}
-      end
-    end
+  def raises(message) do
+    callable(fn _ -> raise message end, :list)
+  end
+
+  def raises(exception, attributes) do
+    callable(fn _ -> raise exception, attributes end, :list)
+  end
+
+  def throws(term) do
+    callable(fn _ -> throw term end, :list)
+  end
+
+  @spec advance(value :: t()) :: t()
+  def advance(%module{} = value) when is_value(module) do
+    module.advance(value)
+  end
+
+  def advance(value) do
+    value
+  end
+
+  @spec next(value :: t(), arguments :: [term()]) :: {t(), term()}
+  def next(%Values.Scalar{} = value, arguments) do
+    Values.Scalar.next(value, arguments)
+  end
+
+  def next(%module{} = value, arguments) when is_value(module) do
+    {next, return_value} = module.next(value, arguments)
+    {_, return_value} = next(return_value, arguments)
+    {next, return_value}
+  end
+
+  def next(callable, arguments) when is_function(callable) do
+    {callable, apply(callable, arguments)}
   end
 
   def next(scalar, _arguments) do
-    {:ok, scalar, scalar}
+    {scalar, scalar}
   end
 end

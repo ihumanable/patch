@@ -43,14 +43,14 @@ defmodule Patch.Mock do
     end
   end
 
+  @spec register(module :: module(), name :: atom(), value :: Mock.Value.t()) :: :ok
+  def register(module, name, value) do
+    Mock.Server.register(module, name, value)
+  end
+
   @spec restore(module :: module()) :: :ok
   def restore(module) do
     Mock.Server.restore(module)
-  end
-
-  @spec returns(module :: module(), name :: atom(), value :: Mock.Value.t()) :: :ok
-  def returns(module, name, value) do
-    Mock.Server.register(module, name, value)
   end
 
   ## Private

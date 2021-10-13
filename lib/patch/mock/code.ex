@@ -213,16 +213,16 @@ defmodule Patch.Mock.Code do
   @type exposes :: :all | :public | exports()
 
   @typedoc """
-  The expose option controls if any private functions should be exposed in the `facade` module.
+  The exposes option controls if any private functions should be exposed in the `facade` module.
 
   The default is `:public`.
   """
-  @type expose_option :: {:expose, exposes()}
+  @type exposes_option :: {:exposes, exposes()}
 
   @typedoc """
   Sum-type of all valid options
   """
-  @type option :: expose_option()
+  @type option :: exposes_option()
 
   @spec abstract_forms(module :: module) ::
           {:ok, [form()]}

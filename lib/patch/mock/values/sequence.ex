@@ -1,27 +1,38 @@
 defmodule Patch.Mock.Values.Sequence do
   @type t :: %__MODULE__{
-          enumerable: Enumerable.t()
+          values: [term()]
         }
-  defstruct [:enumerable]
+  defstruct [:values]
 
-  @spec new(enumerable :: Enumerable.t()) :: t()
-  def new(enumerable) do
-    %__MODULE__{enumerable: enumerable}
+  @spec advance(sequence :: t()) :: t()
+  def advance(%__MODULE__{values: []} = sequence) do
+    sequence
   end
 
-  @spec next(sequence :: t(), arguments :: [term()]) :: {:ok, t(), term()} | :error
-  def next(%__MODULE__{enumerable: []} = sequence, _arguments) do
-    {:ok, sequence, nil}
+  def advance(%__MODULE__{values: [_]} = sequence) do
+    sequence
   end
 
-  def next(%__MODULE__{enumerable: [last]} = sequence, _arguments) do
-    {:ok, sequence, last}
+  def advance(%__MODULE__{values: [_ | rest]} = sequence) do
+    %__MODULE__{sequence | values: rest}
   end
 
-  def next(%__MODULE__{} = sequence, _arguments) do
-    {[value], rest} = Enum.split(sequence.enumerable, 1)
-    sequence = %__MODULE__{sequence | enumerable: rest}
+  @spec new(values :: [term()]) :: t()
+  def new(values) do
+    %__MODULE__{values: values}
+  end
 
-    {:ok, sequence, value}
+  @spec next(sequence :: t(), arguments :: [term()]) :: {t(), term()}
+  def next(%__MODULE__{values: []} = sequence, _arguments) do
+    {sequence, nil}
+  end
+
+  def next(%__MODULE__{values: [last]} = sequence, _arguments) do
+    {sequence, last}
+  end
+
+  def next(%__MODULE__{values: [head | rest]} = sequence, _arguments) do
+    sequence = %__MODULE__{sequence | values: rest}
+    {sequence, head}
   end
 end

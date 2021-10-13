@@ -1,19 +1,37 @@
 defmodule Patch.Mock.Values.Cycle do
   @type t :: %__MODULE__{
-          enumerable: Enumerable.t()
+          values: [term()]
         }
-  defstruct [:enumerable]
+  defstruct [:values]
 
-  @spec new(enumerable :: Enumerable.t()) :: t()
-  def new(enumerable) do
-    %__MODULE__{enumerable: enumerable}
+  def advance(%__MODULE__{values: []} = cycle) do
+    cycle
   end
 
-  @spec next(t(), arguments :: [term()]) :: {:ok, t(), term()} | :error
-  def next(%__MODULE__{} = cycle, _arguments) do
-    {[value], rest} = Enum.split(cycle.enumerable, 1)
-    cycle = %__MODULE__{cycle | enumerable: rest ++ [value]}
+  def advance(%__MODULE__{values: [_]} = cycle) do
+    cycle
+  end
 
-    {:ok, cycle, value}
+  def advance(%__MODULE__{values: [head | rest]} = cycle) do
+    %__MODULE__{values: rest ++ [head]}
+  end
+
+  @spec new(values :: [term()]) :: t()
+  def new(values) do
+    %__MODULE__{values: values}
+  end
+
+  @spec next(t(), arguments :: [term()]) :: {t(), term()}
+  def next(%__MODULE__{values: []} = cycle, _arguments) do
+    {cycle, nil}
+  end
+
+  def next(%__MODULE__{values: [value]} = cycle, _arguments) do
+    {cycle, value}
+  end
+
+  def next(%__MODULE__{values: [head | rest]} = cycle, _arguments) do
+    cycle = %__MODULE__{cycle | values: rest ++ [head]}
+    {cycle, head}
   end
 end

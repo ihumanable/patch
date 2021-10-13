@@ -21,6 +21,8 @@ defmodule Patch do
   import Value
   require Value
 
+  ## Exceptions
+
   defmodule MissingCall do
     defexception [:message]
   end
@@ -28,6 +30,8 @@ defmodule Patch do
   defmodule UnexpectedCall do
     defexception [:message]
   end
+
+  ## Macros / Assertions
 
   defmacro __using__(_) do
     quote do
@@ -171,6 +175,14 @@ defmodule Patch do
     end
   end
 
+  ## Functions
+
+  @spec expose(module :: module, exposes :: Patch.Mock.Code.exposes()) :: :ok
+  def expose(module, exposes) do
+    {:ok, _} = Patch.Mock.module(module, exposes: exposes)
+    :ok
+  end
+
   @doc """
   Fakes out a module with an alternative implementation.
 
@@ -215,50 +227,27 @@ defmodule Patch do
   end
 
   @doc """
-  Spies on the provided module
+  Convenience function for updating the state of a running process.
 
-  Once a module has been spied on the calls to that module can be asserted / refuted without
-  changing the behavior of the module.
+  Uses the `Access` module to traverse the state structure according to the given `keys`.
+
+  Structs have special handling so that they can be updated without having to implement the
+  `Access` behavior.
   """
-  @spec spy(module :: module()) :: :ok
-  def spy(module) do
-    {:ok, _} = Patch.Mock.module(module)
-    :ok
-  end
+  @spec inject(target :: GenServer.server(), keys :: [term(), ...], value :: term()) :: term()
+  def inject(target, keys, value) do
+    :sys.replace_state(target, fn
+      %struct{} = state ->
+        updated =
+          state
+          |> Map.from_struct()
+          |> put_in(keys, value)
 
-  @doc """
-  Patches a function in a module
+        struct(struct, updated)
 
-  The patched function will either always return the provided value or if a function is provided
-  then the function will be called and its result returned.
-  """
-  @spec patch(module :: module(), function :: atom(), value :: Patch.Mock.Value.t()) ::
-          Patch.Mock.Value.t()
-  def patch(module, function, %module{} = value) when is_value(module) do
-    {:ok, _} = Patch.Mock.module(module)
-    :ok = Patch.Mock.returns(module, function, value)
-    value
-  end
-
-  @spec patch(module :: module(), function :: atom(), return_value) :: return_value
-        when return_value: term()
-  def patch(module, function, return_value) do
-    {:ok, _} = Patch.Mock.module(module)
-    :ok = Patch.Mock.returns(module, function, Patch.Mock.Value.scalar(return_value))
-    return_value
-  end
-
-  @spec real(module :: module()) :: module()
-  def real(module) do
-    Naming.original(module)
-  end
-
-  @doc """
-  Remove any mocks or spies from the given module
-  """
-  @spec restore(module :: module()) :: :ok | {:error, term()}
-  def restore(module) do
-    Patch.Mock.restore(module)
+      state ->
+        put_in(state, keys, value)
+    end)
   end
 
   @doc """
@@ -283,26 +272,58 @@ defmodule Patch do
   end
 
   @doc """
-  Convenience function for updating the state of a running process.
+  Patches a function in a module
 
-  Uses the `Access` module to traverse the state structure according to the given `keys`.
-
-  Structs have special handling so that they can be updated without having to implement the
-  `Access` behavior.
+  The patched function will either always return the provided value or if a function is provided
+  then the function will be called and its result returned.
   """
-  @spec inject(target :: GenServer.server(), keys :: [term(), ...], value :: term()) :: term()
-  def inject(target, keys, value) do
-    :sys.replace_state(target, fn
-      %struct{} = state ->
-        updated =
-          state
-          |> Map.from_struct()
-          |> put_in(keys, value)
-
-        struct(struct, updated)
-
-      state ->
-        put_in(state, keys, value)
-    end)
+  @spec patch(module :: module(), function :: atom(), value :: Patch.Mock.Value.t()) ::
+          Patch.Mock.Value.t()
+  def patch(module, function, %value_module{} = value) when is_value(value_module) do
+    {:ok, _} = Patch.Mock.module(module)
+    :ok = Patch.Mock.register(module, function, value)
+    value
   end
+
+  @spec patch(module :: module(), function :: atom(), callable :: function()) :: function()
+  def patch(module, function, callable) when is_function(callable) do
+    patch(module, function, callable(callable))
+    callable
+  end
+
+  @spec patch(module :: module(), function :: atom(), return_value) :: return_value
+        when return_value: term()
+  def patch(module, function, return_value) do
+    patch(module, function, scalar(return_value))
+    return_value
+  end
+
+  @spec real(module :: module()) :: module()
+  def real(module) do
+    Naming.original(module)
+  end
+
+  @doc """
+  Remove any mocks or spies from the given module
+  """
+  @spec restore(module :: module()) :: :ok | {:error, term()}
+  def restore(module) do
+    Patch.Mock.restore(module)
+  end
+
+  @doc """
+  Spies on the provided module
+
+  Once a module has been spied on the calls to that module can be asserted / refuted without
+  changing the behavior of the module.
+  """
+  @spec spy(module :: module()) :: :ok
+  def spy(module) do
+    {:ok, _} = Patch.Mock.module(module)
+    :ok
+  end
+
+
+
+
 end
