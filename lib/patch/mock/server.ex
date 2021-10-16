@@ -16,7 +16,7 @@ defmodule Patch.Mock.Server do
   @typedoc """
   Sum-type of all valid options
   """
-  @type option :: history_limit_option()
+  @type option :: Code.option() | history_limit_option()
 
   @type t :: %__MODULE__{
           history: History.t(),
@@ -86,6 +86,12 @@ defmodule Patch.Mock.Server do
     end
   end
 
+  @spec expose(module :: module(), exposes:: Code.exposes) :: :ok | {:error, term()}
+  def expose(module, exposes) do
+    server = Naming.server(module)
+    GenServer.call(server, {:expose, exposes})
+  end
+
   @doc """
   Retrieves the call history for a mock
   """
@@ -133,7 +139,7 @@ defmodule Patch.Mock.Server do
   def init(%__MODULE__{} = state) do
     Process.flag(:trap_exit, true)
 
-    case Mock.Code.mock(state.module, state.options) do
+    case Mock.Code.module(state.module, state.options) do
       {:ok, unit} ->
         {:ok, %__MODULE__{state | unit: unit}}
 
@@ -157,6 +163,18 @@ defmodule Patch.Mock.Server do
     end
   end
 
+  def handle_call({:expose, exposes}, _from, state) do
+    current_exposes = Keyword.get(state.options, :exposes, :public)
+
+    case do_expose(state, current_exposes, exposes) do
+      {:ok, state} ->
+        {:reply, :ok, state}
+
+      error ->
+        {:stop, error, error, state}
+    end
+  end
+
   def handle_call(:history, _from, state) do
     {:reply, state.history, state}
   end
@@ -175,15 +193,16 @@ defmodule Patch.Mock.Server do
 
   ## Private
 
-  @spec record(state :: t(), name :: atom(), arguments :: [term()]) :: t()
-  defp record(%__MODULE__{} = state, :__info__, _) do
-    # Elixir function dispatch calls `__info__` don't pollute the history with
-    # it
-    state
+  @spec do_expose(state :: t(), current_exposes :: Code.exposes(), desired_exposes :: Code.exposes()) :: {:ok, t()} | {:error, term()}
+  defp do_expose(%__MODULE__{} = state, same, same) do
+    {:ok, state}
   end
 
-  defp record(%__MODULE__{} = state, name, arguments) do
-    %__MODULE__{state | history: History.put(state.history, name, arguments)}
+  defp do_expose(%__MODULE__{} = state, _, exposes) do
+    with :ok <- do_restore(state),
+         {:ok, unit} <- Mock.Code.module(state.module, exposes: exposes) do
+      {:ok, %__MODULE__{state | unit: unit}}
+    end
   end
 
   @spec do_register(state :: t(), name :: atom(), value :: term()) :: t()
@@ -202,6 +221,17 @@ defmodule Patch.Mock.Server do
 
   def do_restore(%__MODULE__{} = state) do
     Unit.restore(state.unit)
+  end
+
+  @spec record(state :: t(), name :: atom(), arguments :: [term()]) :: t()
+  defp record(%__MODULE__{} = state, :__info__, _) do
+    # Elixir function dispatch calls `__info__` don't pollute the history with
+    # it
+    state
+  end
+
+  defp record(%__MODULE__{} = state, name, arguments) do
+    %__MODULE__{state | history: History.put(state.history, name, arguments)}
   end
 
   @spec value(state :: t(), name :: atom(), arguments :: [term()]) :: {:ok, t(), term()} | {:raise, t(), term()} | {:throw, t(), term()} | :error

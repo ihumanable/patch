@@ -6,7 +6,7 @@ defmodule Patch.Mock.Code.Generators.Original do
   @doc """
   Generates a new original module based on the forms of the provided module.
   """
-  @spec generate(abstract_forms :: [Code.form()], module :: module(), exports :: Code.export()) :: [Code.form()]
+  @spec generate(abstract_forms :: [Code.form()], module :: module(), exports :: Code.exports()) :: [Code.form()]
   def generate(abstract_forms, module, exports) do
     delegate_module = Naming.delegate(module)
     original_module = Naming.original(module)

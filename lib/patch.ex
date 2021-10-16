@@ -46,6 +46,22 @@ defmodule Patch do
     end
   end
 
+  @doc """
+  Given a call will assert that a matching call was observed by the patched function.
+
+  The call can use the special sentinal `:_` as a wildcard match.
+
+  ```elixir
+  patch(Example, :function, :patch)
+
+  Example.function(1, 2, 3)
+
+  assert_called Example.function(1, 2, 3)   # passes
+  assert_called Example.function(1, :_, 3)  # passes
+  assert_called Example.function(4, 5, 6)   # fails
+  assert_called Example.function(4, :_, 6)  # fails
+  ```
+  """
   defmacro assert_called(call) do
     {module, function, args} = Macro.decompose_call(call)
 
@@ -89,6 +105,22 @@ defmodule Patch do
     end
   end
 
+  @doc """
+  Given a call will refute that a matching call was observed by the patched function.
+
+  The call can use the special sentinal `:_` as a wildcard match.
+
+  ```elixir
+  patch(Example, :function, :patch)
+
+  Example.function(1, 2, 3)
+
+  refute_called Example.function(4, 5, 6)   # passes
+  refute_called Example.function(4, :_, 6)  # passes
+  refute_called Example.function(1, 2, 3)   # fails
+  refute_called Example.function(1, :_, 3)  # fails
+  ```
+  """
   defmacro refute_called(call) do
     {module, function, args} = Macro.decompose_call(call)
 
@@ -125,7 +157,17 @@ defmodule Patch do
   end
 
   @doc """
-  Asserts that the function has been called with any arity call
+  Asserts that the given module and function has been called with any arity.
+
+  ```elixir
+  patch(Example, :function, :patch)
+
+  assert_any_call(Example, :function)   # fails
+
+  Example.function(1, 2, 3)
+
+  assert_any_call(Example, :function)   # passes
+  ```
   """
   @spec assert_any_call(module :: module(), function :: atom()) :: nil
   def assert_any_call(module, function) do
@@ -144,7 +186,17 @@ defmodule Patch do
   end
 
   @doc """
-  Refutes that the function has been called with any arity call
+  Refutes that the given module and function has been called with any arity.
+
+  ```elixir
+  patch(Example, :function, :patch)
+
+  refute_any_call(Example, :function)   # passes
+
+  Example.function(1, 2, 3)
+
+  refute_any_call(Example, :function)   # fails
+  ```
   """
   @spec refute_any_call(module :: module(), function :: atom()) :: nil
   def refute_any_call(module, function) do
@@ -181,18 +233,23 @@ defmodule Patch do
   Expose can be used to turn private functions into public functions for the
   purpose of testing them.
 
-  To expose every private function as a public function, pass the sentinel value `:all`, otherwise
-  pass a `Keyword.t(arity)` of the functions to expose.
+  To expose every private function as a public function, pass the sentinel value `:all`.
 
-  For example, if one wanted to expose `private_function/1` and `private_function/2` they would
-  pass `[private_function: 1, private_function: 2]`
+  ```elixir
+  expose(Example, :all)
+  ```
 
-  Expose must be called before any patches or spies are applied to a module in a test.
+  Otherwise pass a `Keyword.t(arity)` of the functions to expose.
+
+  For example, if one wanted to expose `private_function/1` and `private_function/2`.
+
+  ```elixir
+  expose(Example, [private_function: 1, private_function: 2])
+  ```
   """
-  @spec expose(module :: module, exposes :: Patch.Mock.Code.exposes()) :: :ok
+  @spec expose(module :: module, exposes :: Patch.Mock.Code.exposes()) :: :ok | {:error, term()}
   def expose(module, exposes) do
-    {:ok, _} = Patch.Mock.module(module, exposes: exposes)
-    :ok
+    Patch.Mock.expose(module, exposes)
   end
 
   @doc """
@@ -239,12 +296,39 @@ defmodule Patch do
   end
 
   @doc """
+  Get all the observed calls to a module.  These calls are expressed as a `{name, argument}` tuple
+  and can either be provided in ascending (oldest first) or descending (newest first) order by
+  providing a sorting of `:asc` or `:desc`, respectively.
+
+  ```elixir
+  Example.example(1, 2, 3)
+  Example.function(:a)
+
+  assert history(Example) == [{:example, [1, 2, 3]}, {:function, [:a]}]
+  assert history(Example, :desc) == [{:function, [:a]}, {:example, [1, 2, 3]}]
+  ```
+  """
+  @spec history(module :: module(), sorting :: :asc | :desc) :: [Patch.Mock.History.entry()]
+  def history(module, sorting \\ :asc) do
+    module
+    |> Patch.Mock.history()
+    |> Patch.Mock.History.entries(sorting)
+  end
+
+  @doc """
   Convenience function for updating the state of a running process.
 
   Uses the `Access` module to traverse the state structure according to the given `keys`.
 
   Structs have special handling so that they can be updated without having to implement the
   `Access` behavior.
+
+  For example to inject the value `:injected` under the key `:key` in the map found under the key
+  `:map`.
+
+  ```elixir
+  inject(target, [:map, :key], :injected)
+  ```
   """
   @spec inject(target :: GenServer.server(), keys :: [term(), ...], value :: term()) :: term()
   def inject(target, keys, value) do
@@ -265,14 +349,26 @@ defmodule Patch do
   @doc """
   Starts a listener process.
 
+  Each listener should provide a unique `tag` that will be used when forwarding messages to the
+  test process.
+
   When used on a named process, this is sufficient to begin intercepting all messages to the named
   process.
+
+  ```elixir
+  listen(:listener, Example)
+  ```
 
   When used on an unnamed process, the process that is spawned will forward any messages to the
   caller and target process but any processes holding a reference to the old pid will need to be
   updated.
 
   `inject/3` can be used to inject a listener into a running process.
+
+  ```elixir
+  {:ok, listener} = listen(:listener, original)
+  inject(target, :original, listener)
+  ```
   """
   @spec listen(
           tag :: Patch.Listener.tag(),
@@ -286,8 +382,110 @@ defmodule Patch do
   @doc """
   Patches a function in a module
 
-  The patched function will either always return the provided value or if a function is provided
-  then the function will be called and its result returned.
+  When called with a function the function will be called instead of the original function and its
+  results returned.
+
+  ```elixir
+  patch(Example, :function, fn arg -> {:mock, arg} end)
+
+  assert Example.function(:test) == {:mock, :test}
+  ```
+
+  To handle multiple arities create a `callable/2` with the `:list` option and the arguments will
+  be wrapped to the function in a list.
+
+  ```elixir
+  patch(Example, :function, callable(fn
+    [] ->
+      :zero
+
+    [a] ->
+      {:one, a}
+
+    [a, b] ->
+      {:two, a, b}
+  end, :list))
+
+  assert Example.function() == :zero
+  assert Example.function(1) == {:one, 1}
+  assert Example.function(1, 2) == {:two, 1, 2}
+  ```
+
+  To provide a function as a literal value to be returned, use the `scalar/1` function.
+
+  ```elixir
+  patch(Example, :function, scalar(fn arg -> {:mock, arg} end))
+
+  callable = Example.function()
+  assert callable.(:test) == {:mock, :test}
+  ```
+
+  The function `cycle/1` can be given a list which will be infinitely cycled when the function is
+  called.
+
+  ```elixir
+  patch(Example, :function, cycle([1, 2, 3]))
+
+  assert Example.function() == 1
+  assert Example.function() == 2
+  assert Example.function() == 3
+  assert Example.function() == 1
+  assert Example.function() == 2
+  assert Example.function() == 3
+  assert Example.function() == 1
+  ```
+
+  The function `raises/1` can be used to `raise/1` a `RuntimeError` when the function is called.
+
+  ```elixir
+  patch(Example, :function, raises("patched"))
+
+  assert_raise RuntimeError, "patched", fn ->
+    Example.function()
+  end
+  ```
+
+  The function `raises/2` can be used to `raise/2` any exception with any attributes when the function
+  is called.
+
+  ```elixir
+  patch(Example, :function, raises(ArgumentError, message: "patched"))
+
+  assert_raise ArgumentError, "patched", fn ->
+    Example.function()
+  end
+  ```
+
+  The function `sequence/1` can be given a list which will be used until a singal value is
+  remaining, the remaining value will be returned on all subsequent calls.
+
+  ```elixir
+  patch(Example, :function, sequence([1, 2, 3]))
+
+  assert Example.function() == 1
+  assert Example.function() == 2
+  assert Example.function() == 3
+  assert Example.function() == 3
+  assert Example.function() == 3
+  assert Example.function() == 3
+  assert Example.function() == 3
+  ```
+
+  The function `throws/1` can be given a value to `throw/1` when the function is called.
+
+  ```elixir
+  patch(Example, :function, throws(:patched))
+
+  assert catch_throw(Example.function()) == :patched
+  ```
+
+  Any other value will be returned as a literal scalar value when the function is called.
+
+  ```elixir
+  patch(Example, :function, :patched)
+
+  assert Example.function() == :patched
+  ```
   """
   @spec patch(module :: module(), function :: atom(), value :: Patch.Mock.Value.t()) ::
           Patch.Mock.Value.t()
@@ -310,6 +508,30 @@ defmodule Patch do
     return_value
   end
 
+  @doc """
+  Gets the real module name for a fake.
+
+  This is useful for Fakes that want to defer some part of the functionality back to the real
+  module.
+
+  ```elixir
+  def Example do
+    def calculate(a) do
+      # ...snip some complex calculations...
+      result
+    end
+  end
+
+  def Example.Fake do
+    import Patch, only: [real: 1]
+
+    def calculate(a) do
+      real_result = real(Example).calculate(a)
+
+      {:fake, real_result}
+    end
+  end
+  """
   @spec real(module :: module()) :: module()
   def real(module) do
     Naming.original(module)
@@ -317,6 +539,16 @@ defmodule Patch do
 
   @doc """
   Remove any mocks or spies from the given module
+
+  ```elixir
+  original = Example.example()
+
+  patch(Example, :example, :patched)
+  assert Example.example() == :patched
+
+  restore(Example)
+  assert Example.example() == original
+  ```
   """
   @spec restore(module :: module()) :: :ok | {:error, term()}
   def restore(module) do
@@ -328,14 +560,17 @@ defmodule Patch do
 
   Once a module has been spied on the calls to that module can be asserted / refuted without
   changing the behavior of the module.
+
+  ```elixir
+  spy(Example)
+
+  Example.example(1, 2, 3)
+
+  assert_called Example.example(1, 2, 3)   # passes
   """
   @spec spy(module :: module()) :: :ok
   def spy(module) do
     {:ok, _} = Patch.Mock.module(module)
     :ok
   end
-
-
-
-
 end

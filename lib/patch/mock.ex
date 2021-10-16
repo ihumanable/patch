@@ -1,6 +1,7 @@
 defmodule Patch.Mock do
   alias Patch.Mock
 
+
   @spec called?(module :: module(), name :: atom()) :: boolean()
   def called?(module, name) do
     module
@@ -21,6 +22,13 @@ defmodule Patch.Mock do
       _ ->
         false
     end)
+  end
+
+  @spec expose(module :: module, exposes :: Mock.Code.exposes()) :: :ok | {:error, term()}
+  def expose(module, exposes) do
+    with {:ok, _} <- module(module, exposes: exposes) do
+      Mock.Server.expose(module, exposes)
+    end
   end
 
   @spec history(module :: module()) :: Mock.History.t()

@@ -31,17 +31,67 @@ defmodule Patch.MixProject do
   end
 
   # Specifies which erlang paths to compile per environemnt
-  defp erlc_paths(env) when env in [:dev, :test], do: ["test/support"]
+  defp erlc_paths(:test), do: ["test/support"]
   defp erlc_paths(_), do: []
 
   # Specifies which elixir paths to compile per environment.
-  defp elixirc_paths(env) when env in [:dev, :test], do: ["lib", "test/support"]
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
   defp docs do
     [
       name: "Patch",
       extras: ["pages/README.md", "pages/CHANGELOG.md"],
+      groups_for_modules: [
+        "Developer Interface": [
+          Patch
+        ],
+        "Listener": [
+          Patch.Listener,
+          Patch.Listener.Supervisor
+        ],
+        "Mock": [
+          Patch.Mock,
+          Patch.Mock.History,
+          Patch.Mock.Naming,
+          Patch.Mock.Server,
+          Patch.Mock.Supervisor
+        ],
+        "Mock Code": [
+          Patch.Mock.Code,
+          Patch.Mock.Code.Generate,
+          Patch.Mock.Code.Query,
+          Patch.Mock.Code.Transform,
+          Patch.Mock.Code.Unit
+        ],
+        "Mock Code Generators": [
+          Patch.Mock.Code.Generators.Delegate,
+          Patch.Mock.Code.Generators.Facade,
+          Patch.Mock.Code.Generators.Original
+        ],
+        "Mock Code Queries": [
+          Patch.Mock.Code.Queries.Exports,
+          Patch.Mock.Code.Queries.Functions
+        ],
+        "Mock Code Transforms": [
+          Patch.Mock.Code.Transforms.Clean,
+          Patch.Mock.Code.Transforms.Export,
+          Patch.Mock.Code.Transforms.Filter,
+          Patch.Mock.Code.Transforms.Remote,
+          Patch.Mock.Code.Transforms.Rename,
+        ],
+        "Mock Values": [
+          Patch.Mock.Value,
+          Patch.Mock.Values.Callable,
+          Patch.Mock.Values.Cycle,
+          Patch.Mock.Values.Scalar,
+          Patch.Mock.Values.Sequence,
+        ],
+        "Utilities": [
+          Patch.Reflection,
+          Patch.Supervisor
+        ]
+      ],
       main: "readme",
       source_url: "https://github.com/ihumanable/patch"
     ]

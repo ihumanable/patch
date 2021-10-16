@@ -7,23 +7,26 @@
 
 Patch - Ergonomic Mocking for Elixir
 
-Patch makes it easy to replace functionality in tests with test specific functionality.  Patch augments ExUnit with several utilities that make writing tests in Elixir fast and easy.
+Patch makes it easy to replace functionality in tests with test specific functionality.  Patch augments ExUnit with several utilities that make writing tests in Elixir fast and easy.  Patch includes unique functionality that no other mocking library for Elixir provides, Patch's [Super Powers](#super-powers).
 
-Patch provides functionality for replacing code at test time and for working with processes.
-
+- [Super Powers](#super-powers)
 - [Installation](#installation)
 - [Quickstart](#quickstart)
-- [Patching Code](#patching-code) 
-  - [Patching](#patching)
-  - [Asserting / Refuting Calls](#asserting--refuting-calls)
-  - [Spies](#spies)
-  - [Fakes](#fakes)
-- [Working with Processes](#working-with-processes)
-  - [Listeners](#listeners)
-  - [Injecting](#injecting)
 - [Support Matrix](#support-matrix)
 - [Limitations](#limitations)
-- [Changelog](CHANGELOG.md)
+- [Prior Art](#prior-art)
+- [Changelog](#changelog)
+
+## Super Powers
+
+Patch provides 2 special features that no other mocking library for Elixir offers.  See the [Mockompare](https://github.com/ihumanable/mockompare) suite for a comparison of Elixir / Erlang mocking libraries.  If there is a way to accomplish the following with another library, please open an issue so this section and the comparisons can be updated.
+
+So what are these super powers?
+
+1.  Patch makes it possible to test your private functions without changing their visibility via the `expose/2` functionality.  
+2.  Patch mocks are effective for both local and remote calls.  This means a patched function **always** resolves to the patch.
+
+For more information about Patch's Super Powers see the [Super Powers Documentation](https://hexdocs.pm/patch/super-powers.html)
 
 ## Installation
 

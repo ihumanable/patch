@@ -356,8 +356,8 @@ defmodule Patch.Mock.Code do
 
   The `target` module's unchanged abstract_form is returned on success.
   """
-  @spec mock(module :: module(), options :: [option()]) :: {:ok, Unit.t()} | {:error, term}
-  def mock(module, options \\ []) do
+  @spec module(module :: module(), options :: [option()]) :: {:ok, Unit.t()} | {:error, term}
+  def module(module, options \\ []) do
     exposes = options[:exposes] || :public
 
     with {:ok, compiler_options} <- compiler_options(module),

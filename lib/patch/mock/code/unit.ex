@@ -4,7 +4,7 @@ defmodule Patch.Mock.Code.Unit do
 
   @type t :: %__MODULE__{
     abstract_forms: [Code.form()],
-    compiler_options: Code.compiler_options(),
+    compiler_options: [Code.compiler_option()],
     module: module(),
     sticky?: boolean()
   }

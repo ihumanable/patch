@@ -70,5 +70,34 @@ defmodule Patch.Test.User.ExposeTest do
         apply(Expose, :private_function_b, [])
       end
     end
+
+    test "expose can be changed after patching without losing previous patches or history" do
+      patch(Expose, :public_function, :patched)
+
+      assert Expose.public_function() == :patched
+
+      assert_raise UndefinedFunctionError, fn ->
+        apply(Expose, :private_function_a, [])
+      end
+
+      assert_raise UndefinedFunctionError, fn ->
+        apply(Expose, :private_function_b, [])
+      end
+
+      expose(Expose, :all)
+
+      assert Expose.public_function() == :patched
+
+      assert apply(Expose, :private_function_a, []) == :private_a
+
+      assert apply(Expose, :private_function_b, []) == :private_b
+
+      assert history(Expose) == [
+        {:public_function, []},
+        {:public_function, []},
+        {:private_function_a, []},
+        {:private_function_b, []}
+      ]
+    end
   end
 end

@@ -9,6 +9,7 @@ defmodule Patch.Mock.Code.Generators.Facade do
   """
 
   alias Patch.Mock.Naming
+  alias Patch.Mock.Code
   alias Patch.Mock.Code.Transform
 
   @generated [generated: true]
