@@ -11,13 +11,15 @@ Patch makes it easy to replace functionality in tests with test specific functio
 
 ## Features
 
-Why use Patch instead of meck, Mock, Mox, etc.  Here are the key features of Patch.
+Why use Patch instead of meck, Mock, Mockery, Mox, etc?  
+
+Here are the key features of Patch.
 
 1. Easy-to-use and composable interface with sensible defaults.
 2. First class support for working with Processes.
 3. No testing code in non-test code.
 
-In addition to these features which many libraries aspire to, Patch has 2 additional features that no other mocking library for Elixir / Erlang seem to have.  These two "super powers" are 
+In addition to these features which many libraries aspire to, Patch has 2 additional features that no other mocking library for Elixir / Erlang seem to have.  These two "Super Powers" are 
 
 1.  Patch makes it possible to test your private functions without changing their visibility via the `expose/2` functionality.  
 2.  Patch mocks are effective for both local and remote calls.  This means a patched function **always** resolves to the patch.
