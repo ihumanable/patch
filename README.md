@@ -47,7 +47,7 @@ Add patch to your mix.exs
 ```elixir
 def deps do
   [
-    {:patch, "~> 0.5.0", only: [:test]}
+    {:patch, "~> 0.6.0", only: [:test]}
   ]
 end
 ```
@@ -60,7 +60,7 @@ After adding the dependency just add the following line to any test module after
 use Patch
 ```
 
-This library comes with a comprehensive suite of unit tests.  These tests not only verify that the library is working correctly but are designed so that for every bit of functionality there is an easy to understand example for how to use that feature.  Check out the [User Tests](https://github.com/ihumanable/tree/master/test/user) for examples of how to use each feature.
+This library comes with a comprehensive suite of unit tests.  These tests not only verify that the library is working correctly but are designed so that for every bit of functionality there is an easy to understand example for how to use that feature.  Check out the [User Tests](https://github.com/ihumanable/patch/tree/master/test/user) for examples of how to use each feature.
 
 Using Patch adds 10 core functions, 4 assertions, and 7 mock value builders to the test.
 
@@ -103,7 +103,7 @@ Using Patch adds 10 core functions, 4 assertions, and 7 mock value builders to t
 
 ## Guide Book
 
-Patch comes with [plenty of documentation](https://hexdocs.pm/patch) and a [Suite of User Tests](https://github.com/ihumanable/tree/master/test/user) that show how to use the library.  
+Patch comes with [plenty of documentation](https://hexdocs.pm/patch) and a [Suite of User Tests](https://github.com/ihumanable/patch/tree/master/test/user) that show how to use the library.  
 
 For a guided tour and deep dive of Patch, see the [Guide Book](https://hexdocs.pm/patch/guide-book.html)
 
