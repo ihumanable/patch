@@ -1,5 +1,29 @@
 # Change Log
 
+## 0.6.1 (2021-10-17)
+
+Minor release to improve the documentation and reduce the scope of imported symbols from `Patch.Mock.Value`.
+
+### Improvements
+
+- ⬆️ - \[Documentation\] Guide Book broken into Chapters, additional information about core concepts.
+
+### Features
+
+None
+
+### Bugfixes
+
+None
+
+### Deprecations
+
+None
+
+### Removals
+
+- ⛔️ - `Patch.Mock.Value.advance/1` and `Patch.Mock.Value.next/2` used to be imported into the test when `use Patch` was present.  This was an oversight and these two functions are not meant to be called directly by the test author, the imports have been reduced to remove these symbols.
+
 ## 0.6.0 (2021-10-16)
 
 Major internal refactor.  This version removes `meck` as a dependency and implements a Patch specific replacement, `Patch.Mock`.  This allows us to have a new set of functionality that no other mocking library for Elixir / Erlang has today.  
