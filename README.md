@@ -71,6 +71,8 @@ Using Patch adds 10 core functions, 4 assertions, and 7 mock value builders to t
 
 ### Core Functions
 
+Core functions let us apply patches, patch processes, intercept messages, and query our patched modules.
+
 | Core Function                                                | Description                                                                |
 |--------------------------------------------------------------|----------------------------------------------------------------------------|
 | [expose/2](https://hexdocs.pm/patch/Patch.html#expose/2)     | Expose private functions as public for the purposes of testing             |
@@ -86,6 +88,8 @@ Using Patch adds 10 core functions, 4 assertions, and 7 mock value builders to t
 
 ### Assertions
 
+Assertions make it easy to assert that a patched module has or has not observed a call.
+
 | Assertion                                                                  | Description                                                                              |
 |----------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
 | [assert_called/1](https://hexdocs.pm/patch/Patch.html#assert_called/1)     | Asserts that a particular call has occurred on a mocked module                           |
@@ -94,6 +98,8 @@ Using Patch adds 10 core functions, 4 assertions, and 7 mock value builders to t
 | [refute_any_call/2](https://hexdocs.pm/patch/Patch.html#refute_any_call/2) | Refutes that any call of any arity has occured on the mocked module for a function name  |
 
 ### Value Builders
+
+Patched functions aren't limited to only returning simple scalar values, a host of Value Builders are provided for all kinds of testing scenarios.  See the [patch](https://hexdocs.pm/patch/Patch.html#patch/3) documentation for details.
 
 | Value Builder                                                             | Description                                                                              |
 |---------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
