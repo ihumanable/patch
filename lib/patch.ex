@@ -12,8 +12,8 @@ defmodule Patch do
   use Patch
   ```
 
-  After this all the patch functions will be available, see the README and function documentation
-  for more details.
+  After this all the patch functions will be available, see the function documentation for
+  details.
   """
   alias Patch.Mock
   alias Patch.Mock.Naming
