@@ -72,7 +72,7 @@ Using Patch adds 10 core functions, 4 assertions, and 7 mock value builders to t
 | [fake/2](https://hexdocs.pm/patch/Patch.html#fake/2)         | Replaces a module with a fake module                                       |
 | [history/1,2](https://hexdocs.pm/patch/Patch.html#history/2) | Returns the call history for a mock                                        |
 | [inject/3](https://hexdocs.pm/patch/Patch.html#inject/3)     | Injects state into a GenServer                                             |
-| [listen/3](https://hexdocs.pm/patch/Patch.html#listen/3)     | Listens to messages to a process and forwards them to the test process     |
+| [listen/3](https://hexdocs.pm/patch/Patch.html#listen/3)     | Intercepts messages to a process and forwards them to the test process     |
 | [patch/3](https://hexdocs.pm/patch/Patch.html#patch/3)       | Patches a function so that it returns a mock value                         |
 | [private/1](https://hexdocs.pm/patch/Patch.html#private/1)   | Macro to call exposed private functions without raising a compiler warning |
 | [real/1](https://hexdocs.pm/patch/Patch.html#real/1)         | Resolves the real module for a patched module                              |
