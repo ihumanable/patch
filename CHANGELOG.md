@@ -2,6 +2,8 @@
 
 ## 0.5.0 (2021-09-17)
 
+Better support for mocking erlang modules
+
 ### Improvements
 
 
@@ -40,6 +42,8 @@ None
 
 
 ## 0.4.0 (2021-08-09)
+
+Support for working with Processes
 
 ### Improvements
 
@@ -84,6 +88,8 @@ None
 
 ## 0.3.0 (2021-07-12)
 
+Support for replacing a module wholesale via the `fake/2` function
+
 ### Improvements
 
 
@@ -125,6 +131,8 @@ None
 
 ## 0.2.0 (2021-03-03)
 
+Removed Arity Limitations
+
 ### Improvements
 
 
@@ -162,6 +170,8 @@ None
 
 ## 0.1.2 (2021-01-28)
 
+Increased Elixir Compatibility
+
 ### Improvements
 
 
@@ -196,6 +206,8 @@ None
 
 
 ## 0.1.1 (2020-04-27)
+
+Bugfix Release
 
 ### Improvements
 
@@ -233,6 +245,8 @@ None
 
 
 ## 0.1.0 (2020-04-21)
+
+Initial Release
 
 ### Improvements
 

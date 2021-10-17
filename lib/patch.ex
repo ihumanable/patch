@@ -15,7 +15,7 @@ defmodule Patch do
   After this all the patch functions will be available, see the README and function documentation
   for more details.
   """
-
+  alias Patch.Mock
   alias Patch.Mock.Naming
   alias Patch.Mock.Value
   import Value
@@ -62,6 +62,7 @@ defmodule Patch do
   assert_called Example.function(4, :_, 6)  # fails
   ```
   """
+  @spec assert_called(Macro.t()) :: Macro.t()
   defmacro assert_called(call) do
     {module, function, args} = Macro.decompose_call(call)
 
@@ -69,8 +70,7 @@ defmodule Patch do
       unless Patch.Mock.called?(unquote(module), unquote(function), unquote(args)) do
         calls =
           unquote(module)
-          |> Patch.Mock.history()
-          |> Patch.Mock.History.entries()
+          |> Patch.history()
           |> Enum.with_index(1)
           |> Enum.map(fn {{f, a}, i} ->
             "#{i}. #{inspect(unquote(module))}.#{f}(#{
@@ -121,6 +121,7 @@ defmodule Patch do
   refute_called Example.function(1, :_, 3)  # fails
   ```
   """
+  @spec refute_called(Macro.t()) :: Macro.t()
   defmacro refute_called(call) do
     {module, function, args} = Macro.decompose_call(call)
 
@@ -128,8 +129,7 @@ defmodule Patch do
       if Patch.Mock.called?(unquote(module), unquote(function), unquote(args)) do
         calls =
           unquote(module)
-          |> Patch.Mock.history()
-          |> Patch.Mock.History.entries()
+          |> Patch.history()
           |> Enum.with_index(1)
           |> Enum.map(fn {{f, a}, i} ->
             "#{i}. #{inspect(unquote(module))}.#{f}(#{
@@ -171,7 +171,7 @@ defmodule Patch do
   """
   @spec assert_any_call(module :: module(), function :: atom()) :: nil
   def assert_any_call(module, function) do
-    unless Patch.Mock.called?(module, function) do
+    unless Mock.called?(module, function) do
       message = """
       \n
       Expected any call received:
@@ -200,11 +200,10 @@ defmodule Patch do
   """
   @spec refute_any_call(module :: module(), function :: atom()) :: nil
   def refute_any_call(module, function) do
-    if Patch.Mock.called?(module, function) do
+    if Mock.called?(module, function) do
       calls =
         module
-        |> Patch.Mock.history()
-        |> Patch.Mock.History.entries()
+        |> history()
         |> Enum.with_index(1)
         |> Enum.map(fn {{_, args}, i} ->
           "#{i}. #{inspect(module)}.#{to_string(function)}(#{
@@ -247,9 +246,9 @@ defmodule Patch do
   expose(Example, [private_function: 1, private_function: 2])
   ```
   """
-  @spec expose(module :: module, exposes :: Patch.Mock.Code.exposes()) :: :ok | {:error, term()}
+  @spec expose(module :: module, exposes :: Patch.Mock.exposes()) :: :ok | {:error, term()}
   def expose(module, exposes) do
-    Patch.Mock.expose(module, exposes)
+    Mock.expose(module, exposes)
   end
 
   @doc """
@@ -275,7 +274,7 @@ defmodule Patch do
   """
   @spec fake(real_module :: module(), fake_module :: module()) :: :ok
   def fake(real_module, fake_module) do
-    {:ok, _} = Patch.Mock.module(real_module)
+    {:ok, _} = Mock.module(real_module)
 
     real_functions = Patch.Reflection.find_functions(real_module)
     fake_functions = Patch.Reflection.find_functions(fake_module)
@@ -307,12 +306,15 @@ defmodule Patch do
   assert history(Example) == [{:example, [1, 2, 3]}, {:function, [:a]}]
   assert history(Example, :desc) == [{:function, [:a]}, {:example, [1, 2, 3]}]
   ```
+
+  For asserting or refuting that a call happened the `assert_called/1`, `assert_any_call/2`,
+  `refute_called/1`, and `refute_any_call/2` functions provide a more convenient API.
   """
-  @spec history(module :: module(), sorting :: :asc | :desc) :: [Patch.Mock.History.entry()]
+  @spec history(module :: module(), sorting :: :asc | :desc) :: [Mock.History.entry()]
   def history(module, sorting \\ :asc) do
     module
-    |> Patch.Mock.history()
-    |> Patch.Mock.History.entries(sorting)
+    |> Mock.history()
+    |> Mock.History.entries(sorting)
   end
 
   @doc """
@@ -373,7 +375,7 @@ defmodule Patch do
   @spec listen(
           tag :: Patch.Listener.tag(),
           target :: Patch.Listener.target(),
-          options :: Patch.Listener.options()
+          options :: [Patch.Listener.option()]
         ) :: {:ok, pid()} | {:error, :not_found}
   def listen(tag, target, options \\ []) do
     Patch.Listener.Supervisor.start_child(self(), tag, target, options)
@@ -487,15 +489,14 @@ defmodule Patch do
   assert Example.function() == :patched
   ```
   """
-  @spec patch(module :: module(), function :: atom(), value :: Patch.Mock.Value.t()) ::
-          Patch.Mock.Value.t()
+  @spec patch(module :: module(), function :: atom(), value :: Value.t()) :: Value.t()
   def patch(module, function, %value_module{} = value) when is_value(value_module) do
     {:ok, _} = Patch.Mock.module(module)
     :ok = Patch.Mock.register(module, function, value)
     value
   end
 
-  @spec patch(module :: module(), function :: atom(), callable :: function()) :: function()
+  @spec patch(module :: module(), function :: atom(), callable) :: callable when callable: function()
   def patch(module, function, callable) when is_function(callable) do
     patch(module, function, callable(callable))
     callable
@@ -506,6 +507,37 @@ defmodule Patch do
   def patch(module, function, return_value) do
     patch(module, function, scalar(return_value))
     return_value
+  end
+
+  @doc """
+  Suppress warnings for using exposed private functions in tests.
+
+  Patch allows you to make a private function public, but this happens dynamically at test time.
+  The Elixir Compiler will flag calls to exposed functions as a warning.
+
+  One way around this is to change the normal function call into an `apply/3` but this is
+  cumbersome and makes tests harder to read.
+
+  This macro just rewrites a normal looking call into an `apply/3` so the compiler won't complain
+  about calling an exposed function.
+
+  ```elixir
+  expose(Example, :all)
+
+  patch(Example, :private_function, :patched)
+
+  assert Example.private_function() == :patched   # Compiler will warn about call to undefined function
+  assert apply(Example, :private_function, []) == :patched   # Compiler will not warn
+  assert private(Example.private_function()) == :patched     # Same as previous line, but looks nicer.
+  ```
+  """
+  @spec private(Macro.t()) :: Macro.t()
+  defmacro private(call) do
+    {module, function, arguments} = Macro.decompose_call(call)
+
+    quote do
+      apply(unquote(module), unquote(function), unquote(arguments))
+    end
   end
 
   @doc """
@@ -552,7 +584,7 @@ defmodule Patch do
   """
   @spec restore(module :: module()) :: :ok | {:error, term()}
   def restore(module) do
-    Patch.Mock.restore(module)
+    Mock.restore(module)
   end
 
   @doc """
@@ -570,7 +602,7 @@ defmodule Patch do
   """
   @spec spy(module :: module()) :: :ok
   def spy(module) do
-    {:ok, _} = Patch.Mock.module(module)
+    {:ok, _} = Mock.module(module)
     :ok
   end
 end

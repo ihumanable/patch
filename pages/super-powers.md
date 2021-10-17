@@ -171,3 +171,6 @@ defmodule ExampleTest do
 end
 ```
 
+## How does this all work?
+
+Check out the documentation for `Patch.Mock.Code` for more details on how this is accomplished.

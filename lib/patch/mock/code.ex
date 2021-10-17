@@ -18,12 +18,12 @@ defmodule Patch.Mock.Code do
 
   - `target` - The module to be mocked.
   - `facade` - The `target` module is replaced by a `facade` module that intercepts all external
-               calls and redirects them to the `delegate` module.
+    calls and redirects them to the `delegate` module.
   - `original` - The `target` module is preserved as the `original` module, with the important
-                 transformation that all local calls are redirected to the `delegate` module.
+    transformation that all local calls are redirected to the `delegate` module.
   - `delegate` - This module is responsible for checking with the `server` to see if a call is
-                 mocked and should be intercepted.  If so, the mock value is returned, otherwise
-                 the `original` function is called.
+    mocked and should be intercepted.  If so, the mock value is returned, otherwise the `original`
+    function is called.
 
   Each `target` module has an associated GenServer, a `Patch.Mock.Server` that has keeps state
   about the history of function calls and holds the mock data to be returned on interception.  See
@@ -119,8 +119,8 @@ defmodule Patch.Mock.Code do
 
   Code calling `Example.public_function/2` has the following call flow.
 
-  ```
-  [Caller] -> facade -> delegate -> serve` -> mocked? -> yes   (Intercepted)
+  ```text
+  [Caller] -> facade -> delegate -> server -> mocked? -> yes   (Intercepted)
            [Mock Value] <----------------------------|----'
                                                       -> no -> original   (Run Original Code)
            [Original Value] <--------------------------------------'
@@ -133,9 +133,9 @@ defmodule Patch.Mock.Code do
 
   Code calling `Example.private_function/2` has the following call flow.
 
-  ```
-  [Caller] --------------------------> `facade`
-           [UndefinedFunctionError] <------'
+  ```text
+  [Caller] --------------------------> facade
+           [UndefinedFunctionError] <-----'
   ```
 
   Calling a private function continues to be an error from the external caller's point of view.
@@ -152,7 +152,7 @@ defmodule Patch.Mock.Code do
   Code in the `original` module calling public functions have their code transformed to call the
   `delegate` module.
 
-  ```
+  ```text
   original -> delegate -> server -> mocked? -> yes   (Intercepted)
            [Mock Value] <------------------|----'
                                             -> no -> original   (Run Original Code)
@@ -167,7 +167,7 @@ defmodule Patch.Mock.Code do
   Code in the `original` module calling private functions have their code transformed to call the
   `delegate` module
 
-  ```
+  ```text
   original -> delegate -> server -> mocked? -> yes   (Intercepted)
            [Mock Value] <------------------|----'
                                             -> no -> original   (Run Original Code)
@@ -182,6 +182,7 @@ defmodule Patch.Mock.Code do
   For additional details on how Code Generation works, see the `Patch.Mock.Code.Generate` module.
   """
 
+  alias Patch.Mock
   alias Patch.Mock.Code.Generate
   alias Patch.Mock.Code.Query
   alias Patch.Mock.Code.Unit
@@ -203,26 +204,9 @@ defmodule Patch.Mock.Code do
   @type exports :: Keyword.t(arity())
 
   @typedoc """
-  What exposures should be made in a module.
-
-
-  - `:public` will only expose the public functions
-  - `:all` will expose both public and private functions
-  - A list of exports can be provided, they will be added to the `:public` functions.
-  """
-  @type exposes :: :all | :public | exports()
-
-  @typedoc """
-  The exposes option controls if any private functions should be exposed in the `facade` module.
-
-  The default is `:public`.
-  """
-  @type exposes_option :: {:exposes, exposes()}
-
-  @typedoc """
   Sum-type of all valid options
   """
-  @type option :: exposes_option()
+  @type option :: Mock.exposes_option()
 
   @spec abstract_forms(module :: module) ::
           {:ok, [form()]}
@@ -322,7 +306,7 @@ defmodule Patch.Mock.Code do
     end
   end
 
-  @spec exports(abstract_forms :: [form()], module :: module(), exposes :: exposes()) :: exports()
+  @spec exports(abstract_forms :: [form()], module :: module(), exposes :: Mock.exposes()) :: exports()
   def exports(abstract_forms, module, :public) do
     exports = Query.exports(abstract_forms)
     filter_exports(module, exports, :normal)

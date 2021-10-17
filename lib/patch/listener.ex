@@ -38,11 +38,6 @@ defmodule Patch.Listener do
   """
   @type option :: capture_replies_option() | timeout_option()
 
-  @typedoc """
-  Convenience type for list of options
-  """
-  @type options :: [option()]
-
   @type t :: %__MODULE__{
           capture_replies: boolean(),
           recipient: pid(),
@@ -67,7 +62,7 @@ defmodule Patch.Listener do
     }
   end
 
-  @spec start_link(recipient :: atom(), tag :: tag(), target :: pid() | atom(), options()) ::
+  @spec start_link(recipient :: atom(), tag :: tag(), target :: pid() | atom(), [option()]) ::
           {:ok, pid()} | {:error, :not_found}
   def start_link(recipient, tag, target, options \\ [])
 

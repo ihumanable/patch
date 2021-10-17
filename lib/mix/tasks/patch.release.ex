@@ -6,26 +6,10 @@ defmodule Mix.Tasks.Patch.Release do
   this tool.
 
   This tool will collect some necessary information for the changelog.
-
-  There are some minor differences in how Github and ExDocs want to link and
-  render things.  This task also takes care of generating custom markdown that
-  renders properly in Github and ExDocs.  Github markdown files end up in the
-  root of the project, the ExDocs markdown files end up in /pages and are
-  included via extras in mix.exs.
   """
   @shortdoc "Prepares Patch for the next release."
 
   use Mix.Task
-
-  @exdocs_links %{
-    assert_refute_calls: "#asserting-refuting-calls",
-    changelog: "changelog.html"
-  }
-
-  @github_links %{
-    assert_refute_calls: "#asserting--refuting-calls",
-    changelog: "CHANGELOG.md"
-  }
 
   def run(_) do
     config = Mix.Project.config()
@@ -66,6 +50,7 @@ defmodule Mix.Tasks.Patch.Release do
 
   def prepare_release(version, releases) do
     date = get_date()
+    summary = get_summary()
     improvements = entries("Improvements")
     features = entries("Features")
     bugfixes = entries("Bugfixes")
@@ -74,6 +59,7 @@ defmodule Mix.Tasks.Patch.Release do
 
     release = %{
       version: version,
+      summary: summary,
       date: date,
       improvements: improvements,
       features: features,
@@ -88,27 +74,13 @@ defmodule Mix.Tasks.Patch.Release do
   def render_files(version, releases) do
     releases_binary = :erlang.term_to_binary(releases)
 
-    readme_template = Path.expand("./pages/templates/README.eex")
     changelog_template = Path.expand("./pages/templates/CHANGELOG.eex")
     releases_path = Path.expand("./pages/templates/releases.etf")
 
-    exdocs_changelog_path = Path.expand("./pages/CHANGELOG.md")
-    github_changelog_path = Path.expand("./CHANGELOG.md")
+    changelog_path = Path.expand("./CHANGELOG.md")
+    changelog = EEx.eval_file(changelog_template, releases: releases)
 
-    exdocs_readme_path = Path.expand("./pages/README.md")
-    github_readme_path = Path.expand("./README.md")
-
-    exdocs_changelog = EEx.eval_file(changelog_template, releases: releases)
-    github_changelog = EEx.eval_file(changelog_template, releases: releases)
-
-    exdocs_readme = EEx.eval_file(readme_template, version: version, links: @exdocs_links)
-    github_readme = EEx.eval_file(readme_template, version: version, links: @github_links)
-
-    File.write!(exdocs_changelog_path, exdocs_changelog)
-    File.write!(github_changelog_path, github_changelog)
-
-    File.write!(exdocs_readme_path, exdocs_readme)
-    File.write!(github_readme_path, github_readme)
+    File.write!(changelog_path, changelog)
 
     File.write!(releases_path, releases_binary)
 
@@ -143,6 +115,10 @@ defmodule Mix.Tasks.Patch.Release do
       date ->
         date
     end
+  end
+
+  def get_summary do
+    prompt([:cyan, "Summary", :default_color])
   end
 
   def entries(prompt, acc \\ []) do

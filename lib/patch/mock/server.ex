@@ -11,12 +11,11 @@ defmodule Patch.Mock.Server do
 
   @default_history_limit :infinity
 
-  @type history_limit_option :: {:history_limit, non_neg_integer() | :infinity}
-
   @typedoc """
   Sum-type of all valid options
   """
-  @type option :: Code.option() | history_limit_option()
+  @type option :: Mock.option()
+
 
   @type t :: %__MODULE__{
           history: History.t(),
@@ -86,7 +85,7 @@ defmodule Patch.Mock.Server do
     end
   end
 
-  @spec expose(module :: module(), exposes:: Code.exposes) :: :ok | {:error, term()}
+  @spec expose(module :: module(), exposes:: Mock.exposes()) :: :ok | {:error, term()}
   def expose(module, exposes) do
     server = Naming.server(module)
     GenServer.call(server, {:expose, exposes})
@@ -97,30 +96,15 @@ defmodule Patch.Mock.Server do
   """
   @spec history(module :: module()) :: History.t()
   def history(module) do
-    server = Naming.server(module)
-    GenServer.call(server, :history)
+    call(module, :history, fn -> History.new() end)
   end
 
   @doc """
   Restores a module to its original state.
-
-  Can be called by module or by pid
   """
-  @spec restore(pid :: pid()) :: :ok
-  def restore(pid) when is_pid(pid) do
-    GenServer.call(pid, :restore)
-  end
-
   @spec restore(module :: module()) :: :ok
   def restore(module) do
-    server = Naming.server(module)
-
-    try do
-      GenServer.call(server, :restore)
-    catch
-      :exit, {:noproc, _} ->
-        :ok
-    end
+    call(module, :restore, fn -> :ok end)
   end
 
   @doc """
@@ -192,6 +176,18 @@ defmodule Patch.Mock.Server do
   end
 
   ## Private
+
+  @spec call(module :: module(), message :: term(), default :: term()) :: term()
+  defp call(module, message, default) do
+    server = Naming.server(module)
+
+    try do
+      GenServer.call(server, message)
+    catch
+      :exit, {:noproc, _} ->
+        default.()
+    end
+  end
 
   @spec do_expose(state :: t(), current_exposes :: Code.exposes(), desired_exposes :: Code.exposes()) :: {:ok, t()} | {:error, term()}
   defp do_expose(%__MODULE__{} = state, same, same) do

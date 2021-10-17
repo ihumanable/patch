@@ -1,51 +1,4 @@
-# Patch
-
-[![CI](https://github.com/ihumanable/patch/workflows/CI/badge.svg)](https://github.com/ihumanable/patch/actions)
-[![Hex.pm Version](http://img.shields.io/hexpm/v/patch.svg?style=flat)](https://hex.pm/packages/patch)
-[![Hex.pm License](http://img.shields.io/hexpm/l/patch.svg?style=flat)](https://hex.pm/packages/patch)
-[![HexDocs](https://img.shields.io/badge/HexDocs-Yes-blue)](https://hexdocs.pm/patch)
-
-Patch - Ergonomic Mocking for Elixir
-
-Patch makes it easy to replace functionality in tests with test specific functionality.  Patch augments ExUnit with several utilities that make writing tests in Elixir fast and easy.
-
-Patch provides functionality for replacing code at test time and for working with processes.
-
-- [Installation](#installation)
-- [Quickstart](#quickstart)
-- [Patching Code](#patching-code) 
-  - [Patching](#patching)
-  - [Asserting / Refuting Calls](#asserting-refuting-calls)
-  - [Spies](#spies)
-  - [Fakes](#fakes)
-- [Working with Processes](#working-with-processes)
-  - [Listeners](#listeners)
-  - [Injecting](#injecting)
-- [Support Matrix](#support-matrix)
-- [Limitations](#limitations)
-- [Changelog](changelog.html)
-
-## Installation
-
-Add patch to your mix.exs
-
-```elixir
-def deps do
-  [
-    {:patch, "~> 0.5.0", only: [:test]}
-  ]
-end
-```
-
-## Quickstart
-
-After adding the dependency just add the following line to any test module after using your test case
-
-```elixir
-use Patch
-```
-
-This library comes with a comprehensive suite of unit tests.  These tests not only verify that the library is working correctly but are designed so that for every bit of functionality there is an easy to understand example for how to use that feature.  Check out the [tests](https://github.com/ihumanable/tree/master/test) for examples of how to use each feature.
+# Guide Book
 
 ## Patching Code
 
@@ -384,25 +337,3 @@ end
 ```
 
 `inject/3` accepts a `GenServer.server` a list of `keys` like one would use for `put_in` and then a value to inject into the processes state.
-
-## Support Matrix
-
-Tests automatically run against a matrix of OTP and Elixir Versions, see the [ci.yml](https://github.com/ihumanable/patch/tree/master/.github/workflows/ci.yml) for details.
-
-| OTP \ Elixir | 1.7  | 1.8  | 1.9  | 1.10 | 1.11 | 1.12 |
-|:------------:|:----:|:----:|:----:|:----:|:----:|:----:|
-| 20           | ✅   | ✅   | ✅   | N/A  | N/A  | N/A  |
-| 21           | ✅   | ✅   | ✅   | ✅   | ✅   | N/A  |
-| 22           | ✅   | ✅   | ✅   | ✅   | ✅   | ✅   |
-| 23           | N/A  | N/A  | N/A  | ✅   | ✅   | ✅   |
-| 24           | N/A  | N/A  | N/A  | N/A  | ✅   | ✅   |
-
-## Limitations
-
-Patch is built on top of [meck](https://github.com/eproxus/meck) and shares many limitations with that library.  
-
-The most important limitation for ExUnit is that Patch **is not compatible with async: true**.
-
-## Changelog
-
-See the [Changelog](changelog.html)

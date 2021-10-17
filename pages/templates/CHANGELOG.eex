@@ -2,6 +2,8 @@
 <%= for release <- releases do %>
 ## <%= release.version %> (<%= release.date %>)
 
+<%= release.summary %>
+
 ### Improvements
 
 <%= if Enum.empty?(release.improvements) do %>

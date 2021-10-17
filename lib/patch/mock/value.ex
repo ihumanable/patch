@@ -11,9 +11,9 @@ defmodule Patch.Mock.Value do
   @value_modules [Values.Callable, Values.Cycle, Values.Scalar, Values.Sequence]
 
   defdelegate callable(target, dispatch \\ :apply), to: Values.Callable, as: :new
-  defdelegate cycle(enumerable), to: Values.Cycle, as: :new
+  defdelegate cycle(values), to: Values.Cycle, as: :new
   defdelegate scalar(value), to: Values.Scalar, as: :new
-  defdelegate sequence(enumerable), to: Values.Sequence, as: :new
+  defdelegate sequence(values), to: Values.Sequence, as: :new
 
   defguard is_value(module) when module in @value_modules
 
