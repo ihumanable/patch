@@ -7,7 +7,7 @@
 
 Patch - Ergonomic Mocking for Elixir
 
-Patch makes it easy to replace functionality in tests with test specific functionality.  Patch augments ExUnit with several utilities that make writing tests in Elixir fast and easy.  Patch includes unique functionality that no other mocking library for Elixir provides, Patch's [Super Powers](#super-powers).
+Patch makes it easy to replace functionality in tests with test specific functionality.  Patch augments ExUnit with several utilities that make writing tests in Elixir fast and easy.  Patch includes unique functionality that no other mocking library for Elixir provides, Patch's [Super Powers](https://hexdocs.pm/patch/super-powers.html).
 
 ## Features
 
@@ -23,7 +23,7 @@ Here are the key features of Patch.
 2. First class support for working with Processes.
 3. No testing code in non-test code.
 
-In addition to these features which many libraries aspire to, Patch has 3 additional features that no other mocking library for Elixir / Erlang seem to have.  These "Super Powers" are 
+In addition to these features which many libraries aspire to, Patch has 3 additional features that no other mocking library for Elixir / Erlang seem to have.  These [Super Powers](https://hexdocs.pm/patch/super-powers.html) are 
 
 1. Patch mocks are effective for both local and remote calls.  This means a patched function **always** resolves to the patch.
 2. Patch can patch private functions without changing their visibility.
