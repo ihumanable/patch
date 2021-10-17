@@ -1,5 +1,52 @@
 # Change Log
 
+## 0.6.0 (2021-10-16)
+
+Major internal refactor.  This version removes `meck` as a dependency and implements a Patch specific replacement, `Patch.Mock`.  This allows us to have a new set of functionality that no other mocking library for Elixir / Erlang has today.  
+
+Patch Mocks can now be said to obey a single simple rule, public or private, local or remote.
+
+A patched function **always** returns the mock value to all callers.
+
+Two new bits of functionality make this true.
+
+1.  All calls, local or remote, end up intercepted and the mock value returned.
+2.  Private functions can be mocked.
+
+And as a bonus
+
+1.  Private functions can be converted into public functions for direct testing.
+
+### Improvements
+
+- ⬆️ - \[Internal\] `Patch.Mock` introduced to replace `meck`
+- ⬆️ - \[Documentation\] README revamped again, new Super Powers documentation and Guide Book.
+
+### Features
+
+- 🎁 - Added the `expose/2` function to support testing private functions.
+- 🎁 - Added the `history/1,2` function so the history of calls to a mock can be retrieved.
+- 🎁 - Added the `private/1` macro to prevent compiler warnings when calling private functions.
+- 🎁 - Added the `callable/1,2` value builder to create explicit callable mock values.
+- 🎁 - Added the `cycle/1` value builder to create a cycle mock values.
+- 🎁 - Added the `raises/1` value builder to cause a mocked function to raise a RuntimeError.
+- 🎁 - Added the `raises/2` value builder to cause a mocked function to raise any other Exception.
+- 🎁 - Added the `scalar/1` value builder to create explicit scalar mock values.
+- 🎁 - Added the `sequence/1` value builder to create sequence mock values.
+- 🎁 - Added the `throws/1` value builder to cause a mocked function to throw a value.
+
+### Bugfixes
+
+None
+
+### Deprecations
+
+None
+
+### Removals
+
+- ⛔️ - \[Dependency\] `meck` was removed as a dependency
+
 ## 0.5.0 (2021-09-17)
 
 Better support for mocking erlang modules
@@ -31,9 +78,9 @@ Support for working with Processes
 
 ### Improvements
 
-- ⬆️ - [Testing] Testing Matrix updated to latest versions of Elixir / OTP
-- ⬆️ - [Dependencies] `meck` updated to 0.9.2
-- ⬆️ - [Documentation] README revamped
+- ⬆️ - \[Testing\] Testing Matrix updated to latest versions of Elixir / OTP
+- ⬆️ - \[Dependencies\] `meck` updated to 0.9.2
+- ⬆️ - \[Documentation\] README revamped
 
 ### Features
 
