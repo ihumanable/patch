@@ -1,6 +1,6 @@
 # Super Powers
 
-Patch provides uniqute features that no other mocking library for Elixir offers.  See the [Mockompare](https://github.com/ihumanable/mockompare) suite for a comparison of Elixir / Erlang mocking libraries.  If there is a way to accomplish the following with another library, please open an issue so this section and the comparisons can be updated.
+Patch provides unique features that no other mocking library for Elixir offers.  See the [Mockompare](https://github.com/ihumanable/mockompare) suite for a comparison of Elixir / Erlang mocking libraries.  If there is a way to accomplish the following with another library, please open an issue so this section and the comparisons can be updated.
 
 So what are these super powers?
 
