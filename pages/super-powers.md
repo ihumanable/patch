@@ -53,8 +53,12 @@ defmodule Example do
   end
 
   def valid?(thing) do
-    rules = DB.fetch(validation_rules_for, thing)
-    Enum.all?(rules, &Rule.valid?(&1, thing))
+    [
+      &Example.Validation.name_not_blank?/1,
+      &Example.Validation.token_hash_valid?/1,
+      &Example.Validation.flux_capacitor_within_limits?/1
+    ]
+    |> Enum.all?(fn validator -> validator.(thing) end)
   end
 
   defp do_save(thing) do
@@ -63,7 +67,15 @@ defmodule Example do
 end
 ```
 
-In a unit test we would want to isolate the unit from the database, we might not want to create a fixture that can actually pass realistic validation if we just want to test the high level logic of "valid gets saved, invalid gets an error."
+In the unit tests for `Example.save/1` we want to test the high level logic of "valid gets saved, invalid gets an error."
+
+This is complicated though because `Example.valid?/1` has real validations baked in.  A common approach is to create a fixture that can pass the validation rules and one that can't.  This is a brittle solution though, it introduces a high degree of coupling between the `Example.save/1` tests and the implementation of `Example.valid?/1`.  
+
+A more robust approach is simply to patch out the call to `Example.valid?/1`.  When we want to test that a valid thing gets saved, we don't have to jump through hoops to get `Example.valid?/1` to return true, we can just patch it and tell it to return true.  When someone comes along and changes the validation rules in `Example.valid?/1` it won't break our `Example.save/1` tests, it might break the tests for `Example.valid?/1` but that's a much better outcome because the test breaking is directly related to the code being changed.
+
+Additionally, in a unit test we would want to isolate the unit from the database.  Our `Example.do_save/1` method wants to actually write to a database, but this is an implementation detail as far as `Example.save/1` is concerned.  A common approach in unit testing is to replace external dependencies, like APIs and Databases, with Fakes.  
+
+A Fake DB could be as complex another copy of the schema actually running on the real database software that's isolated for test data or as simple as an in memory map.  In this style of testing, the test author can let the code read and write from the fake datastore and then query to make sure the datastore is in the appropriate state.  This approach "over tests" the datastore, which is likely already well tested.  A simpler approach is to simply patch out `Example.do_save/1` since we only care that it gets called and it's correct functioning should be guaranteed by tests that directly test that function.
 
 With Patch, we **can** mock these functions and have the mocks be effective even though the module is using the common local call pattern.
 
@@ -210,7 +222,6 @@ defmodule ExampleTest do
   end
 end
 ```
-
 
 ## How does this all work?
 

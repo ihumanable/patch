@@ -43,8 +43,21 @@ defmodule Patch.MixProject do
       extras: [
         "README.md",
         "pages/super-powers.md",
-        "pages/guide-book.md",
+        "pages/guide-book/01-introduction.md",
+        "pages/guide-book/02-patching.md",
+        "pages/guide-book/03-mock-values.md",
+        "pages/guide-book/04-spies-and-fakes.md",
+        "pages/guide-book/05-processes.md",
         "CHANGELOG.md"
+      ],
+      groups_for_extras: [
+        "Guide Book": [
+          "pages/guide-book/01-introduction.md",
+          "pages/guide-book/02-patching.md",
+          "pages/guide-book/03-mock-values.md",
+          "pages/guide-book/04-spies-and-fakes.md",
+          "pages/guide-book/05-processes.md",
+        ]
       ],
       groups_for_modules: [
         "Developer Interface": [
