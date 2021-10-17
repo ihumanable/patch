@@ -21,6 +21,16 @@ defmodule Patch.Test.User.Patch.CallableTest do
       assert Callable.example(:a, :b, :c) == {:patched, :a, :b, :c}
     end
 
+    test "in apply mode, calling the patched function with the wrong arity raises" do
+      assert Callable.example(:a, :b, :c) == {:original, :a, :b, :c}
+
+      patch(Callable, :example, fn a, b, c -> {:patched, a, b, c} end)
+
+      assert_raise BadArityError, fn ->
+        Callable.example(:test_argument)
+      end
+    end
+
     test "callable can optionally be dispatched with all arguments in a list" do
       assert Callable.example(:a, :b, :c) == {:original, :a, :b, :c}
 

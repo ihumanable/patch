@@ -37,7 +37,7 @@ defmodule Patch do
     quote do
       require unquote(__MODULE__)
       import unquote(__MODULE__)
-      import Patch.Mock.Value
+      import Patch.Mock.Value, except: [advance: 1, next: 2]
 
       setup do
         start_supervised!(Patch.Supervisor)
