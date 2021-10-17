@@ -11,8 +11,7 @@ defmodule Patch.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: docs(),
-      package: package(),
-      xref: [exclude: [EEx]]
+      package: package()
     ]
   end
 
