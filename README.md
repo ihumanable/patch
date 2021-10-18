@@ -7,7 +7,7 @@
 
 Patch - Ergonomic Mocking for Elixir
 
-Patch makes it easy to replace functionality in tests with test specific functionality.  Patch augments ExUnit with several utilities that make writing tests in Elixir fast and easy.  Patch includes unique functionality that no other mocking library for Elixir provides, Patch's [Super Powers](super-powers.html).
+Patch makes it easy to replace functionality in tests with test specific functionality.  Patch augments ExUnit with several utilities that make writing tests in Elixir fast and easy.  Patch includes unique functionality that no other mocking library for Elixir provides, Patch's [Super Powers](https://hexdocs.pm/patch/super-powers.html).
 
 ## Features
 
@@ -23,7 +23,7 @@ Here are the key features of Patch.
 2. First class support for working with Processes.
 3. No testing code in non-test code.
 
-In addition to these features which many libraries aspire to, Patch has 3 additional features that no other mocking library for Elixir / Erlang seem to have.  These [Super Powers](super-powers.html) are 
+In addition to these features which many libraries aspire to, Patch has 3 additional features that no other mocking library for Elixir / Erlang seem to have.  These [Super Powers](https://hexdocs.pm/patch/super-powers.html) are 
 
 1. Patch mocks are effective for both local and remote calls.  This means a patched function **always** resolves to the patch.
 2. Patch can patch private functions without changing their visibility.
@@ -31,7 +31,7 @@ In addition to these features which many libraries aspire to, Patch has 3 additi
 
 See the [Mockompare](https://github.com/ihumanable/mockompare) companion project for a comparison of Elixir / Erlang mocking libraries.  If there is a way to accomplish the following with another library, please open an issue so this section and the comparisons can be updated.
 
-For more information about Patch's Super Powers see the [Super Powers Documentation](super-powers.html)
+For more information about Patch's Super Powers see the [Super Powers Documentation](https://hexdocs.pm/patch/super-powers.html)
 
 ## Table of Contents
 
@@ -75,16 +75,16 @@ Core functions let us apply patches, patch processes, intercept messages, and qu
 
 | Core Function                                                | Description                                                                |
 |--------------------------------------------------------------|----------------------------------------------------------------------------|
-| [expose/2](Patch.html#expose/2)     | Expose private functions as public for the purposes of testing             |
-| [fake/2](Patch.html#fake/2)         | Replaces a module with a fake module                                       |
-| [history/1,2](Patch.html#history/2) | Returns the call history for a mock                                        |
-| [inject/3](Patch.html#inject/3)     | Injects state into a GenServer                                             |
-| [listen/3](Patch.html#listen/3)     | Intercepts messages to a process and forwards them to the test process     |
-| [patch/3](Patch.html#patch/3)       | Patches a function so that it returns a mock value                         |
-| [private/1](Patch.html#private/1)   | Macro to call exposed private functions without raising a compiler warning |
-| [real/1](Patch.html#real/1)         | Resolves the real module for a patched module                              |
-| [restore/1](Patch.html#restore/1)   | Restores a module to its pre-patched form                                  |
-| [spy/1](Patch.html#spy/1)           | Patches a module so calls can be asserted without changing behavior        |
+| [expose/2](https://hexdocs.pm/patch/Patch.html#expose/2)     | Expose private functions as public for the purposes of testing             |
+| [fake/2](https://hexdocs.pm/patch/Patch.html#fake/2)         | Replaces a module with a fake module                                       |
+| [history/1,2](https://hexdocs.pm/patch/Patch.html#history/2) | Returns the call history for a mock                                        |
+| [inject/3](https://hexdocs.pm/patch/Patch.html#inject/3)     | Injects state into a GenServer                                             |
+| [listen/3](https://hexdocs.pm/patch/Patch.html#listen/3)     | Intercepts messages to a process and forwards them to the test process     |
+| [patch/3](https://hexdocs.pm/patch/Patch.html#patch/3)       | Patches a function so that it returns a mock value                         |
+| [private/1](https://hexdocs.pm/patch/Patch.html#private/1)   | Macro to call exposed private functions without raising a compiler warning |
+| [real/1](https://hexdocs.pm/patch/Patch.html#real/1)         | Resolves the real module for a patched module                              |
+| [restore/1](https://hexdocs.pm/patch/Patch.html#restore/1)   | Restores a module to its pre-patched form                                  |
+| [spy/1](https://hexdocs.pm/patch/Patch.html#spy/1)           | Patches a module so calls can be asserted without changing behavior        |
 
 ### Assertions
 
@@ -92,31 +92,31 @@ Assertions make it easy to assert that a patched module has or has not observed 
 
 | Assertion                                                                  | Description                                                                              |
 |----------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
-| [assert_called/1](Patch.html#assert_called/1)     | Asserts that a particular call has occurred on a mocked module                           |
-| [assert_any_call/2](Patch.html#assert_any_call/2) | Asserts that any call of any arity has occurred on the mocked module for a function name |
-| [refute_called/1](Patch.html#refute_called/1)     | Refutes that a particular call has occurred on a mocked module                           |
-| [refute_any_call/2](Patch.html#refute_any_call/2) | Refutes that any call of any arity has occured on the mocked module for a function name  |
+| [assert_called/1](https://hexdocs.pm/patch/Patch.html#assert_called/1)     | Asserts that a particular call has occurred on a mocked module                           |
+| [assert_any_call/2](https://hexdocs.pm/patch/Patch.html#assert_any_call/2) | Asserts that any call of any arity has occurred on the mocked module for a function name |
+| [refute_called/1](https://hexdocs.pm/patch/Patch.html#refute_called/1)     | Refutes that a particular call has occurred on a mocked module                           |
+| [refute_any_call/2](https://hexdocs.pm/patch/Patch.html#refute_any_call/2) | Refutes that any call of any arity has occured on the mocked module for a function name  |
 
 ### Value Builders
 
-Patched functions aren't limited to only returning simple scalar values, a host of Value Builders are provided for all kinds of testing scenarios.  See the [patch](Patch.html#patch/3) documentation for details.
+Patched functions aren't limited to only returning simple scalar values, a host of Value Builders are provided for all kinds of testing scenarios.  See the [patch](https://hexdocs.pm/patch/Patch.html#patch/3) documentation for details.
 
 | Value Builder                                                             | Description                                                                              |
 |---------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
-| [callable/1,2](Patch.Mock.Value.html#callable/2) | Callable that will be invoked on every patch invocation, dispatch mode can be customized |
-| [cycle/1](Patch.Mock.Value.html#cycle/1)         | Cycles through the values provided on every invocation                                   |
-| [raises/1](Patch.Mock.Value.html#raises/1)       | Raises a RuntimeException with the given message upon invocation                         |
-| [raises/2](Patch.Mock.Value.html#raises/2)       | Raises the specified Exception with the given attribtues upon invocation                 |
-| [scalar/1](Patch.Mock.Value.html#scalar/1)       | Returns the argument as a literal, useful for returning functions                        |
-| [sequence/1](Patch.Mock.Value.html#sequence/2)   | Returns the values in order, repeating the last value indefinitely                       |
-| [throws/1](Patch.Mock.Value.html#throws/1)       | Throws the given value upon invocation                                                   |
+| [callable/1,2](https://hexdocs.pm/patch/Patch.Mock.Value.html#callable/2) | Callable that will be invoked on every patch invocation, dispatch mode can be customized |
+| [cycle/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#cycle/1)         | Cycles through the values provided on every invocation                                   |
+| [raises/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#raises/1)       | Raises a RuntimeException with the given message upon invocation                         |
+| [raises/2](https://hexdocs.pm/patch/Patch.Mock.Value.html#raises/2)       | Raises the specified Exception with the given attribtues upon invocation                 |
+| [scalar/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#scalar/1)       | Returns the argument as a literal, useful for returning functions                        |
+| [sequence/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#sequence/2)   | Returns the values in order, repeating the last value indefinitely                       |
+| [throws/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#throws/1)       | Throws the given value upon invocation                                                   |
 
 
 ## Guide Book
 
 Patch comes with [plenty of documentation](https://hexdocs.pm/patch) and a [Suite of User Tests](https://github.com/ihumanable/patch/tree/master/test/user) that show how to use the library.  
 
-For a guided tour and deep dive of Patch, see the [Guide Book](guide-book/01-introduction.html)
+For a guided tour and deep dive of Patch, see the [Guide Book](https://hexdocs.pm/patch/01-introduction.html)
 
 ## Support Matrix
 
@@ -138,7 +138,7 @@ Since the global execution environment is altered by Patch, **Patch is not compa
 
 ## Prior Art
 
-Up to version 0.5.0 Patch was based off the excellent [meck](https://hex.pm/packages/meck) library.  Patch [Super Powers](super-powers.html) required a custom replacement for meck, `Patch.Mock`.  
+Up to version 0.5.0 Patch was based off the excellent [meck](https://hex.pm/packages/meck) library.  Patch [Super Powers](https://hexdocs.pm/patch/super-powers.html) required a custom replacement for meck, `Patch.Mock`.  
 
 Patch also takes inspiration from python's [unittest.mock.patch](https://docs.python.org/3/library/unittest.mock.html#patch) for API design.
 ## Changelog
