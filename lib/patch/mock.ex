@@ -33,6 +33,47 @@ defmodule Patch.Mock do
 
 
   @doc """
+  Given a list of expected arguments and actual arguments checks to see if the
+  two lists are compatible.
+
+  In the `expected_arguments` the wildcard atom, `:_` can be used to match any
+  value.
+  """
+  @spec arguments_compatible?(expected_arguments :: [term()], actual_arguments :: [term()]) :: boolean()
+  def arguments_compatible?(expected_arguments, actual_arguments) do
+    do_arguments_compatible?(
+      expected_arguments,
+      Enum.count(expected_arguments),
+      actual_arguments,
+      Enum.count(actual_arguments)
+    )
+  end
+
+  @doc """
+  Returns the number of times the given name has been called in the given module with the given
+  arguments.
+
+  The arguments list can include the wildcard atom, `:_`, to match any argument in that position.
+
+  This function uses the Mock's history to check, if the history is limited or disabled then calls
+  that have happened may report back as never having happened.
+  """
+  @spec call_count(module :: module(), name :: atom(), expected_arguments :: [term()]) :: non_neg_integer()
+  def call_count(module, name, expected_arguments) do
+    module
+    |> history()
+    |> Mock.History.entries(:desc)
+    |> Enum.filter(fn
+      {^name, actual_arguments} ->
+        arguments_compatible?(expected_arguments, actual_arguments)
+
+      _ ->
+        false
+    end)
+    |> Enum.count()
+  end
+
+  @doc """
   Checks to see if a function with the given name has been called in the given module.
 
   This function uses the Mock's history to check, if the history is limited or disabled then calls
@@ -50,19 +91,19 @@ defmodule Patch.Mock do
   Checks to see if a fucntion with the given name has been called in the given module with the
   given arguments.
 
-  The arguments list can include the wildcard atom, `:_` to match any argument in that position.
+  The arguments list can include the wildcard atom, `:_`, to match any argument in that position.
 
   This function uses the Mock's history to check, if the history is limited or disabled then calls
-  tht have happened may report back as never having happened.
+  that have happened may report back as never having happened.
   """
-  @spec called?(module :: module(), name :: atom(), arguments :: [term()]) :: boolean()
-  def called?(module, name, arguments) do
+  @spec called?(module :: module(), name :: atom(), expected_arguments :: [term()]) :: boolean()
+  def called?(module, name, expected_arguments) do
     module
     |> history()
     |> Mock.History.entries(:desc)
     |> Enum.any?(fn
-      {^name, recorded_arguments} ->
-        arguments_compatible?(arguments, recorded_arguments)
+      {^name, actual_arguments} ->
+        arguments_compatible?(expected_arguments, actual_arguments)
 
       _ ->
         false
@@ -136,34 +177,25 @@ defmodule Patch.Mock do
 
   ## Private
 
-  defp argument_compatible?({:_, _}) do
+  defp do_argument_compatible?({:_, _}) do
     true
   end
 
-  defp argument_compatible?({same, same}) do
+  defp do_argument_compatible?({same, same}) do
     true
   end
 
-  defp argument_compatible?(_) do
+  defp do_argument_compatible?(_) do
     false
   end
 
-  defp arguments_compatible?(required_arguments, recorded_arguments) do
-    arguments_compatible?(
-      required_arguments,
-      Enum.count(required_arguments),
-      recorded_arguments,
-      Enum.count(recorded_arguments)
-    )
+  defp do_arguments_compatible?(expected_arguments, same, actual_arguments, same) do
+    expected_arguments
+    |> Enum.zip(actual_arguments)
+    |> Enum.all?(&do_argument_compatible?/1)
   end
 
-  defp arguments_compatible?(required_arguments, same, recorded_arguments, same) do
-    required_arguments
-    |> Enum.zip(recorded_arguments)
-    |> Enum.all?(&argument_compatible?/1)
-  end
-
-  defp arguments_compatible?(_, _, _, _) do
+  defp do_arguments_compatible?(_, _, _, _) do
     false
   end
 end
