@@ -52,7 +52,7 @@ Add patch to your mix.exs
 ```elixir
 def deps do
   [
-    {:patch, "~> 0.6.0", only: [:test]}
+    {:patch, "~> 0.7.0", only: [:test]}
   ]
 end
 ```
@@ -67,7 +67,7 @@ use Patch
 
 This library comes with a comprehensive suite of unit tests.  These tests not only verify that the library is working correctly but are designed so that for every bit of functionality there is an easy to understand example for how to use that feature.  Check out the [User Tests](https://github.com/ihumanable/patch/tree/master/test/user) for examples of how to use each feature.
 
-Using Patch adds 10 core functions, 4 assertions, and 7 mock value builders to the test.
+Using Patch adds 10 core functions, 10 assertions, and 7 mock value builders to the test.
 
 ### Core Functions
 
@@ -90,12 +90,18 @@ Core functions let us apply patches, patch processes, intercept messages, and qu
 
 Assertions make it easy to assert that a patched module has or has not observed a call.
 
-| Assertion                                                                  | Description                                                                              |
-|----------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
-| [assert_called/1](https://hexdocs.pm/patch/Patch.html#assert_called/1)     | Asserts that a particular call has occurred on a mocked module                           |
-| [assert_any_call/2](https://hexdocs.pm/patch/Patch.html#assert_any_call/2) | Asserts that any call of any arity has occurred on the mocked module for a function name |
-| [refute_called/1](https://hexdocs.pm/patch/Patch.html#refute_called/1)     | Refutes that a particular call has occurred on a mocked module                           |
-| [refute_any_call/2](https://hexdocs.pm/patch/Patch.html#refute_any_call/2) | Refutes that any call of any arity has occured on the mocked module for a function name  |
+| Assertion                                                                        | Description                                                                                                   |
+|----------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| [assert_any_call/1](https://hexdocs.pm/patch/Patch.html#assert_any_call/1)       | Asserts that any call of any arity has occurred on the mocked module for a function name (preferred macro)    |
+| [assert_any_call/2](https://hexdocs.pm/patch/Patch.html#assert_any_call/2)       | Asserts that any call of any arity has occurred on the mocked module for a function name (advanced use cases) |
+| [assert_called/1](https://hexdocs.pm/patch/Patch.html#assert_called/1)           | Asserts that a particular call has occurred on a mocked module                                                |
+| [assert_called/2](https://hexdocs.pm/patch/Patch.html#assert_called/2)           | Asserts that a particular call has occurred a given number of times on a mocked module                        |
+| [assert_called_once/1](https://hexdocs.pm/patch/Patch.html#assert_called_once/2) | Asserts that a particular call has occurred exactly once on a mocked module                                   |
+| [refute_any_call/1](https://hexdocs.pm/patch/Patch.html#refute_any_call/1)       | Refutes that any call of any arity has occured on the mocked module for a function name (preferred macro)     |
+| [refute_any_call/2](https://hexdocs.pm/patch/Patch.html#refute_any_call/2)       | Refutes that any call of any arity has occured on the mocked module for a function name (advanced use cases)  |
+| [refute_called/1](https://hexdocs.pm/patch/Patch.html#refute_called/1)           | Refutes that a particular call has occurred on a mocked module                                                |
+| [refute_called/2](https://hexdocs.pm/patch/Patch.html#refute_called/2)           | Refutes that a particular call has occurred a given number of time on a mocked module                         |
+| [refute_called_once/1](https://hexdocs.pm/patch/Patch.html#refute_called_once/1) | Refutes that a particular call has occurred exactly once on a mocked module                                   |
 
 ### Value Builders
 

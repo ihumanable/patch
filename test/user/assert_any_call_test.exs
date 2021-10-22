@@ -6,25 +6,25 @@ defmodule Patch.Test.User.AssertAnyCallTest do
 
   describe "assert_any_call/1" do
     test "does not raise if a patched function has a call of any arity (/1)" do
-      patch(AssertAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(AssertAnyCall, :function_with_multiple_arities, :patched)
 
-      assert :patched_result == AssertAnyCall.function_with_multiple_arities(1)
+      assert :patched == AssertAnyCall.function_with_multiple_arities(1)
 
       assert_any_call AssertAnyCall.function_with_multiple_arities
     end
 
     test "does not raise if a patched function has a call of any arity (/2)" do
-      patch(AssertAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(AssertAnyCall, :function_with_multiple_arities, :patched)
 
-      assert :patched_result == AssertAnyCall.function_with_multiple_arities(1, 2)
+      assert :patched == AssertAnyCall.function_with_multiple_arities(1, 2)
 
       assert_any_call AssertAnyCall.function_with_multiple_arities
     end
 
     test "does not raise if a patched function has a call of any arity (/3)" do
-      patch(AssertAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(AssertAnyCall, :function_with_multiple_arities, :patched)
 
-      assert :patched_result == AssertAnyCall.function_with_multiple_arities(1, 2, 3)
+      assert :patched == AssertAnyCall.function_with_multiple_arities(1, 2, 3)
 
       assert_any_call AssertAnyCall.function_with_multiple_arities
     end
@@ -54,7 +54,7 @@ defmodule Patch.Test.User.AssertAnyCallTest do
     end
 
     test "raises if a patched function has no calls" do
-      patch(AssertAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(AssertAnyCall, :function_with_multiple_arities, :patched)
 
       assert_raise Patch.MissingCall, fn ->
         assert_any_call AssertAnyCall.function_with_multiple_arities
@@ -80,10 +80,10 @@ defmodule Patch.Test.User.AssertAnyCallTest do
     end
 
     test "exception formatting" do
-      patch(AssertAnyCall, :other_function, :patched_result)
-      patch(AssertAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(AssertAnyCall, :other_function, :patched)
+      patch(AssertAnyCall, :function_with_multiple_arities, :patched)
 
-      assert AssertAnyCall.other_function(1) == :patched_result
+      assert AssertAnyCall.other_function(1) == :patched
 
       expected_message = """
       \n
@@ -105,25 +105,25 @@ defmodule Patch.Test.User.AssertAnyCallTest do
 
   describe "assert_any_call/2" do
     test "does not raise if a patched function has a call of any arity (/1)" do
-      patch(AssertAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(AssertAnyCall, :function_with_multiple_arities, :patched)
 
-      assert :patched_result == AssertAnyCall.function_with_multiple_arities(1)
+      assert :patched == AssertAnyCall.function_with_multiple_arities(1)
 
       assert_any_call AssertAnyCall, :function_with_multiple_arities
     end
 
     test "does not raise if a patched function has a call of any arity (/2)" do
-      patch(AssertAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(AssertAnyCall, :function_with_multiple_arities, :patched)
 
-      assert :patched_result == AssertAnyCall.function_with_multiple_arities(1, 2)
+      assert :patched == AssertAnyCall.function_with_multiple_arities(1, 2)
 
       assert_any_call AssertAnyCall, :function_with_multiple_arities
     end
 
     test "does not raise if a patched function has a call of any arity (/3)" do
-      patch(AssertAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(AssertAnyCall, :function_with_multiple_arities, :patched)
 
-      assert :patched_result == AssertAnyCall.function_with_multiple_arities(1, 2, 3)
+      assert :patched == AssertAnyCall.function_with_multiple_arities(1, 2, 3)
 
       assert_any_call AssertAnyCall, :function_with_multiple_arities
     end
@@ -153,7 +153,7 @@ defmodule Patch.Test.User.AssertAnyCallTest do
     end
 
     test "raises if a patched function has no calls" do
-      patch(AssertAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(AssertAnyCall, :function_with_multiple_arities, :patched)
 
       assert_raise Patch.MissingCall, fn ->
         assert_any_call AssertAnyCall, :function_with_multiple_arities
@@ -179,10 +179,10 @@ defmodule Patch.Test.User.AssertAnyCallTest do
     end
 
     test "exception formatting" do
-      patch(AssertAnyCall, :other_function, :patched_result)
-      patch(AssertAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(AssertAnyCall, :other_function, :patched)
+      patch(AssertAnyCall, :function_with_multiple_arities, :patched)
 
-      assert AssertAnyCall.other_function(1) == :patched_result
+      assert AssertAnyCall.other_function(1) == :patched
 
       expected_message = """
       \n

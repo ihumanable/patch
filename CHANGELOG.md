@@ -1,5 +1,37 @@
 # Change Log
 
+## 0.7.0 (2021-10-21)
+
+Support for call counts in assertions.  `assert_called/1` and `refute_called/1` are unchanged.
+
+### Improvements
+
+- ⬆️ - Exception messages have been improved to clearly indicate which calls have matched.
+- ⬆️ - Assertion Macros have been refactored to minimize injected code in line with Elixir best practices.  Macros now defer to `Patch.Assertions`
+- ⬆️ - Increased test coverage for assertions including improved message formatting.
+
+### Features
+
+- 🎁 - Added the `assert_any_call/1` macro.  This is now the preferred over `assert_any_call/2`, it allows the test author to write `assert_any_call Module.function` instead of `assert_any_call Module, :function`
+- 🎁 - Added the `assert_called/2` assertion.  The second argument is a call count, this assertion will only pass if there is exactly call count matching calls.
+- 🎁 - Added the `assert_called_once/1` assertion.  This assertion only passes if there is one and only one matching call.
+- 🎁 - Added the `refute_any_call/1` macro.  This is now preferred over `refute_any_call/2`, it allows the test author to write `refute_any_call Module.function` instead of `refute_any_call Module, :function`
+- 🎁 - Added the `refute_called/2` assertion.  The second argument is a call count, this assertion will pass as long as the numebr of matching calls does not equal the provided call count.
+- 🎁 - Added the `refute_called_once/1` assertion.  This assertion will pass if there are any number of matching calls besides 1.
+
+### Bugfixes
+
+None
+
+### Deprecations
+
+- ⚠️ - Soft Deprecation for `assert_any_call/2`.  This function is **not** slated for removal but should be reserved for advanced use cases.  Test authors should prefer `assert_any_call/1` when possible.
+- ⚠️ - Soft Deprecation for `refute_any_call/2`.  This function is **not** slated for removal but should be reserved for advanced use cases.  Test authors should prefer `refute_any_call/1` when possible.
+
+### Removals
+
+None
+
 ## 0.6.1 (2021-10-17)
 
 Minor release to improve the documentation and reduce the scope of imported symbols from `Patch.Mock.Value`.

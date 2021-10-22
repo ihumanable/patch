@@ -6,9 +6,9 @@ defmodule Patch.Test.User.RefuteAnyCallTest do
 
   describe "refute_any_call/1" do
     test "raises if a patched function has a call of any arity (/1)" do
-      patch(RefuteAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(RefuteAnyCall, :function_with_multiple_arities, :patched)
 
-      assert :patched_result == RefuteAnyCall.function_with_multiple_arities(1)
+      assert :patched == RefuteAnyCall.function_with_multiple_arities(1)
 
       assert_raise Patch.UnexpectedCall, fn ->
         refute_any_call RefuteAnyCall.function_with_multiple_arities
@@ -16,9 +16,9 @@ defmodule Patch.Test.User.RefuteAnyCallTest do
     end
 
     test "raises if a patched function has a call of any arity (/2)" do
-      patch(RefuteAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(RefuteAnyCall, :function_with_multiple_arities, :patched)
 
-      assert :patched_result == RefuteAnyCall.function_with_multiple_arities(1, 2)
+      assert :patched == RefuteAnyCall.function_with_multiple_arities(1, 2)
 
       assert_raise Patch.UnexpectedCall, fn ->
         refute_any_call RefuteAnyCall.function_with_multiple_arities
@@ -26,9 +26,9 @@ defmodule Patch.Test.User.RefuteAnyCallTest do
     end
 
     test "raises if a patched function has a call of any arity (/3)" do
-      patch(RefuteAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(RefuteAnyCall, :function_with_multiple_arities, :patched)
 
-      assert :patched_result == RefuteAnyCall.function_with_multiple_arities(1, 2, 3)
+      assert :patched == RefuteAnyCall.function_with_multiple_arities(1, 2, 3)
 
       assert_raise Patch.UnexpectedCall, fn ->
         refute_any_call RefuteAnyCall.function_with_multiple_arities
@@ -66,7 +66,7 @@ defmodule Patch.Test.User.RefuteAnyCallTest do
     end
 
     test "does not raise if a patched function has no calls" do
-      patch(RefuteAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(RefuteAnyCall, :function_with_multiple_arities, :patched)
       refute_any_call RefuteAnyCall.function_with_multiple_arities
     end
 
@@ -76,19 +76,19 @@ defmodule Patch.Test.User.RefuteAnyCallTest do
     end
 
     test "does not raise if another function is called" do
-      patch(RefuteAnyCall, :other_function, :patched_result)
+      patch(RefuteAnyCall, :other_function, :patched)
 
-      assert RefuteAnyCall.other_function(1) == :patched_result
+      assert RefuteAnyCall.other_function(1) == :patched
 
       refute_any_call RefuteAnyCall.function_with_multiple_arities
     end
 
     test "exception formatting" do
-      patch(RefuteAnyCall, :other_function, :patched_result)
-      patch(RefuteAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(RefuteAnyCall, :other_function, :patched)
+      patch(RefuteAnyCall, :function_with_multiple_arities, :patched)
 
-      assert RefuteAnyCall.function_with_multiple_arities(1) == :patched_result
-      assert RefuteAnyCall.other_function(1) == :patched_result
+      assert RefuteAnyCall.function_with_multiple_arities(1) == :patched
+      assert RefuteAnyCall.other_function(1) == :patched
 
       expected_message = """
       \n
@@ -111,9 +111,9 @@ defmodule Patch.Test.User.RefuteAnyCallTest do
 
   describe "refute_any_call/2" do
     test "raises if a patched function has a call of any arity (/1)" do
-      patch(RefuteAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(RefuteAnyCall, :function_with_multiple_arities, :patched)
 
-      assert :patched_result == RefuteAnyCall.function_with_multiple_arities(1)
+      assert :patched == RefuteAnyCall.function_with_multiple_arities(1)
 
       assert_raise Patch.UnexpectedCall, fn ->
         refute_any_call RefuteAnyCall, :function_with_multiple_arities
@@ -121,9 +121,9 @@ defmodule Patch.Test.User.RefuteAnyCallTest do
     end
 
     test "raises if a patched function has a call of any arity (/2)" do
-      patch(RefuteAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(RefuteAnyCall, :function_with_multiple_arities, :patched)
 
-      assert :patched_result == RefuteAnyCall.function_with_multiple_arities(1, 2)
+      assert :patched == RefuteAnyCall.function_with_multiple_arities(1, 2)
 
       assert_raise Patch.UnexpectedCall, fn ->
         refute_any_call RefuteAnyCall, :function_with_multiple_arities
@@ -131,9 +131,9 @@ defmodule Patch.Test.User.RefuteAnyCallTest do
     end
 
     test "raises if a patched function has a call of any arity (/3)" do
-      patch(RefuteAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(RefuteAnyCall, :function_with_multiple_arities, :patched)
 
-      assert :patched_result == RefuteAnyCall.function_with_multiple_arities(1, 2, 3)
+      assert :patched == RefuteAnyCall.function_with_multiple_arities(1, 2, 3)
 
       assert_raise Patch.UnexpectedCall, fn ->
         refute_any_call RefuteAnyCall, :function_with_multiple_arities
@@ -171,7 +171,7 @@ defmodule Patch.Test.User.RefuteAnyCallTest do
     end
 
     test "does not raise if a patched function has no calls" do
-      patch(RefuteAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(RefuteAnyCall, :function_with_multiple_arities, :patched)
       refute_any_call RefuteAnyCall, :function_with_multiple_arities
     end
 
@@ -181,19 +181,19 @@ defmodule Patch.Test.User.RefuteAnyCallTest do
     end
 
     test "does not raise if another function is called" do
-      patch(RefuteAnyCall, :other_function, :patched_result)
+      patch(RefuteAnyCall, :other_function, :patched)
 
-      assert RefuteAnyCall.other_function(1) == :patched_result
+      assert RefuteAnyCall.other_function(1) == :patched
 
       refute_any_call RefuteAnyCall, :function_with_multiple_arities
     end
 
     test "exception formatting" do
-      patch(RefuteAnyCall, :other_function, :patched_result)
-      patch(RefuteAnyCall, :function_with_multiple_arities, :patched_result)
+      patch(RefuteAnyCall, :other_function, :patched)
+      patch(RefuteAnyCall, :function_with_multiple_arities, :patched)
 
-      assert RefuteAnyCall.function_with_multiple_arities(1) == :patched_result
-      assert RefuteAnyCall.other_function(1) == :patched_result
+      assert RefuteAnyCall.function_with_multiple_arities(1) == :patched
+      assert RefuteAnyCall.other_function(1) == :patched
 
       expected_message = """
       \n
