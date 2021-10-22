@@ -617,8 +617,7 @@ defmodule Patch do
   end
 
   @doc """
-  Given a call will refute that a matching call was observed exactly the number of times provided
-  by the patched function.
+  Given a call will refute that a matching call was observed exactly once by the patched function.
 
   The call can use the special sentinal `:_` as a wildcard match.
 
@@ -627,13 +626,13 @@ defmodule Patch do
 
   Example.function(1, 2, 3)
 
-  refute_called_once Example.function(1, 2, 3), 2   # fails
-  refute_called_once Example.function(1, :_, 3), 2  # fails
+  refute_called_once Example.function(1, 2, 3)   # fails
+  refute_called_once Example.function(1, :_, 3)  # fails
 
   Example.function(1, 2, 3)
 
-  refute_called_once Example.function(1, 2, 3), 1   # passes
-  refute_called_once Example.function(1, :_, 3), 1  # passes
+  refute_called_once Example.function(1, 2, 3)   # passes
+  refute_called_once Example.function(1, :_, 3)  # passes
   ```
   """
   @spec refute_called_once(call :: Macro.t()) :: Macro.t()
