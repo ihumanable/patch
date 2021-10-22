@@ -130,7 +130,7 @@ This allows the test author to combine creating fixture data with patching.
 
 ## Asserting / Refuting Calls
 
-After a patch is applied, all subsequent calls to the module become "Observered Calls" and tests can assert that an expected call has occurred by using the `assert_called` macro.
+After a patch is applied, all subsequent calls to the module become "Observered Calls" and tests can assert that an expected call has occurred by using the `assert_called/1` macro.
 
 ```elixir
 defmodule PatchExample do
@@ -147,7 +147,7 @@ defmodule PatchExample do
 end
 ```
 
-`assert_called` supports the `:_` wildcard atom.  In the above example the following assertion would also pass.
+`assert_called/1` supports the `:_` wildcard atom.  In the above example the following assertion would also pass.
 
 ```elixir
 assert_called String.upcase(:_)
@@ -155,7 +155,7 @@ assert_called String.upcase(:_)
 
 This can be useful when some of the arguments are complex or uninteresting for the unit test.
 
-Tests can also refute that a call has occurred with the `refute_called` macro.  This macro works in much the same way as `assert_called` and also supports the `:_` wildcard atom.
+Tests can also refute that a call has occurred with the `refute_called/1` macro.  This macro works in much the same way as `assert_called/1` and also supports the `:_` wildcard atom.
 
 ```elixir
 defmodule PatchExample do
@@ -172,13 +172,125 @@ defmodule PatchExample do
 end
 ```
 
+### Asserting / Refuting Call Once
+
+We can assert that a call has only happened once with the `assert_called_once/1` macro.  This assertion will only pass if the only one observed call matches.
+
+```elixir
+defmodule PatchExample do
+  use ExUnit.Case
+  use Patch
+
+  test "refuting a patch was called once" do
+    patch(String, :upcase, :patched)
+
+    assert_called_once String.upcase("hello")   # Assertion fails before the function is called.
+
+    assert :patched == String.upcase("hello")
+
+    assert_called_once String.upcase("hello")   # Assertion passes after called once.
+
+    assert :patched == String.upcase("hello")
+
+    assert_called_once String.upcase("hello")   # Assertion fails after second call.
+  end
+end
+```
+
+`assert_called_once/1` supports the `:_` wildcard atom.  In the above example the following assertion would behave identically.
+
+```elixir
+assert_called_once String.upcase(:_)
+```
+
+Tests can also refute that a call has occurred once with the `refute_called_once/1` macro.  This macro works in much the same way as `assert_called_once/1` and also supports the `:_` wildcard atom.
+
+```elixir
+defmodule PatchExample do
+  use ExUnit.Case
+  use Patch
+
+  test "refuting calls on a patch" do
+    patch(String, :upcase, :patched)
+
+    refute_called_once String.upcase("hello")   # Assertion passes before the function is called.
+
+    assert :patched == String.upcase("hello")
+
+    refute_called_once String.upcase("hello")   # Assertion fails after called once.
+
+    assert :patched == String.upcase("hello")
+
+    refute_called_once String.upcase("hello")   # Assertion passes after second call.
+  end
+end
+```
+
+### Asserting / Refuting Call Counts
+
+We can assert that a call has happened some given number of times exactly with the `assert_called/2` macro.  The second argument is the number of observed call matches there must be to pass.
+
+```elixir
+defmodule PatchExample do
+  use ExUnit.Case
+  use Patch
+
+  test "asserting 3 calls on a patch" do
+    patch(String, :upcase, :patched)
+
+    assert :patched == String.upcase("hello")
+
+    assert_called String.upcase("hello"), 3   # Assertion fails after first call.
+    
+    assert :patched == String.upcase("hello")
+
+    assert_called String.upcase("hello"), 3   # Assertion fails after second call.
+    
+    assert :patched == String.upcase("hello")
+
+    assert_called String.upcase("hello"), 3   # Assertion passes after third call.
+  end
+end
+```
+
+`assert_called/2` supports the `:_` wildcard atom.  In the above example the following assertion would behave identically.
+
+```elixir
+assert_called String.upcase(:_), 3
+```
+
+Tests can also refute that a call has happened some given number of times exactly with the `refute_called/2` macro.  This macro works in much the same way as `assert_called/2` and also supports the `:_` wildcard atom.
+
+```elixir
+defmodule PatchExample do
+  use ExUnit.Case
+  use Patch
+
+  test "refuting 3 calls on a patch" do
+    patch(String, :upcase, :patched)
+
+    assert :patched == String.upcase("hello")
+
+    refute_called String.upcase("hello"), 3   # Assertion passes after first call.
+    
+    assert :patched == String.upcase("hello")
+
+    refute_called String.upcase("hello"), 3   # Assertion passes after second call.
+    
+    assert :patched == String.upcase("hello")
+
+    refute_called String.upcase("hello"), 3   # Assertion fails after third call.
+  end
+end
+```
+
+
 ### Asserting / Refuting Multiple Arities
 
 If a function has multiple arities that may be called based on different conditions the test author may wish to assert or refute that a function has been called at all without regards to the number of arguments passed.
 
-This can be accomplished with the `assert_any_call/2` and `refute_any_call/2` functions.
+This can be accomplished with the `assert_any_call/1` and `refute_any_call/1` functions.
 
-These functions take two arguments the module and the function name as an atom.
 
 ```elixir
 defmodule PatchExample do
@@ -192,7 +304,7 @@ defmodule PatchExample do
     # time of day.  (This is an obviously constructed example).
     TimeOfDaySensitiveFormatter.format("Hello World")
 
-    assert_any_call String, :pad_leading
+    assert_any_call String.pad_leading
   end
 end
 ```
@@ -209,7 +321,54 @@ defmodule PatchExample do
 
     assert {:error, :not_a_string} = TimeOfDaySensitiveFormatter.format(123)
 
-    refute_any_call String, :pad_leading
+    refute_any_call String.pad_leading
   end
 end
 ```
+
+#### Advanced Use Cases
+
+The `assert_any_call/2` and `refute_any_call/2` functions take two arguments the module and the function name as an 
+atom.  This allows some more advanced use cases where the module or function isn't known at test authoring time.
+
+```elixir
+defmodule PatchExample
+  use ExUnit.Case
+  use Patch
+
+  test "asserting any call on normalizer" do
+    spy(Formatter)
+
+    normalizer = Formatter.get_normalizer()
+
+    assert_any_call Fromatter, normalizer   # Assertion fails before call
+
+    Formatter.normalize("hello", with: normalizer)
+
+    assert_any_call Fromatter, normalizer   # Assertion passes after call
+  end
+end
+```
+
+Similarly we can refute any call
+
+```elixir
+defmodule PatchExample
+  use ExUnit.Case
+  use Patch
+
+  test "refuting any call on normalizer" do
+    spy(Formatter)
+
+    normalizer = Formatter.get_normalizer()
+
+    refute_any_call Formatter, normalizer   # Assertion passes before call
+
+    Formatter.normalize("hello", with: normalizer)
+
+    refute_any_call Formatter, normalizer   # Assertion fails after call
+  end
+end
+```
+
+    
