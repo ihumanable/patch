@@ -23,6 +23,10 @@ defmodule Patch do
 
   ## Exceptions
 
+  defmodule InvalidAnyCall do
+    defexception [:message]
+  end
+
   defmodule MissingCall do
     defexception [:message]
   end
@@ -30,8 +34,6 @@ defmodule Patch do
   defmodule UnexpectedCall do
     defexception [:message]
   end
-
-  ## Macros / Assertions
 
   defmacro __using__(_) do
     quote do
@@ -45,6 +47,51 @@ defmodule Patch do
       end
     end
   end
+
+  @doc """
+  Asserts that the given module and function has been called with any arity.
+
+  ```elixir
+  patch(Example, :function, :patch)
+
+  assert_any_call Example.function   # fails
+
+  Example.function(1, 2, 3)
+
+  assert_any_call Example.function   # passes
+  ```
+  """
+  @spec assert_any_call(call :: Macro.t()) :: Macro.t()
+  defmacro assert_any_call(call) do
+    {module, function, arguments} = Macro.decompose_call(call)
+
+    unless Enum.empty?(arguments) do
+      raise InvalidAnyCall, message: "assert_any_call/1 does not support arguments"
+    end
+
+    quote do
+      Patch.Assertions.assert_any_call(unquote(module), unquote(function))
+    end
+  end
+
+  @doc """
+  Asserts that the given module and function has been called with any arity.
+
+  ```elixir
+  patch(Example, :function, :patch)
+
+  assert_any_call Example, :function   # fails
+
+  Example.function(1, 2, 3)
+
+  assert_any_call Example, :function   # passes
+  ```
+
+  This function exists for advanced use cases where the module or function are not literals in the
+  test code.  If they are literals then `assert_any_call/1` should be preferred.
+  """
+  @spec assert_any_call(module :: module(), function :: atom()) :: nil
+  defdelegate assert_any_call(module, function), to: Patch.Assertions
 
   @doc """
   Given a call will assert that a matching call was observed by the patched function.
@@ -64,49 +111,16 @@ defmodule Patch do
   """
   @spec assert_called(Macro.t()) :: Macro.t()
   defmacro assert_called(call) do
-    {module, function, args} = Macro.decompose_call(call)
+    {module, function, arguments} = Macro.decompose_call(call)
 
     quote do
-      unless Patch.Mock.called?(unquote(module), unquote(function), unquote(args)) do
-        calls =
-          unquote(module)
-          |> Patch.history()
-          |> Enum.with_index(1)
-          |> Enum.map(fn {{f, a}, i} ->
-            "#{i}. #{inspect(unquote(module))}.#{f}(#{
-              a |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")
-            })"
-          end)
-
-        calls =
-          case calls do
-            [] ->
-              "   [No Calls Received]"
-
-            _ ->
-              Enum.join(calls, "\n")
-          end
-
-        call_args = unquote(args) |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")
-
-        message = """
-        \n
-        Expected but did not receive the following call:
-
-           #{inspect(unquote(module))}.#{to_string(unquote(function))}(#{call_args})
-
-        Calls which were received:
-
-        #{calls}
-        """
-
-        raise MissingCall, message: message
-      end
+      Patch.Assertions.assert_called(unquote(module), unquote(function), unquote(arguments))
     end
   end
 
   @doc """
-  Given a call will refute that a matching call was observed by the patched function.
+  Given a call will assert that a matching call was observed exactly the number of times provided
+  by the patched function.
 
   The call can use the special sentinal `:_` as a wildcard match.
 
@@ -115,118 +129,52 @@ defmodule Patch do
 
   Example.function(1, 2, 3)
 
-  refute_called Example.function(4, 5, 6)   # passes
-  refute_called Example.function(4, :_, 6)  # passes
-  refute_called Example.function(1, 2, 3)   # fails
-  refute_called Example.function(1, :_, 3)  # fails
+  assert_called Example.function(1, 2, 3), 1   # passes
+  assert_called Example.function(1, :_, 3), 1  # passes
+
+  Example.function(1, 2, 3)
+
+  assert_called Example.function(1, 2, 3), 2   # passes
+  assert_called Example.function(1, :_, 3), 2  # passes
   ```
   """
-  @spec refute_called(Macro.t()) :: Macro.t()
-  defmacro refute_called(call) do
-    {module, function, args} = Macro.decompose_call(call)
+  @spec assert_called(call :: Macro.t(), count :: Macro.t()) :: Macro.t()
+  defmacro assert_called(call, count) do
+    {module, function, arguments} = Macro.decompose_call(call)
 
     quote do
-      if Patch.Mock.called?(unquote(module), unquote(function), unquote(args)) do
-        calls =
-          unquote(module)
-          |> Patch.history()
-          |> Enum.with_index(1)
-          |> Enum.map(fn {{f, a}, i} ->
-            "#{i}. #{inspect(unquote(module))}.#{f}(#{
-              a |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")
-            })"
-          end)
-          |> Enum.join("\n")
-
-        call_args = unquote(args) |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")
-
-        message = """
-        \n
-        Unexpected call received:
-
-           #{inspect(unquote(module))}.#{to_string(unquote(function))}(#{call_args})
-
-        Calls which were received:
-
-        #{calls}
-        """
-
-        raise UnexpectedCall, message: message
-      end
+      Patch.Assertions.assert_called(unquote(module), unquote(function), unquote(arguments), unquote(count))
     end
   end
 
   @doc """
-  Asserts that the given module and function has been called with any arity.
+  Given a call will assert that a matching call was observed exactly once by the patched function.
+
+  The call can use the special sentinal `:_` as a wildcard match.
 
   ```elixir
   patch(Example, :function, :patch)
 
-  assert_any_call(Example, :function)   # fails
+  Example.function(1, 2, 3)
+
+  assert_called_once Example.function(1, 2, 3)   # passes
+  assert_called_once Example.function(1, :_, 3)  # passes
 
   Example.function(1, 2, 3)
 
-  assert_any_call(Example, :function)   # passes
+  assert_called_once Example.function(1, 2, 3)   # fails
+  assert_called_once Example.function(1, :_, 3)  # fails
   ```
   """
-  @spec assert_any_call(module :: module(), function :: atom()) :: nil
-  def assert_any_call(module, function) do
-    unless Mock.called?(module, function) do
-      message = """
-      \n
-      Expected any call received:
+  @spec assert_called_once(call :: Macro.t()) :: Macro.t()
+  defmacro assert_called_once(call) do
+    {module, function, arguments} = Macro.decompose_call(call)
 
-        #{inspect(module)}.#{to_string(function)}
-
-      No calls found
-      """
-
-      raise MissingCall, message: message
+    quote do
+      Patch.Assertions.assert_called_once(unquote(module), unquote(function), unquote(arguments))
     end
   end
 
-  @doc """
-  Refutes that the given module and function has been called with any arity.
-
-  ```elixir
-  patch(Example, :function, :patch)
-
-  refute_any_call(Example, :function)   # passes
-
-  Example.function(1, 2, 3)
-
-  refute_any_call(Example, :function)   # fails
-  ```
-  """
-  @spec refute_any_call(module :: module(), function :: atom()) :: nil
-  def refute_any_call(module, function) do
-    if Mock.called?(module, function) do
-      calls =
-        module
-        |> history()
-        |> Enum.with_index(1)
-        |> Enum.map(fn {{_, args}, i} ->
-          "#{i}. #{inspect(module)}.#{to_string(function)}(#{
-            args |> Enum.map(&Kernel.inspect/1) |> Enum.join(", ")
-          })"
-        end)
-
-      message = """
-      \n
-      Unexpected call received, expected no calls:
-
-        #{inspect(module)}.#{to_string(function)}
-
-      Calls which were received:
-
-      #{calls}
-      """
-
-      raise UnexpectedCall, message: message
-    end
-  end
-
-  ## Functions
 
   @doc """
   Expose can be used to turn private functions into public functions for the
@@ -567,6 +515,134 @@ defmodule Patch do
   @spec real(module :: module()) :: module()
   def real(module) do
     Naming.original(module)
+  end
+
+  @doc """
+  Refutes that the given module and function has been called with any arity.
+
+  ```elixir
+  patch(Example, :function, :patch)
+
+  refute_any_call Example.function   # passes
+
+  Example.function(1, 2, 3)
+
+  refute_any_call Example.function   # fails
+  ```
+  """
+  @spec refute_any_call(call :: Macro.t()) :: Macro.t()
+  defmacro refute_any_call(call) do
+    {module, function, arguments} = Macro.decompose_call(call)
+
+    unless Enum.empty?(arguments) do
+      raise InvalidAnyCall, message: "refute_any_call/1 does not support arguments"
+    end
+
+    quote do
+      Patch.Assertions.refute_any_call(unquote(module), unquote(function))
+    end
+  end
+
+  @doc """
+  Refutes that the given module and function has been called with any arity.
+
+  ```elixir
+  patch(Example, :function, :patch)
+
+  refute_any_call Example, :function   # passes
+
+  Example.function(1, 2, 3)
+
+  refute_any_call Example, :function   # fails
+  ```
+
+  This function exists for advanced use cases where the module or function are not literals in the
+  test code.  If they are literals then `refute_any_call/1` should be preferred.
+  """
+  @spec refute_any_call(module :: module(), function :: atom()) :: nil
+  defdelegate refute_any_call(module, function), to: Patch.Assertions
+
+  @doc """
+  Given a call will refute that a matching call was observed by the patched function.
+
+  The call can use the special sentinal `:_` as a wildcard match.
+
+  ```elixir
+  patch(Example, :function, :patch)
+
+  Example.function(1, 2, 3)
+
+  refute_called Example.function(4, 5, 6)   # passes
+  refute_called Example.function(4, :_, 6)  # passes
+  refute_called Example.function(1, 2, 3)   # fails
+  refute_called Example.function(1, :_, 3)  # fails
+  ```
+  """
+  @spec refute_called(call :: Macro.t()) :: Macro.t()
+  defmacro refute_called(call) do
+    {module, function, arguments} = Macro.decompose_call(call)
+
+    quote do
+      Patch.Assertions.refute_called(unquote(module), unquote(function), unquote(arguments))
+    end
+  end
+
+  @doc """
+  Given a call will refute that a matching call was observed exactly the number of times provided
+  by the patched function.
+
+  The call can use the special sentinal `:_` as a wildcard match.
+
+  ```elixir
+  patch(Example, :function, :patch)
+
+  Example.function(1, 2, 3)
+
+  refute_called Example.function(1, 2, 3), 2   # passes
+  refute_called Example.function(1, :_, 3), 2  # passes
+
+  Example.function(1, 2, 3)
+
+  refute_called Example.function(1, 2, 3), 1   # passes
+  refute_called Example.function(1, :_, 3), 1  # passes
+  ```
+  """
+  @spec refute_called(call :: Macro.t(), count :: Macro.t()) :: Macro.t()
+  defmacro refute_called(call, count) do
+    {module, function, arguments} = Macro.decompose_call(call)
+
+    quote do
+      Patch.Assertions.refute_called(unquote(module), unquote(function), unquote(arguments), unquote(count))
+    end
+  end
+
+  @doc """
+  Given a call will refute that a matching call was observed exactly the number of times provided
+  by the patched function.
+
+  The call can use the special sentinal `:_` as a wildcard match.
+
+  ```elixir
+  patch(Example, :function, :patch)
+
+  Example.function(1, 2, 3)
+
+  refute_called_once Example.function(1, 2, 3), 2   # fails
+  refute_called_once Example.function(1, :_, 3), 2  # fails
+
+  Example.function(1, 2, 3)
+
+  refute_called_once Example.function(1, 2, 3), 1   # passes
+  refute_called_once Example.function(1, :_, 3), 1  # passes
+  ```
+  """
+  @spec refute_called_once(call :: Macro.t()) :: Macro.t()
+  defmacro refute_called_once(call) do
+    {module, function, arguments} = Macro.decompose_call(call)
+
+    quote do
+      Patch.Assertions.refute_called_once(unquote(module), unquote(function), unquote(arguments))
+    end
   end
 
   @doc """
