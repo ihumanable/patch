@@ -111,10 +111,8 @@ defmodule Patch do
   """
   @spec assert_called(Macro.t()) :: Macro.t()
   defmacro assert_called(call) do
-    {module, function, arguments} = Macro.decompose_call(call)
-
-    quote do
-      Patch.Assertions.assert_called(unquote(module), unquote(function), unquote(arguments))
+    quote bind_quoted: [call: call] do
+      Patch.Assertions.assert_called(call)
     end
   end
 

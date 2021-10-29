@@ -55,21 +55,23 @@ defmodule Patch.Assertions do
   There is a convenience macro in the Developer Interface, `Patch.assert_called/1` which should be
   preferred over calling this function directly.
   """
-  @spec assert_called(module :: module(), function :: atom(), arguments :: [term()]) :: nil
-  def assert_called(module, function, arguments) do
-    unless Patch.Mock.called?(module, function, arguments) do
-      message = """
-      \n
-      Expected but did not receive the following call:
+  @spec assert_called(call :: Macro.t()) :: Macro.t()
+  defmacro assert_called(call) do
+    quote bind_quoted: [call: call] do
+      unless Patch.Mock.called?(call) do
+        message = """
+        \n
+        Expected but did not receive the following call:
 
-        #{inspect(module)}.#{to_string(function)}(#{format_arguments(arguments)})
+          #{inspect(module)}.#{to_string(function)}(#{format_patterns(patterns)})
 
-      Calls which were received (matching calls are marked with *):
+        Calls which were received (matching calls are marked with *):
 
-      #{format_calls_matching(module, function, arguments)}
-      """
+        #{format_calls_matching(module, function, patterns)}
+        """
 
-      raise MissingCall, message: message
+        raise MissingCall, message: message
+      end
     end
   end
 
@@ -335,6 +337,11 @@ defmodule Patch.Assertions do
     arguments
     |> Enum.map(&Kernel.inspect/1)
     |> Enum.join(", ")
+  end
+
+  @spec format_patterns(patterns :: [term()]) :: String.t()
+  defp format_patterns(patterns) do
+    Macro.to_string(patterns)
   end
 
   @spec format_calls_matching_any(module :: module(), expected_function :: atom()) :: String.t()

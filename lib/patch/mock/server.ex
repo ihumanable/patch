@@ -96,7 +96,7 @@ defmodule Patch.Mock.Server do
   """
   @spec history(module :: module()) :: History.t()
   def history(module) do
-    call(module, :history, fn -> History.new() end)
+    call(module, :history, &History.new/0)
   end
 
   @doc """
