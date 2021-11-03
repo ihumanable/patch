@@ -169,10 +169,8 @@ defmodule Patch do
   """
   @spec assert_called_once(call :: Macro.t()) :: Macro.t()
   defmacro assert_called_once(call) do
-    {module, function, arguments} = Macro.decompose_call(call)
-
     quote do
-      Patch.Assertions.assert_called_once(unquote(module), unquote(function), unquote(arguments))
+      Patch.Assertions.assert_called_once(unquote(call))
     end
   end
 
@@ -581,10 +579,8 @@ defmodule Patch do
   """
   @spec refute_called(call :: Macro.t()) :: Macro.t()
   defmacro refute_called(call) do
-    {module, function, arguments} = Macro.decompose_call(call)
-
     quote do
-      Patch.Assertions.refute_called(unquote(module), unquote(function), unquote(arguments))
+      Patch.Assertions.refute_called(unquote(call))
     end
   end
 
@@ -610,10 +606,8 @@ defmodule Patch do
   """
   @spec refute_called(call :: Macro.t(), count :: Macro.t()) :: Macro.t()
   defmacro refute_called(call, count) do
-    {module, function, arguments} = Macro.decompose_call(call)
-
     quote do
-      Patch.Assertions.refute_called(unquote(module), unquote(function), unquote(arguments), unquote(count))
+      Patch.Assertions.refute_called(unquote(call), unquote(count))
     end
   end
 
@@ -638,10 +632,8 @@ defmodule Patch do
   """
   @spec refute_called_once(call :: Macro.t()) :: Macro.t()
   defmacro refute_called_once(call) do
-    {module, function, arguments} = Macro.decompose_call(call)
-
     quote do
-      Patch.Assertions.refute_called_once(unquote(module), unquote(function), unquote(arguments))
+      Patch.Assertions.refute_called_once(unquote(call))
     end
   end
 

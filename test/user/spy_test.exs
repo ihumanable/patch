@@ -53,7 +53,7 @@ defmodule Patch.Test.User.SpyTest do
 
       assert Spy.example(:test_argument_2) == {:original, :test_argument_2}
 
-      assert_called Spy.example(:_)
+      assert_called Spy.example(_)
     end
 
     test "raises MissingCall if no calls have occurred on assert_called with wildcard" do
@@ -62,7 +62,7 @@ defmodule Patch.Test.User.SpyTest do
       spy(Spy)
 
       assert_raise Patch.MissingCall, fn ->
-        assert_called Spy.example(:_)
+        assert_called Spy.example(_)
       end
     end
 
@@ -94,7 +94,7 @@ defmodule Patch.Test.User.SpyTest do
 
       spy(Spy)
 
-      refute_called Spy.example(:_)
+      refute_called Spy.example(_)
     end
 
     test "raises UnexpectedCall for refute_called with wildcards if any call to the spy has occurred" do
@@ -105,7 +105,7 @@ defmodule Patch.Test.User.SpyTest do
       assert Spy.example(:test_argument_2) == {:original, :test_argument_2}
 
       assert_raise Patch.UnexpectedCall, fn ->
-        refute_called Spy.example(:_)
+        refute_called Spy.example(_)
       end
     end
   end

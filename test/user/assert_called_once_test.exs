@@ -39,8 +39,8 @@ defmodule Patch.Test.User.AssertCalledOnecTest do
 
       assert AssertCalledOnce.example(1, 2) == :patched
 
-      assert_called_once AssertCalledOnce.example(1, :_)
-      assert_called_once AssertCalledOnce.example(:_, 2)
+      assert_called_once AssertCalledOnce.example(1, _)
+      assert_called_once AssertCalledOnce.example(_, 2)
     end
 
     test "partial call mismatch raises MissingCall" do
@@ -49,11 +49,11 @@ defmodule Patch.Test.User.AssertCalledOnecTest do
       assert AssertCalledOnce.example(1, 2) == :patched
 
       assert_raise Patch.MissingCall, fn ->
-        assert_called_once AssertCalledOnce.example(3, :_)
+        assert_called_once AssertCalledOnce.example(3, _)
       end
 
       assert_raise Patch.MissingCall, fn ->
-        assert_called_once AssertCalledOnce.example(:_, 4)
+        assert_called_once AssertCalledOnce.example(_, 4)
       end
     end
 
@@ -66,11 +66,11 @@ defmodule Patch.Test.User.AssertCalledOnecTest do
 
 
       assert_raise Patch.UnexpectedCall, fn ->
-        assert_called_once AssertCalledOnce.example(1, :_)
+        assert_called_once AssertCalledOnce.example(1, _)
       end
 
       assert_raise Patch.UnexpectedCall, fn ->
-        assert_called_once AssertCalledOnce.example(:_, 2)
+        assert_called_once AssertCalledOnce.example(_, 2)
       end
     end
 
@@ -79,14 +79,14 @@ defmodule Patch.Test.User.AssertCalledOnecTest do
 
       assert AssertCalledOnce.example(1, 2) == :patched
 
-      assert_called_once AssertCalledOnce.example(:_, :_)
+      assert_called_once AssertCalledOnce.example(_, _)
     end
 
     test "wildcard call raises MissingCall when no calls present" do
       patch(AssertCalledOnce, :example, :patched)
 
       assert_raise Patch.MissingCall, fn ->
-        assert_called_once AssertCalledOnce.example(:_, :_)
+        assert_called_once AssertCalledOnce.example(_, _)
       end
     end
 
@@ -97,7 +97,7 @@ defmodule Patch.Test.User.AssertCalledOnecTest do
       assert AssertCalledOnce.example(3, 4) == :patched
 
       assert_raise Patch.UnexpectedCall, fn ->
-        assert_called_once AssertCalledOnce.example(:_, :_)
+        assert_called_once AssertCalledOnce.example(_, _)
       end
     end
 

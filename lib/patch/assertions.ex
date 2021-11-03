@@ -162,30 +162,39 @@ defmodule Patch.Assertions do
   There is a convenience macro in the Developer Interface, `Patch.assert_called_once/1` which
   should be preferred over calling this function directly.
   """
-  @spec assert_called_once(module :: module(), function :: atom(), arguments :: [term()]) :: nil
-  def assert_called_once(module, function, arguments) do
-    call_count = Patch.Mock.call_count(module, function, arguments)
+  @spec assert_called_once(call :: Macro.t()) :: Macro.t()
+  defmacro assert_called_once(call) do
+    {module, function, patterns} = Macro.decompose_call(call)
 
-    unless call_count == 1 do
-      exception =
-        if call_count == 0 do
-          MissingCall
-        else
-          UnexpectedCall
-        end
+    quote do
+      call_count = Patch.Mock.call_count(unquote(call))
 
-      message = """
-      \n
-      Expected the following call to occur exactly once, but call occurred #{call_count} times:
+      unless call_count == 1 do
+        exception =
+          if call_count == 0 do
+            MissingCall
+          else
+            UnexpectedCall
+          end
 
-        #{inspect(module)}.#{to_string(function)}(#{format_arguments(arguments)})
+        history = Patch.Mock.match_history(unquote(call))
 
-      Calls which were received (matching calls are marked with *):
+        message = """
+        \n
+        Expected the following call to occur exactly once, but call occurred #{call_count} times:
 
-      #{format_calls_matching(module, function, arguments)}
-      """
+          #{inspect(unquote(module))}.#{to_string(unquote(function))}(#{Patch.Assertions.format_patterns(unquote(patterns))})
 
-      raise exception, message
+        Calls which were received (matching calls are marked with *):
+
+        #{Patch.Assertions.format_history(unquote(module), history)}
+        """
+
+        raise exception, message
+      end
+
+      {:ok, {unquote(function), arguments}} = Patch.Mock.latest_match(unquote(call))
+      Patch.Macro.match(unquote(patterns), arguments)
     end
   end
 
@@ -242,21 +251,27 @@ defmodule Patch.Assertions do
   There is a convenience macro in the Developer Interface, `Patch.refute_called/1` which should be
   preferred over calling this function directly.
   """
-  @spec refute_called(module :: module(), function :: atom(), arguments :: [term()]) :: nil
-  def refute_called(module, function, arguments) do
-    if Patch.Mock.called?(module, function, arguments) do
-      message = """
-      \n
-      Unexpected call received:
+  @spec refute_called(call :: Macro.t()) :: Macro.t()
+  defmacro refute_called(call) do
+    {module, function, patterns} = Macro.decompose_call(call)
 
-        #{inspect(module)}.#{to_string(function)}(#{format_arguments(arguments)})
+    quote do
+      if Patch.Mock.called?(unquote(call)) do
+        history = Patch.Mock.match_history(unquote(call))
 
-      Calls which were received (matching calls are marked with *):
+        message = """
+        \n
+        Unexpected call received:
 
-      #{format_calls_matching(module, function, arguments)}
-      """
+          #{inspect(unquote(module))}.#{to_string(unquote(function))}(#{Patch.Assertions.format_patterns(unquote(patterns))})
 
-      raise UnexpectedCall, message: message
+        Calls which were received (matching calls are marked with *):
+
+        #{Patch.Assertions.format_history(unquote(module), history)}
+        """
+
+        raise UnexpectedCall, message: message
+      end
     end
   end
 
@@ -283,23 +298,29 @@ defmodule Patch.Assertions do
   There is a convenience macro in the Developer Interface, `Patch.refute_called/2` which
   should be preferred over calling this function directly.
   """
-  @spec refute_called(module :: module(), function :: atom(), arguments :: [term()], count :: non_neg_integer()) :: nil
-  def refute_called(module, function, arguments, count) do
-    call_count = Patch.Mock.call_count(module, function, arguments)
+  @spec refute_called(call :: Macro.t(), count :: non_neg_integer()) :: Macro.t()
+  defmacro refute_called(call, count) do
+    {module, function, patterns} = Macro.decompose_call(call)
 
-    if call_count == count do
-      message = """
-      \n
-      Expected any count except #{count} of the following calls, but found #{count}:
+    quote do
+      call_count = Patch.Mock.call_count(unquote(call))
 
-        #{inspect(module)}.#{to_string(function)}(#{format_arguments(arguments)})
+      if call_count == unquote(count) do
+        history = Patch.Mock.match_history(unquote(call))
 
-      Calls which were received (matching calls are marked with *):
+        message = """
+        \n
+        Expected any count except #{unquote(count)} of the following calls, but found #{call_count}:
 
-      #{format_calls_matching(module, function, arguments)}
-      """
+          #{inspect(unquote(module))}.#{to_string(unquote(function))}(#{Patch.Assertions.format_patterns(unquote(patterns))})
 
-      raise UnexpectedCall, message
+        Calls which were received (matching calls are marked with *):
+
+        #{Patch.Assertions.format_history(unquote(module), history)}
+        """
+
+        raise UnexpectedCall, message
+      end
     end
   end
 
@@ -325,26 +346,35 @@ defmodule Patch.Assertions do
   There is a convenience macro in the Developer Interface, `Patch.refute_called_once/1` which
   should be preferred over calling this function directly.
   """
-  @spec refute_called_once(module :: module(), function :: atom(), arguments :: [term()]) :: nil
-  def refute_called_once(module, function, arguments) do
-    call_count = Patch.Mock.call_count(module, function, arguments)
+  @spec refute_called_once(call :: Macro.t()) :: Macro.t()
+  defmacro refute_called_once(call) do
+    {module, function, patterns} = Macro.decompose_call(call)
 
-    if call_count == 1 do
-      message = """
-      \n
-      Expected the following call to occur any number of times but once, but it occurred once:
+    quote do
+      call_count = Patch.Mock.call_count(unquote(call))
 
-        #{inspect(module)}.#{to_string(function)}(#{format_arguments(arguments)})
+      if call_count == 1 do
+        history = Patch.Mock.match_history(unquote(call))
 
-      Calls which were received (matching calls are marked with *):
+        message = """
+        \n
+        Expected the following call to occur any number of times but once, but it occurred once:
 
-      #{format_calls_matching(module, function, arguments)}
-      """
+          #{inspect(unquote(module))}.#{to_string(unquote(function))}(#{Patch.Assertions.format_patterns(unquote(patterns))})
 
-      raise UnexpectedCall, message
+        Calls which were received (matching calls are marked with *):
+
+        #{Patch.Assertions.format_history(unquote(module), history)}
+        """
+
+        raise UnexpectedCall, message
+      end
     end
   end
 
+  @doc """
+  Prints a list of patterns AST as an argument list.
+  """
   @spec format_patterns(patterns :: [term()]) :: String.t()
   defmacro format_patterns(patterns) do
     patterns
@@ -352,6 +382,7 @@ defmodule Patch.Assertions do
     |> String.slice(1..-2)
   end
 
+  @spec format_history(module :: Module.t(), calls :: [{atom(), [term()]}]) :: String.t()
   def format_history(module, calls) do
     calls
     |> Enum.reverse()
@@ -383,8 +414,6 @@ defmodule Patch.Assertions do
     |> Enum.join(", ")
   end
 
-
-
   @spec format_calls_matching_any(module :: module(), expected_function :: atom()) :: String.t()
   defp format_calls_matching_any(module, expected_function) do
     module
@@ -407,28 +436,4 @@ defmodule Patch.Assertions do
         Enum.join(calls, "\n")
     end
   end
-
-  @spec format_calls_matching(module :: module(), expected_function :: atom(), expected_arguments :: [term()]) :: String.t()
-  defp format_calls_matching(module, expected_function, expected_arguments) do
-    module
-    |> Patch.history()
-    |> Enum.with_index(1)
-    |> Enum.map(fn {{actual_function, actual_arguments}, i} ->
-      marker =
-        if expected_function == actual_function and Mock.arguments_compatible?(expected_arguments, actual_arguments) do
-          "* "
-        else
-          "  "
-        end
-
-      "#{marker}#{i}. #{inspect(module)}.#{actual_function}(#{format_arguments(actual_arguments)})"
-    end)
-    |> case do
-      [] ->
-        "  [No Calls Received]"
-      calls ->
-        Enum.join(calls, "\n")
-    end
-  end
-
 end

@@ -28,7 +28,7 @@ defmodule Patch.Test.User.Patch.LocalCallTest do
 
       patch(LocalCall, :public_function, :patched)
 
-      refute_called LocalCall.public_function(:_)
+      refute_called LocalCall.public_function(_)
     end
   end
 
@@ -56,7 +56,7 @@ defmodule Patch.Test.User.Patch.LocalCallTest do
 
       patch(LocalCall, :private_function, :patched)
 
-      refute_called LocalCall.private_function(:_)
+      refute_called LocalCall.private_function(_)
     end
   end
 end
