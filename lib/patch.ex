@@ -193,6 +193,10 @@ defmodule Patch do
   ```elixir
   expose(Example, [private_function: 1, private_function: 2])
   ```
+
+  After exposing a function, attempting to call the exposed function will cause the Elixir
+  Compiler to flag calls to exposed functions as a warning.  There is a companion macro
+  `private/1` that test authors can wrap their calls with to prevent warnings.
   """
   @spec expose(module :: module, exposes :: Patch.Mock.exposes()) :: :ok | {:error, term()}
   def expose(module, exposes) do
@@ -460,8 +464,9 @@ defmodule Patch do
   @doc """
   Suppress warnings for using exposed private functions in tests.
 
-  Patch allows you to make a private function public, but this happens dynamically at test time.
-  The Elixir Compiler will flag calls to exposed functions as a warning.
+  Patch allows you to make a private function public via the `expose/2` function.  Exposure
+  happens dynamically at test time. The Elixir Compiler will flag calls to exposed functions as a
+  warning.
 
   One way around this is to change the normal function call into an `apply/3` but this is
   cumbersome and makes tests harder to read.
