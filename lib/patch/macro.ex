@@ -89,11 +89,20 @@ defmodule Patch.Macro do
   defp variables(pattern) do
     pattern
     |> Macro.prewalk([], fn
-      {:_, _, _}, acc ->
+      {:_, _, _} = node, acc ->
         {node, acc}
 
       {name, meta, context} = node, acc when is_atom(name) and is_atom(context) ->
-        {node, [{name, meta, nil} | acc]}
+        ignored? =
+          name
+          |> Atom.to_string()
+          |> String.starts_with?("_")
+
+        if ignored? do
+          {node, acc}
+        else
+          {node, [{name, meta, nil} | acc]}
+        end
 
       node, acc ->
         {node, acc}

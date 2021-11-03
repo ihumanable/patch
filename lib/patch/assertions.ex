@@ -57,21 +57,28 @@ defmodule Patch.Assertions do
   """
   @spec assert_called(call :: Macro.t()) :: Macro.t()
   defmacro assert_called(call) do
-    quote bind_quoted: [call: call] do
-      unless Patch.Mock.called?(call) do
+    {module, function, patterns} = Macro.decompose_call(call)
+
+    quote do
+      unless Patch.Mock.called?(unquote(call)) do
+        history = Patch.Mock.match_history(unquote(call))
+
         message = """
         \n
         Expected but did not receive the following call:
 
-          #{inspect(module)}.#{to_string(function)}(#{format_patterns(patterns)})
+          #{inspect(unquote(module))}.#{to_string(unquote(function))}(#{Patch.Assertions.format_patterns(unquote(patterns))})
 
         Calls which were received (matching calls are marked with *):
 
-        #{format_calls_matching(module, function, patterns)}
+        #{Patch.Assertions.format_history(unquote(module), history)}
         """
 
         raise MissingCall, message: message
       end
+
+      {:ok, {unquote(function), arguments}} = Patch.Mock.latest_match(unquote(call))
+      Patch.Macro.match(unquote(patterns), arguments)
     end
   end
 
@@ -98,30 +105,38 @@ defmodule Patch.Assertions do
   There is a convenience macro in the Developer Interface, `Patch.assert_called/2` which
   should be preferred over calling this function directly.
   """
-  @spec assert_called(module :: module(), function :: atom(), arguments :: [term()], count :: non_neg_integer()) :: nil
-  def assert_called(module, function, arguments, count) do
-    call_count = Patch.Mock.call_count(module, function, arguments)
+  @spec assert_called(call :: Macro.t(), count :: non_neg_integer()) :: Macro.t()
+  defmacro assert_called(call, count) do
+    {module, function, patterns} = Macro.decompose_call(call)
 
-    unless call_count == count do
-      exception =
-        if call_count < count do
-          MissingCall
-        else
-          UnexpectedCall
-        end
+    quote do
+      call_count = Patch.Mock.call_count(unquote(call))
+      unless call_count == unquote(count) do
+        exception =
+          if call_count < unquote(count) do
+            MissingCall
+          else
+            UnexpectedCall
+          end
 
-      message = """
-      \n
-      Expected #{count} of the following calls, but found #{call_count}:
+        history = Patch.Mock.match_history(unquote(call))
 
-        #{inspect(module)}.#{to_string(function)}(#{format_arguments(arguments)})
+        message = """
+        \n
+        Expected #{unquote(count)} of the following calls, but found #{call_count}:
 
-      Calls which were received (matching calls are marked with *):
+          #{inspect(unquote(module))}.#{to_string(unquote(function))}(#{Patch.Assertions.format_patterns(unquote(patterns))})
 
-      #{format_calls_matching(module, function, arguments)}
-      """
+        Calls which were received (matching calls are marked with *):
 
-      raise exception, message
+        #{Patch.Assertions.format_history(unquote(module), history)}
+        """
+
+        raise exception, message
+      end
+
+      {:ok, {unquote(function), arguments}} = Patch.Mock.latest_match(unquote(call))
+      Patch.Macro.match(unquote(patterns), arguments)
     end
   end
 
@@ -330,6 +345,34 @@ defmodule Patch.Assertions do
     end
   end
 
+  @spec format_patterns(patterns :: [term()]) :: String.t()
+  defmacro format_patterns(patterns) do
+    patterns
+    |> Macro.to_string()
+    |> String.slice(1..-2)
+  end
+
+  def format_history(module, calls) do
+    calls
+    |> Enum.with_index(1)
+    |> Enum.map(fn {{matches, {function, arguments}}, i} ->
+      marker =
+        if matches do
+          "* "
+        else
+          "  "
+        end
+
+      "#{marker}#{i}. #{inspect(module)}.#{function}(#{format_arguments(arguments)})"
+    end)
+    |> case do
+      [] ->
+        "  [No Calls Received]"
+      calls ->
+        Enum.join(calls, "\n")
+    end
+  end
+
   ## Private
 
   @spec format_arguments(arguments :: [term()]) :: String.t()
@@ -339,10 +382,7 @@ defmodule Patch.Assertions do
     |> Enum.join(", ")
   end
 
-  @spec format_patterns(patterns :: [term()]) :: String.t()
-  defp format_patterns(patterns) do
-    Macro.to_string(patterns)
-  end
+
 
   @spec format_calls_matching_any(module :: module(), expected_function :: atom()) :: String.t()
   defp format_calls_matching_any(module, expected_function) do

@@ -37,6 +37,16 @@ defmodule Patch.Test.Unit.Patch.MacroTest do
       assert x == :unbound
     end
 
+    test "can match unused variables" do
+      assert Patch.Macro.match?(_x, 1)
+    end
+
+    test "can match a mix of used and unused variabled, but does not bind them" do
+      x = :unbound
+      assert Patch.Macro.match?({x, _y}, {1, 2})
+      assert x == :unbound
+    end
+
     test "functionality works in arbitrarily complex expressions" do
       x = 1
       assert Patch.Macro.match?([^x, y, _, %{a: 1}], [1, 2, 3, %{a: 1, b: 2}])
@@ -77,6 +87,15 @@ defmodule Patch.Test.Unit.Patch.MacroTest do
 
     test "can match variables and binds them" do
       assert Patch.Macro.match(x, 1)
+      assert x == 1
+    end
+
+    test "can match unused variables" do
+      assert Patch.Macro.match(_x, 1)
+    end
+
+    test "can match a mix of used and unused variabled" do
+      assert Patch.Macro.match({x, _y}, {1, 2})
       assert x == 1
     end
 

@@ -28,8 +28,8 @@ defmodule Patch.Test.User.AssertCalledTest do
 
       assert AssertCalled.example(1, 2) == :patched
 
-      assert_called AssertCalled.example(1, :_)
-      assert_called AssertCalled.example(:_, 2)
+      assert_called AssertCalled.example(1, _)
+      assert_called AssertCalled.example(_, 2)
     end
 
     test "partial call mismatch raises MissingCall" do
@@ -38,11 +38,11 @@ defmodule Patch.Test.User.AssertCalledTest do
       assert AssertCalled.example(1, 2) == :patched
 
       assert_raise Patch.MissingCall, fn ->
-        assert_called AssertCalled.example(3, :_)
+        assert_called AssertCalled.example(3, _)
       end
 
       assert_raise Patch.MissingCall, fn ->
-        assert_called AssertCalled.example(:_, 4)
+        assert_called AssertCalled.example(_, 4)
       end
     end
 
@@ -51,15 +51,47 @@ defmodule Patch.Test.User.AssertCalledTest do
 
       assert AssertCalled.example(1, 2) == :patched
 
-      assert_called AssertCalled.example(:_, :_)
+      assert_called AssertCalled.example(_, _)
     end
 
     test "wildcard call raises MissingCall when no calls present" do
       patch(AssertCalled, :example, :patched)
 
       assert_raise Patch.MissingCall, fn ->
-        assert_called AssertCalled.example(:_, :_)
+        assert_called AssertCalled.example(_, _)
       end
+    end
+
+    test "variable match" do
+      patch(AssertCalled, :example, :patched)
+
+      assert AssertCalled.example(1, 2) == :patched
+
+      assert_called AssertCalled.example(a, b)
+
+      assert a == 1
+      assert b == 2
+    end
+
+    test "partial map match" do
+      patch(AssertCalled, :example, :patched)
+
+      assert AssertCalled.example(%{a: 1, b: 2}, :test) == :patched
+
+      assert_called AssertCalled.example(%{a: 1}, _)
+    end
+
+    test "patterns can express arbitrary complexity" do
+      patch(AssertCalled, :example, :patched)
+
+      assert AssertCalled.example([1, 2, 3, %{a: 1, b: 2}], []) == :patched
+
+      x = 1
+
+      assert_called AssertCalled.example([^x, y, _z, %{b: 2}] = first, [])
+
+      assert first == [1, 2, 3, %{a: 1, b: 2}]
+      assert y == 2
     end
 
     test "exception formatting with no calls" do
@@ -166,13 +198,13 @@ defmodule Patch.Test.User.AssertCalledTest do
 
       assert AssertCalled.example(1, 2) == :patched
 
-      assert_called AssertCalled.example(1, :_), 1
-      assert_called AssertCalled.example(:_, 2), 1
+      assert_called AssertCalled.example(1, _), 1
+      assert_called AssertCalled.example(_, 2), 1
 
       assert AssertCalled.example(1, 2) == :patched
 
-      assert_called AssertCalled.example(1, :_), 2
-      assert_called AssertCalled.example(:_, 2), 2
+      assert_called AssertCalled.example(1, _), 2
+      assert_called AssertCalled.example(_, 2), 2
     end
 
     test "partial call mismatch raises MissingCall" do
@@ -181,11 +213,11 @@ defmodule Patch.Test.User.AssertCalledTest do
       assert AssertCalled.example(1, 2) == :patched
 
       assert_raise Patch.MissingCall, fn ->
-        assert_called AssertCalled.example(3, :_), 1
+        assert_called AssertCalled.example(3, _), 1
       end
 
       assert_raise Patch.MissingCall, fn ->
-        assert_called AssertCalled.example(:_, 4), 1
+        assert_called AssertCalled.example(_, 4), 1
       end
     end
 
@@ -195,11 +227,11 @@ defmodule Patch.Test.User.AssertCalledTest do
       assert AssertCalled.example(1, 2) == :patched
 
       assert_raise Patch.MissingCall, fn ->
-        assert_called AssertCalled.example(1, :_), 2
+        assert_called AssertCalled.example(1, _), 2
       end
 
       assert_raise Patch.MissingCall, fn ->
-        assert_called AssertCalled.example(:_, 2), 2
+        assert_called AssertCalled.example(_, 2), 2
       end
     end
 
@@ -211,11 +243,11 @@ defmodule Patch.Test.User.AssertCalledTest do
       assert AssertCalled.example(3, 2) == :patched
 
       assert_raise Patch.UnexpectedCall, fn ->
-        assert_called AssertCalled.example(1, :_), 1
+        assert_called AssertCalled.example(1, _), 1
       end
 
       assert_raise Patch.UnexpectedCall, fn ->
-        assert_called AssertCalled.example(:_, 2), 1
+        assert_called AssertCalled.example(_, 2), 1
       end
     end
 
@@ -224,11 +256,11 @@ defmodule Patch.Test.User.AssertCalledTest do
 
       assert AssertCalled.example(1, 2) == :patched
 
-      assert_called AssertCalled.example(:_, :_), 1
+      assert_called AssertCalled.example(_, _), 1
 
       assert AssertCalled.example(3, 4) == :patched
 
-      assert_called AssertCalled.example(:_, :_), 2
+      assert_called AssertCalled.example(_, _), 2
     end
 
     test "wildcard call with too high an expected count raises MissingCall" do
@@ -237,7 +269,7 @@ defmodule Patch.Test.User.AssertCalledTest do
       assert AssertCalled.example(1, 2) == :patched
 
       assert_raise Patch.MissingCall, fn ->
-        assert_called AssertCalled.example(:_, :_), 2
+        assert_called AssertCalled.example(_, _), 2
       end
     end
 
@@ -248,8 +280,42 @@ defmodule Patch.Test.User.AssertCalledTest do
       assert AssertCalled.example(3, 4) == :patched
 
       assert_raise Patch.UnexpectedCall, fn ->
-        assert_called AssertCalled.example(:_, :_), 1
+        assert_called AssertCalled.example(_, _), 1
       end
+    end
+
+    test "variable matches only call" do
+      patch(AssertCalled, :example, :patched)
+
+      assert AssertCalled.example(1, 2) == :patched
+
+      assert_called AssertCalled.example(a, b), 1
+
+      assert a == 1
+      assert b == 2
+    end
+
+    test "variable matches latest call" do
+      patch(AssertCalled, :example, :patched)
+
+      assert AssertCalled.example(1, 2) == :patched
+      assert AssertCalled.example(3, 4) == :patched
+
+      assert_called AssertCalled.example(a, b), 2
+
+      assert a == 3
+      assert b == 4
+    end
+
+    test "pattern match matches latest call" do
+      patch(AssertCalled, :example, :patched)
+
+      assert AssertCalled.example(1, 2) == :patched
+      assert AssertCalled.example(1, 3) == :patched
+
+      assert_called AssertCalled.example(1, a), 2
+
+      assert a == 3
     end
 
     test "exception formatting with no calls" do

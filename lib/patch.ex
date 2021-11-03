@@ -41,6 +41,11 @@ defmodule Patch do
       import unquote(__MODULE__)
       import Patch.Mock.Value, except: [advance: 1, next: 2]
 
+      require Patch.Macro
+      require Patch.Mock
+      require Patch.Assertions
+
+
       setup do
         start_supervised!(Patch.Supervisor)
         :ok
@@ -111,8 +116,8 @@ defmodule Patch do
   """
   @spec assert_called(Macro.t()) :: Macro.t()
   defmacro assert_called(call) do
-    quote bind_quoted: [call: call] do
-      Patch.Assertions.assert_called(call)
+    quote do
+      Patch.Assertions.assert_called(unquote(call))
     end
   end
 
@@ -138,10 +143,8 @@ defmodule Patch do
   """
   @spec assert_called(call :: Macro.t(), count :: Macro.t()) :: Macro.t()
   defmacro assert_called(call, count) do
-    {module, function, arguments} = Macro.decompose_call(call)
-
     quote do
-      Patch.Assertions.assert_called(unquote(module), unquote(function), unquote(arguments), unquote(count))
+      Patch.Assertions.assert_called(unquote(call), unquote(count))
     end
   end
 

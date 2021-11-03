@@ -109,6 +109,27 @@ defmodule Patch.Mock do
     Mock.Server.history(module)
   end
 
+  defmacro latest_match(call) do
+    {module, function, pattern} = Macro.decompose_call(call)
+
+    quote do
+      unquote(module)
+      |> Patch.Mock.history()
+      |> Patch.Mock.History.entries(:desc)
+      |> Enum.find_value(fn
+        {unquote(function), arguments} = call ->
+          if Patch.Macro.match?(unquote(pattern), arguments) do
+            {:ok, call}
+          else
+            false
+          end
+
+        _ ->
+          false
+      end)
+    end
+  end
+
   @doc """
   Decorates the history with whether or not the call in the history matches the provided call.
 
