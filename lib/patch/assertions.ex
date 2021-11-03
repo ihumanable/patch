@@ -354,6 +354,7 @@ defmodule Patch.Assertions do
 
   def format_history(module, calls) do
     calls
+    |> Enum.reverse()
     |> Enum.with_index(1)
     |> Enum.map(fn {{matches, {function, arguments}}, i} ->
       marker =

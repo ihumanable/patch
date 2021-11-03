@@ -382,5 +382,32 @@ defmodule Patch.Test.User.AssertCalledTest do
         assert_called AssertCalled.example(1, 2), 1
       end
     end
+
+    test "exception formatting with wrong pinned variables" do
+      patch(AssertCalled, :example, :patched)
+
+      assert AssertCalled.example(1, 2) == :patched
+      assert AssertCalled.example(1, 3) == :patched
+      assert AssertCalled.example(1, 4) == :patched
+
+      x = 1
+
+      expected_message = """
+      \n
+      Expected 1 of the following calls, but found 0:
+
+        Patch.Test.Support.User.AssertCalled.example(1, ^x)
+
+      Calls which were received (matching calls are marked with *):
+
+        1. Patch.Test.Support.User.AssertCalled.example(1, 2)
+        2. Patch.Test.Support.User.AssertCalled.example(1, 3)
+        3. Patch.Test.Support.User.AssertCalled.example(1, 4)
+      """
+
+      assert_raise Patch.MissingCall, expected_message, fn ->
+        assert_called AssertCalled.example(1, ^x), 1
+      end
+    end
   end
 end
