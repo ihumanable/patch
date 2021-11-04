@@ -147,15 +147,23 @@ defmodule PatchExample do
 end
 ```
 
-`assert_called/1` supports the `:_` wildcard atom.  In the above example the following assertion would also pass.
+`assert_called/1` supports full pattern matching and non-hygienic binds.  This is similar to how
+ExUnit's `assert_receive/3` and `assert_received/2` work.
 
 ```elixir
-assert_called String.upcase(:_)
+# Wildcards are supported
+assert_called String.upcase(_)
+
+# Pinned variables are supported
+expected = "hello"
+assert_called String.upcase(^expected)
+
+# Unpinned variables are supported
+assert_called String.upcase(argument)
+assert argument == "hello"
 ```
 
-This can be useful when some of the arguments are complex or uninteresting for the unit test.
-
-Tests can also refute that a call has occurred with the `refute_called/1` macro.  This macro works in much the same way as `assert_called/1` and also supports the `:_` wildcard atom.
+Tests can also refute that a call has occurred with the `refute_called/1` macro.  This macro works in much the same way as `assert_called/1` and has full pattern support.
 
 ```elixir
 defmodule PatchExample do
@@ -197,13 +205,22 @@ defmodule PatchExample do
 end
 ```
 
-`assert_called_once/1` supports the `:_` wildcard atom.  In the above example the following assertion would behave identically.
+`assert_called_once/1` supports patterns and binds just like `assert_called/1`.  In the above example the following assertion would behave identically.
 
 ```elixir
-assert_called_once String.upcase(:_)
+# Wildcards are supported
+assert_called_once String.upcase(_)
+
+# Pinned variables are supported
+expected = "hello"
+assert_called_once String.upcase(^expected)
+
+# Unpinned variables are supported
+assert_called_once String.upcase(argument)
+assert argument == "hello"
 ```
 
-Tests can also refute that a call has occurred once with the `refute_called_once/1` macro.  This macro works in much the same way as `assert_called_once/1` and also supports the `:_` wildcard atom.
+Tests can also refute that a call has occurred once with the `refute_called_once/1` macro.  This macro works in much the same way as `assert_called_once/1` and has full pattern support.
 
 ```elixir
 defmodule PatchExample do
@@ -253,13 +270,24 @@ defmodule PatchExample do
 end
 ```
 
-`assert_called/2` supports the `:_` wildcard atom.  In the above example the following assertion would behave identically.
+`assert_called/2` supports patterns and binds just like `assert_called/1`.  Since multiple calls might match any binds bind to the latest matching call.
+
+In the above example the following assertion would behave identically.
 
 ```elixir
-assert_called String.upcase(:_), 3
+# Wildcards are supported
+assert_called String.upcase(_), 3
+
+# Pinned variables are supported
+expected = "hello"
+assert_called String.upcase(^expected), 3
+
+# Unpinned variables are supported
+assert_called String.upcase(argument), 3
+assert argument == "hello"
 ```
 
-Tests can also refute that a call has happened some given number of times exactly with the `refute_called/2` macro.  This macro works in much the same way as `assert_called/2` and also supports the `:_` wildcard atom.
+Tests can also refute that a call has happened some an exact number of times with the `refute_called/2` macro.  This macro works in much the same way as `assert_called/2` and also has full pattern support.
 
 ```elixir
 defmodule PatchExample do
@@ -283,7 +311,6 @@ defmodule PatchExample do
   end
 end
 ```
-
 
 ### Asserting / Refuting Multiple Arities
 

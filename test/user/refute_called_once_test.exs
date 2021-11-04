@@ -37,8 +37,8 @@ defmodule Patch.Test.User.RefuteCalledOnecTest do
 
       assert RefuteCalledOnce.example(1, 2) == :patched
 
-      refute_called_once RefuteCalledOnce.example(3, :_)
-      refute_called_once RefuteCalledOnce.example(:_, 4)
+      refute_called_once RefuteCalledOnce.example(3, _)
+      refute_called_once RefuteCalledOnce.example(_, 4)
     end
 
     test "partial call that match raises UnexpectedCall" do
@@ -47,11 +47,11 @@ defmodule Patch.Test.User.RefuteCalledOnecTest do
       assert RefuteCalledOnce.example(1, 2) == :patched
 
       assert_raise Patch.UnexpectedCall, fn ->
-        refute_called_once RefuteCalledOnce.example(1, :_)
+        refute_called_once RefuteCalledOnce.example(1, _)
       end
 
       assert_raise Patch.UnexpectedCall, fn ->
-        refute_called_once RefuteCalledOnce.example(:_, 2)
+        refute_called_once RefuteCalledOnce.example(_, 2)
       end
     end
 
@@ -62,14 +62,14 @@ defmodule Patch.Test.User.RefuteCalledOnecTest do
       assert RefuteCalledOnce.example(1, 3) == :patched
       assert RefuteCalledOnce.example(3, 2) == :patched
 
-      refute_called_once RefuteCalledOnce.example(1, :_)
-      refute_called_once RefuteCalledOnce.example(:_, 2)
+      refute_called_once RefuteCalledOnce.example(1, _)
+      refute_called_once RefuteCalledOnce.example(_, 2)
     end
 
     test "an uncalled function can be wildcard refuted" do
       patch(RefuteCalledOnce, :example, :patched)
 
-      refute_called_once RefuteCalledOnce.example(:_, :_)
+      refute_called_once RefuteCalledOnce.example(_, _)
     end
 
     test "any call causes a wildcard to raise UnexpectedCall" do
@@ -78,7 +78,7 @@ defmodule Patch.Test.User.RefuteCalledOnecTest do
       assert RefuteCalledOnce.example(1, 2) == :patched
 
       assert_raise Patch.UnexpectedCall, fn ->
-        refute_called_once RefuteCalledOnce.example(:_, :_)
+        refute_called_once RefuteCalledOnce.example(_, _)
       end
     end
 
@@ -88,7 +88,7 @@ defmodule Patch.Test.User.RefuteCalledOnecTest do
       assert RefuteCalledOnce.example(1, 2) == :patched
       assert RefuteCalledOnce.example(3, 4) == :patched
 
-      refute_called_once RefuteCalledOnce.example(:_, :_)
+      refute_called_once RefuteCalledOnce.example(_, _)
     end
 
     test "exception formatting" do

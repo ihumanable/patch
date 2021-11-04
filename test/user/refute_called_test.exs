@@ -28,8 +28,8 @@ defmodule Patch.Test.User.RefuteCalledTest do
 
       assert RefuteCalled.example(1, 2) == :patched
 
-      refute_called RefuteCalled.example(3, :_)
-      refute_called RefuteCalled.example(:_, 4)
+      refute_called RefuteCalled.example(3, _)
+      refute_called RefuteCalled.example(_, 4)
     end
 
     test "partial calls that match raises UnexpectedCall" do
@@ -38,18 +38,18 @@ defmodule Patch.Test.User.RefuteCalledTest do
       assert RefuteCalled.example(1, 2) == :patched
 
       assert_raise Patch.UnexpectedCall, fn ->
-        refute_called RefuteCalled.example(1, :_)
+        refute_called RefuteCalled.example(1, _)
       end
 
       assert_raise Patch.UnexpectedCall, fn ->
-        refute_called RefuteCalled.example(:_, 2)
+        refute_called RefuteCalled.example(_, 2)
       end
     end
 
     test "an uncalled function can be wildcard refuted" do
       patch(RefuteCalled, :example, :patched)
 
-      refute_called RefuteCalled.example(:_, :_)
+      refute_called RefuteCalled.example(_, _)
     end
 
     test "any call causes a wildcard refute to raise UnexpectedCall" do
@@ -58,7 +58,7 @@ defmodule Patch.Test.User.RefuteCalledTest do
       assert RefuteCalled.example(1, 2) == :patched
 
       assert_raise Patch.UnexpectedCall, fn ->
-        refute_called RefuteCalled.example(:_, :_)
+        refute_called RefuteCalled.example(_, _)
       end
     end
 
@@ -130,8 +130,8 @@ defmodule Patch.Test.User.RefuteCalledTest do
 
       assert RefuteCalled.example(1, 2) == :patched
 
-      refute_called RefuteCalled.example(1, :_), 2
-      refute_called RefuteCalled.example(:_, 2), 2
+      refute_called RefuteCalled.example(1, _), 2
+      refute_called RefuteCalled.example(_, 2), 2
     end
 
     test "partial call can be refuted with expression count" do
@@ -141,8 +141,8 @@ defmodule Patch.Test.User.RefuteCalledTest do
 
       unexpected_count = 2
 
-      refute_called RefuteCalled.example(1, :_), unexpected_count
-      refute_called RefuteCalled.example(:_, 2), unexpected_count + 1
+      refute_called RefuteCalled.example(1, _), unexpected_count
+      refute_called RefuteCalled.example(_, 2), unexpected_count + 1
     end
 
     test "partial calls that match raises UnexpectedCall" do
@@ -151,18 +151,18 @@ defmodule Patch.Test.User.RefuteCalledTest do
       assert RefuteCalled.example(1, 2) == :patched
 
       assert_raise Patch.UnexpectedCall, fn ->
-        refute_called RefuteCalled.example(1, :_), 1
+        refute_called RefuteCalled.example(1, _), 1
       end
 
       assert_raise Patch.UnexpectedCall, fn ->
-        refute_called RefuteCalled.example(:_, 2), 1
+        refute_called RefuteCalled.example(_, 2), 1
       end
     end
 
     test "an uncalled function can be wildcard refuted" do
       patch(RefuteCalled, :example, :patched)
 
-      refute_called RefuteCalled.example(:_, :_), 1
+      refute_called RefuteCalled.example(_, _), 1
     end
 
     test "any call causes a wildcard refute to raise UnexpectedCall" do
@@ -171,7 +171,7 @@ defmodule Patch.Test.User.RefuteCalledTest do
       assert RefuteCalled.example(1, 2) == :patched
 
       assert_raise Patch.UnexpectedCall, fn ->
-        refute_called RefuteCalled.example(:_, :_), 1
+        refute_called RefuteCalled.example(_, _), 1
       end
     end
 
