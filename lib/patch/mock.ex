@@ -109,6 +109,12 @@ defmodule Patch.Mock do
     Mock.Server.history(module)
   end
 
+  @doc """
+  Given a call finds the latest call that matched.
+
+  Returns `{:ok, {function, arguments}}` if a matching call is found, `false` otherwise.
+  """
+  @spec latest_match(call :: Macro.t()) :: Macro.t()
   defmacro latest_match(call) do
     {module, function, pattern} = Macro.decompose_call(call)
 
