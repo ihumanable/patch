@@ -194,7 +194,9 @@ Testing `public_function/1` gives us a very coarse measure of if the `private_fu
 
 It would be great if we could expose `private_function/1` to be able to more directly test this unit. 
 
-Here's how we can expose this function for testing via `expose/2`
+Here's how we can expose this function for testing via `expose/2`.  Calling an exposed functions will be flagged by the 
+Elixir Compiler as a warning, since the exposure happens at runtime not compile-time.  To suppress these warnings, the
+`private/1` macro is provided, just wrap the call to the exposed function with `private/1`.
 
 ```elixir
 defmodule ExampleTest do
@@ -205,19 +207,19 @@ defmodule ExampleTest do
     test "values less than 20 get magnified by 1000" do
       expose(Example, private_function: 1)
 
-      assert Example.private_function(10) == 10_000
+      assert private(Example.private_function(10)) == 10_000
     end
 
     test "values betwen 20 and 80 are reduced by 3" do
       expose(Example, private_function: 1)
 
-      assert Example.private_function(50) == 47
+      assert private(Example.private_function(50)) == 47
     end
 
     test "values greater than or equal to 80 are halved" do
       expose(Example, private_function: 1)
 
-      assert Example.private_function(120) == 60
+      assert private(Example.private_function(120)) == 60
     end
   end
 end
