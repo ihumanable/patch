@@ -1,4 +1,4 @@
-defmodule Patch.Test.Support.User.Inject.Validator do
+defmodule Patch.Test.Support.User.Replace.Validator do
   use GenServer
 
   ## Client

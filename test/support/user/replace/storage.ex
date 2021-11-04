@@ -1,4 +1,4 @@
-defmodule Patch.Test.Support.User.Inject.Storage do
+defmodule Patch.Test.Support.User.Replace.Storage do
   use GenServer
 
   @type t :: %__MODULE__{
