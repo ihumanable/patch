@@ -101,7 +101,8 @@ defmodule Patch do
   @doc """
   Given a call will assert that a matching call was observed by the patched function.
 
-  The call can use the special sentinal `:_` as a wildcard match.
+  This macro fully supports patterns and will perform non-hygienic binding similar to ExUnit's
+  `assert_receive/3` and `assert_received/2`.
 
   ```elixir
   patch(Example, :function, :patch)
@@ -109,9 +110,9 @@ defmodule Patch do
   Example.function(1, 2, 3)
 
   assert_called Example.function(1, 2, 3)   # passes
-  assert_called Example.function(1, :_, 3)  # passes
+  assert_called Example.function(1, _, 3)   # passes
   assert_called Example.function(4, 5, 6)   # fails
-  assert_called Example.function(4, :_, 6)  # fails
+  assert_called Example.function(4, _, 6)   # fails
   ```
   """
   @spec assert_called(Macro.t()) :: Macro.t()
@@ -125,7 +126,9 @@ defmodule Patch do
   Given a call will assert that a matching call was observed exactly the number of times provided
   by the patched function.
 
-  The call can use the special sentinal `:_` as a wildcard match.
+  This macro fully supports patterns and will perform non-hygienic binding similar to ExUnit's
+  `assert_receive/3` and `assert_received/2`.  Any binds will bind to the latest matching call
+  values.
 
   ```elixir
   patch(Example, :function, :patch)
@@ -133,12 +136,12 @@ defmodule Patch do
   Example.function(1, 2, 3)
 
   assert_called Example.function(1, 2, 3), 1   # passes
-  assert_called Example.function(1, :_, 3), 1  # passes
+  assert_called Example.function(1, _, 3), 1   # passes
 
   Example.function(1, 2, 3)
 
   assert_called Example.function(1, 2, 3), 2   # passes
-  assert_called Example.function(1, :_, 3), 2  # passes
+  assert_called Example.function(1, _, 3), 2   # passes
   ```
   """
   @spec assert_called(call :: Macro.t(), count :: Macro.t()) :: Macro.t()
@@ -151,7 +154,8 @@ defmodule Patch do
   @doc """
   Given a call will assert that a matching call was observed exactly once by the patched function.
 
-  The call can use the special sentinal `:_` as a wildcard match.
+  This macro fully supports patterns and will perform non-hygienic binding similar to ExUnit's
+  `assert_receive/3` and `assert_received/2`.
 
   ```elixir
   patch(Example, :function, :patch)
@@ -159,12 +163,12 @@ defmodule Patch do
   Example.function(1, 2, 3)
 
   assert_called_once Example.function(1, 2, 3)   # passes
-  assert_called_once Example.function(1, :_, 3)  # passes
+  assert_called_once Example.function(1, _, 3)   # passes
 
   Example.function(1, 2, 3)
 
   assert_called_once Example.function(1, 2, 3)   # fails
-  assert_called_once Example.function(1, :_, 3)  # fails
+  assert_called_once Example.function(1, _, 3)   # fails
   ```
   """
   @spec assert_called_once(call :: Macro.t()) :: Macro.t()
@@ -564,7 +568,7 @@ defmodule Patch do
   @doc """
   Given a call will refute that a matching call was observed by the patched function.
 
-  The call can use the special sentinal `:_` as a wildcard match.
+  This macro fully supports patterns.
 
   ```elixir
   patch(Example, :function, :patch)
@@ -572,9 +576,9 @@ defmodule Patch do
   Example.function(1, 2, 3)
 
   refute_called Example.function(4, 5, 6)   # passes
-  refute_called Example.function(4, :_, 6)  # passes
+  refute_called Example.function(4, _, 6)   # passes
   refute_called Example.function(1, 2, 3)   # fails
-  refute_called Example.function(1, :_, 3)  # fails
+  refute_called Example.function(1, _, 3)   # fails
   ```
   """
   @spec refute_called(call :: Macro.t()) :: Macro.t()
@@ -588,7 +592,7 @@ defmodule Patch do
   Given a call will refute that a matching call was observed exactly the number of times provided
   by the patched function.
 
-  The call can use the special sentinal `:_` as a wildcard match.
+  This macro fully supports patterns.
 
   ```elixir
   patch(Example, :function, :patch)
@@ -596,12 +600,12 @@ defmodule Patch do
   Example.function(1, 2, 3)
 
   refute_called Example.function(1, 2, 3), 2   # passes
-  refute_called Example.function(1, :_, 3), 2  # passes
+  refute_called Example.function(1, _, 3), 2   # passes
 
   Example.function(1, 2, 3)
 
   refute_called Example.function(1, 2, 3), 1   # passes
-  refute_called Example.function(1, :_, 3), 1  # passes
+  refute_called Example.function(1, _, 3), 1   # passes
   ```
   """
   @spec refute_called(call :: Macro.t(), count :: Macro.t()) :: Macro.t()
@@ -614,7 +618,7 @@ defmodule Patch do
   @doc """
   Given a call will refute that a matching call was observed exactly once by the patched function.
 
-  The call can use the special sentinal `:_` as a wildcard match.
+  This macro fully supports patterns.
 
   ```elixir
   patch(Example, :function, :patch)
@@ -622,12 +626,12 @@ defmodule Patch do
   Example.function(1, 2, 3)
 
   refute_called_once Example.function(1, 2, 3)   # fails
-  refute_called_once Example.function(1, :_, 3)  # fails
+  refute_called_once Example.function(1, _, 3)   # fails
 
   Example.function(1, 2, 3)
 
   refute_called_once Example.function(1, 2, 3)   # passes
-  refute_called_once Example.function(1, :_, 3)  # passes
+  refute_called_once Example.function(1, _, 3)   # passes
   ```
   """
   @spec refute_called_once(call :: Macro.t()) :: Macro.t()

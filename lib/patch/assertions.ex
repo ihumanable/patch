@@ -41,7 +41,7 @@ defmodule Patch.Assertions do
   Given a call will assert that a matching call was observed by the patched function.
 
   This macro fully supports patterns and will perform non-hygienic binding similar to ExUnit's
-  `assert_receive/1` and `assert_received/1`.
+  `assert_receive/3` and `assert_received/2`.
 
   ```elixir
   patch(Example, :function, :patch)
@@ -89,7 +89,7 @@ defmodule Patch.Assertions do
   by the patched function.
 
   This macro fully supports patterns and will perform non-hygienic binding similar to ExUnit's
-  `assert_receive/1` and `assert_received/1`.  The value bound will be the from the latest call.
+  `assert_receive/3` and `assert_received/2`.  The value bound will be the from the latest call.
 
   ```elixir
   patch(Example, :function, :patch)
@@ -147,7 +147,7 @@ defmodule Patch.Assertions do
   Given a call will assert that a matching call was observed exactly once by the patched function.
 
   This macro fully supports patterns and will perform non-hygienic binding similar to ExUnit's
-  `assert_receive/1` and `assert_received/1`.
+  `assert_receive/3` and `assert_received/2`.
 
   ```elixir
   patch(Example, :function, :patch)
