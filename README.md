@@ -78,11 +78,12 @@ Core functions let us apply patches, patch processes, intercept messages, and qu
 | [expose/2](https://hexdocs.pm/patch/Patch.html#expose/2)     | Expose private functions as public for the purposes of testing             |
 | [fake/2](https://hexdocs.pm/patch/Patch.html#fake/2)         | Replaces a module with a fake module                                       |
 | [history/1,2](https://hexdocs.pm/patch/Patch.html#history/2) | Returns the call history for a mock                                        |
-| [inject/3](https://hexdocs.pm/patch/Patch.html#inject/3)     | Injects state into a GenServer                                             |
+| [inject/3,4](https://hexdocs.pm/patch/Patch.html#inject/4)   | Injects a listener into a GenServer                                        |
 | [listen/3](https://hexdocs.pm/patch/Patch.html#listen/3)     | Intercepts messages to a process and forwards them to the test process     |
 | [patch/3](https://hexdocs.pm/patch/Patch.html#patch/3)       | Patches a function so that it returns a mock value                         |
 | [private/1](https://hexdocs.pm/patch/Patch.html#private/1)   | Macro to call exposed private functions without raising a compiler warning |
 | [real/1](https://hexdocs.pm/patch/Patch.html#real/1)         | Resolves the real module for a patched module                              |
+| [replace/3](https://hexdocs.pm/patch/Patch.html#replace/3)   | Replaces part of the state of a GenServer                                  |
 | [restore/1](https://hexdocs.pm/patch/Patch.html#restore/1)   | Restores a module to its pre-patched form                                  |
 | [spy/1](https://hexdocs.pm/patch/Patch.html#spy/1)           | Patches a module so calls can be asserted without changing behavior        |
 
