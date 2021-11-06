@@ -2,55 +2,21 @@ defmodule Patch.Test.User.InjectTest do
   use ExUnit.Case
   use Patch
 
-  alias Patch.Test.Support.User.Inject.Storage
+  alias Patch.Test.Support.User.Inject.Caller
 
-  def start_anonymous_storage(_) do
-    storage = start_supervised!(Storage)
-    {:ok, storage: storage}
-  end
+  describe "inject/4" do
+    test "Target listener can be injected into the Caller Process" do
+      bonus = 5
+      multiplier = 10
 
-  def start_named_storage(_) do
-    storage = start_supervised!({Storage, name: Storage})
-    {:ok, storage: storage}
-  end
+      {:ok, caller_pid} = Caller.start_link(bonus, multiplier)
 
-  describe "inject/3 with a named process" do
-    setup [:start_named_storage]
+      inject(:target, caller_pid, [:target_pid])
 
-    test "top-level fields can be updated via pid" do
-      assert 1 == Storage.version(Storage)
+      assert Caller.calculate(caller_pid, 7) == 75   # (7 * 10) + 5
 
-      inject(Storage, [:version], :injected_version)
-
-      assert :injected_version == Storage.version(Storage)
-    end
-
-    test "nested fields can be updated" do
-      :ok = Storage.put(Storage, :test_key, :test_value)
-
-      inject(Storage, [:store, :test_key], :injected_value)
-
-      assert {:ok, :injected_value} = Storage.get(Storage, :test_key)
-    end
-  end
-
-  describe "inject/3 with an anonymous process" do
-    setup [:start_anonymous_storage]
-
-    test "top-level fields can be updated via pid", ctx do
-      assert 1 == Storage.version(ctx.storage)
-
-      inject(ctx.storage, [:version], :injected_version)
-
-      assert :injected_version == Storage.version(ctx.storage)
-    end
-
-    test "nested fields can be updated", ctx do
-      :ok = Storage.put(ctx.storage, :test_key, :test_value)
-
-      inject(ctx.storage, [:store, :test_key], :injected_value)
-
-      assert {:ok, :injected_value} = Storage.get(ctx.storage, :test_key)
+      assert_receive {:target, {GenServer, :call, {:work, 7}, from}}
+      assert_receive {:target, {GenServer, :reply, 70, ^from}}
     end
   end
 end

@@ -249,6 +249,27 @@ defmodule Patch do
     end)
   end
 
+  @spec inject(
+          tag :: Patch.Listener.tag(),
+          target :: Patch.Listener.target(),
+          keys :: [term(), ...],
+          options :: [Patch.Listener.option()]
+        ) :: {:ok, pid()} | {:error, :not_found} | {:error, :invalid_keys}
+  def inject(tag, target, keys, options \\ []) do
+    state = :sys.get_state(target)
+
+    case Patch.Access.fetch(state, keys) do
+      {:ok, subject} ->
+        with {:ok, listener} <- listen(tag, subject, options) do
+          replace(target, keys, listener)
+          {:ok, listener}
+        end
+
+      :error ->
+        {:error, :invalid_keys}
+    end
+  end
+
   @doc """
   Get all the observed calls to a module.  These calls are expressed as a `{name, argument}` tuple
   and can either be provided in ascending (oldest first) or descending (newest first) order by
@@ -270,37 +291,6 @@ defmodule Patch do
     module
     |> Mock.history()
     |> Mock.History.entries(sorting)
-  end
-
-  @doc """
-  Convenience function for updating the state of a running process.
-
-  Uses the `Access` module to traverse the state structure according to the given `keys`.
-
-  Structs have special handling so that they can be updated without having to implement the
-  `Access` behavior.
-
-  For example to inject the value `:injected` under the key `:key` in the map found under the key
-  `:map`.
-
-  ```elixir
-  inject(target, [:map, :key], :injected)
-  ```
-  """
-  @spec inject(target :: GenServer.server(), keys :: [term(), ...], value :: term()) :: term()
-  def inject(target, keys, value) do
-    :sys.replace_state(target, fn
-      %struct{} = state ->
-        updated =
-          state
-          |> Map.from_struct()
-          |> put_in(keys, value)
-
-        struct(struct, updated)
-
-      state ->
-        put_in(state, keys, value)
-    end)
   end
 
   @doc """
@@ -644,6 +634,26 @@ defmodule Patch do
     quote do
       Patch.Assertions.refute_called_once(unquote(call))
     end
+  end
+
+  @doc """
+  Convenience function for replacing part of the state of a running process.
+
+  Uses the `Access` module to traverse the state structure according to the given `keys`.
+
+  Structs have special handling so that they can be updated without having to implement the
+  `Access` behavior.
+
+  For example to replace the key `:key` in the map found under the key `:map` with the value
+  `:replaced`
+
+  ```elixir
+  replace(target, [:map, :key], :replaced)
+  ```
+  """
+  @spec replace(target :: GenServer.server(), keys :: [term(), ...], value :: term()) :: term()
+  def replace(target, keys, value) do
+    :sys.replace_state(target, &Patch.Access.put(&1, keys, value))
   end
 
   @doc """

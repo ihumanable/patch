@@ -83,6 +83,26 @@ During a `GenServer.call/3` the listener sits between the client and the server 
 
 `GenServer.call/3` allows the client to set a timeout, an amount of time to wait for the server to response.  The listener does not know how long the original client will wait for a timeout, the test author can provide a `:timeout` option when spawning the listener to control how long the listener will wait for its `GenServer.call/3`.  By default the listener will wait 5000ms for each call, the default for `GenServer.call/2`.
 
+Since `assert_receive/3` supports binding, we can use the `from` to match a call and a reply.
+
+```elixir
+defmodule PatchExample do
+  use ExUnit.Case
+  use Patch
+
+  test "matching calls and replies" do
+    Counter.start_link(0, name: Counter)
+
+    listen(:counter, Counter)
+
+    assert Counter.increment() == 1
+
+    assert_receive {:counter, {GenServer, :call, :increment, from}}  # Bind `from`
+    assert_receive {:counter, {GenServer, :reply, 1, ^from}}         # Match the pinned `from`
+  end
+end
+```
+
 If the test doesn't require the listener to capture replies to `GenServer.call` then the `:capture_replies` option can be set to false.  When this option is false the listener will simply forward the call onto the server.  Refer to the following diagram for details on how this works.
 
 ```text
@@ -105,31 +125,133 @@ If the test doesn't require the listener to capture replies to `GenServer.call` 
      '------------'          '------'                '--------'                          '------'
 ```
 
+
+
 ### Target Monitoring
 
 Listeners will automatically monitor the target process they are listening to.  If the target process goes `:DOWN` the listener will deliver a tagged `{:DOWN, reason}` message to the test process and then exit.
 
-## Injecting
+## Injecting Listeners
 
-When working with processes in test code it is sometimes necessary to change the state of a running GenServer.  Common use cases for injecting state into a GenServer are to set up some fixture data, update a configuration value, or replace a target pid with a listener from the previous section.
+`listen/3` works well for named processes when callers are using the name to send messages to the target process.  What should we do when callers are sending to a pid instead of a name?  This is where the `inject/4` function can be used.
 
-`inject/3` is a helper that handles some common issues when updating state.
+`inject/4` will extract a pid out of a GenServer's state, wrap it with a listener and then replace the pid in the GenServer's state with the listener pid.
+
+Here's a simple example, we will have 2 modules, `Target` and `Caller`.
+
+```elixir
+defmodule Target do
+  use GenServer
+
+  ## Client
+
+  def start_link(multiplier) do
+    GenServer.start_link(__MODULE__, multiplier)
+  end
+
+  def work(pid, argument) do
+    GenServer.call(pid, {:work, argument})
+  end
+
+  ## Server
+
+  def init(multiplier) do
+    {:ok, multiplier}
+  end
+
+  def handle_call({:work, argument}, _from, multiplier) do
+    {:reply, argument * multiplier, multiplier}
+  end
+end
+```
+
+Our `Target` module isn't very interested, it can do some `work/1` where the caller sends it a number and it multiplies it by the `multiplier` it was started with and returns it.
+
+Next let's look at our `Caller`
+
+```elixir
+defmodule Caller do
+  use GenServer
+
+  defstruct [:bonus, :target_pid]
+
+  ## Client
+
+  def start_link(bonus, multiplier) do
+    GenServer.start_link(__MODULE__, {bonus, multiplier})
+  end
+
+  def calculate(pid, argument) do
+    GenServer.call(pid, {:calculate, argument})
+  end
+
+  ## Server
+
+  def init({bonus, multiplier}) do
+    {:ok, target_pid} = Target.start_link(multiplier) 
+
+    {:ok, %__MODULE__{bonus: bonus, target_pid: target_pid}}
+  end
+
+  def handle_call({:calculate, argument}, _from, %__MODULE__{} = state) do
+    multiplied = Target.work(state.target_pid, argument)
+    {:reply, multiplied + state.bonus, state}
+  end
+end
+```
+
+Our `Caller` takes two values, a `bonus` and a `multiplier`.  It spawns a new `Target` process with the multiplier and stores the `target_pid` in its state.
+
+The `Caller` process will send a message to the `target_pid` it has stored in its state.  
+
+Here's how we can use `inject/4` to listen to the messages between the `Caller` process and the `Target` process.
 
 ```elixir
 defmodule PatchExample do
   use ExUnit.Case
   use Patch
 
-  test "state can be updated" do
+  test "listen to messages to Target Process" do
+    bonus = 5
+    multiplier = 10
+
+    {:ok, caller_pid} = Caller.start_link(bonus, multiplier)
+
+    inject(:target, caller_pid, [:target_pid])
+
+    assert Caller.calculate(caller_pid, 7) == 75   # (7 * 10) + 5
+
+    assert_receive {:target, {GenServer, :call, {:work, 7}, from}}
+    assert_receive {:target, {GenServer, :reply, 70, ^from}}
+  end
+end
+```
+
+`inject/4` accepts the same options as `listen/3` and returns the `{:ok, listener_pid}` after successfully injecting the listener.
+
+## Replacing State
+
+When working with processes in test code it is sometimes necessary to change the state of a running GenServer.  Common use cases for injecting state into a GenServer are to set up some fixture data, update a configuration value, or replacing pids like in the previous section.
+
+`replace/3` is a helper that handles some common issues when updating state.
+
+```elixir
+defmodule PatchExample do
+  use ExUnit.Case
+  use Patch
+
+  test "state can be replaced" do
     {:ok, pid} = Target.start_link(:initial_value)
     
     assert :initial_value == Target.get_value(pid)
 
-    inject(pid, [:value], :updated_value)
+    replace(pid, [:value], :updated_value)
 
     assert :updated_value == Target.get_value(pid)
   end
 end
 ```
 
-`inject/3` accepts a `GenServer.server` a list of `keys` like one would use for `put_in` and then a value to inject into the processes state.
+`replace/3` accepts a `GenServer.server` a list of `keys` like one would use for `put_in/3` and then a value to inject into the processes state.
+
+Unlike `put_in/3`, `replace/3` will work with Structs that do not implement the `Access` behaviour.  It does not support the Access functions though, just a list of keys.
