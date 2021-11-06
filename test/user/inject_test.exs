@@ -2,26 +2,21 @@ defmodule Patch.Test.User.InjectTest do
   use ExUnit.Case
   use Patch
 
-  alias Patch.Test.Support.User.Replace.Storage
-  alias Patch.Test.Support.User.Replace.Validator
-
-  def start_storage(_) do
-    validator = start_supervised!(Validator)
-    storage = start_supervised!({Storage, validator: validator})
-
-    {:ok, storage: storage, validator: validator}
-  end
+  alias Patch.Test.Support.User.Inject.Caller
 
   describe "inject/4" do
-    setup [:start_storage]
+    test "Target listener can be injected into the Caller Process" do
+      bonus = 5
+      multiplier = 10
 
-    test "validator listener can be injected into storage", ctx do
-      inject(:validator, ctx.storage, [:validator])
+      {:ok, caller_pid} = Caller.start_link(bonus, multiplier)
 
-      Storage.put(ctx.storage, :test_key, :test_value)
+      inject(:target, caller_pid, [:target_pid])
 
-      assert_receive {:validator, {GenServer, :call, {:validate, :test_key, :test_value}, _}}
-      assert_receive {:validator, {GenServer, :reply, :ok, _}}
+      assert Caller.calculate(caller_pid, 7) == 75   # (7 * 10) + 5
+
+      assert_receive {:target, {GenServer, :call, {:work, 7}, from}}
+      assert_receive {:target, {GenServer, :reply, 70, ^from}}
     end
   end
 end

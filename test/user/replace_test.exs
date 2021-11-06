@@ -2,55 +2,86 @@ defmodule Patch.Test.User.ReplaceTest do
   use ExUnit.Case
   use Patch
 
-  alias Patch.Test.Support.User.Replace.Storage
+  alias Patch.Test.Support.User.Replace
+  alias Patch.Test.Support.User.Replace.Inner
 
-  def start_anonymous_storage(_) do
-    storage = start_supervised!(Storage)
-    {:ok, storage: storage}
-  end
 
-  def start_named_storage(_) do
-    storage = start_supervised!({Storage, name: Storage})
-    {:ok, storage: storage}
-  end
+  describe "replace/3 with an anonymous process" do
+    test "top-level fields can be updated" do
+      {:ok, pid} = Replace.start_link(:initial_value)
 
-  describe "replace/3 with a named process" do
-    setup [:start_named_storage]
+      replace(pid, [:value], :replaced_value)
 
-    test "top-level fields can be updated via pid" do
-      assert 1 == Storage.version(Storage)
-
-      replace(Storage, [:version], :replaced_version)
-
-      assert :replaced_version == Storage.version(Storage)
+      assert :sys.get_state(pid) == %Replace{
+        value: :replaced_value,
+        inner: %Inner{
+          value: :initial_value
+        }
+      }
     end
 
     test "nested fields can be updated" do
-      :ok = Storage.put(Storage, :test_key, :test_value)
+      {:ok, pid} = Replace.start_link(:initial_value)
 
-      replace(Storage, [:store, :test_key], :replaced_value)
+      replace(pid, [:inner, :value], :replaced_value)
 
-      assert {:ok, :replaced_value} = Storage.get(Storage, :test_key)
+      assert :sys.get_state(pid) == %Replace{
+        value: :initial_value,
+        inner: %Inner{
+          value: :replaced_value
+        }
+      }
+    end
+
+    test "replaces key's value wholesale" do
+      {:ok, pid} = Replace.start_link(:initial_value)
+
+      replace(pid, [:inner], :replaced_value)
+
+      assert :sys.get_state(pid) == %Replace{
+        value: :initial_value,
+        inner: :replaced_value
+      }
     end
   end
 
-  describe "replace/3 with an anonymous process" do
-    setup [:start_anonymous_storage]
 
-    test "top-level fields can be updated via pid", ctx do
-      assert 1 == Storage.version(ctx.storage)
+  describe "replace/3 with a named process" do
+    test "top-level fields can be updated" do
+      {:ok, pid} = Replace.start_link(:initial_value, name: Replace)
 
-      replace(ctx.storage, [:version], :replaced_version)
+      replace(Replace, [:value], :replaced_value)
 
-      assert :replaced_version == Storage.version(ctx.storage)
+      assert :sys.get_state(pid) == %Replace{
+        value: :replaced_value,
+        inner: %Inner{
+          value: :initial_value
+        }
+      }
     end
 
-    test "nested fields can be updated", ctx do
-      :ok = Storage.put(ctx.storage, :test_key, :test_value)
+    test "nested fields can be updated" do
+      {:ok, pid} = Replace.start_link(:initial_value, name: Replace)
 
-      replace(ctx.storage, [:store, :test_key], :replaced_value)
+      replace(Replace, [:inner, :value], :replaced_value)
 
-      assert {:ok, :replaced_value} = Storage.get(ctx.storage, :test_key)
+      assert :sys.get_state(pid) == %Replace{
+        value: :initial_value,
+        inner: %Inner{
+          value: :replaced_value
+        }
+      }
+    end
+
+    test "replaces key's value wholesale" do
+      {:ok, pid} = Replace.start_link(:initial_value, name: Replace)
+
+      replace(Replace, [:inner], :replaced_value)
+
+      assert :sys.get_state(pid) == %Replace{
+        value: :initial_value,
+        inner: :replaced_value
+      }
     end
   end
 end
