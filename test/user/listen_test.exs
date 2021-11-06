@@ -76,13 +76,26 @@ defmodule Patch.Test.User.ListenTest do
       assert_receive {:counter, {GenServer, :reply, 1, _}}
     end
 
-    test "receipient can correlate calls and replies" do
+    test "recipient can correlate calls and replies" do
       listen(:counter, Counter)
 
       GenServer.call(Counter, :increment)
 
       assert_receive {:counter, {GenServer, :call, :increment, from}}
       assert_receive {:counter, {GenServer, :reply, 1, ^from}}
+    end
+
+    test "recipient can correlate multiple calls and replies" do
+      listen(:counter, Counter)
+
+      GenServer.call(Counter, :increment)
+      GenServer.call(Counter, :increment)
+
+      assert_receive {:counter, {GenServer, :call, :increment, first_from}}
+      assert_receive {:counter, {GenServer, :reply, 1, ^first_from}}
+
+      assert_receive {:counter, {GenServer, :call, :increment, second_from}}
+      assert_receive {:counter, {GenServer, :reply, 2, ^second_from}}
     end
 
     test "recipient receives GenServer.call deferred reply" do

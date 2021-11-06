@@ -83,6 +83,26 @@ During a `GenServer.call/3` the listener sits between the client and the server 
 
 `GenServer.call/3` allows the client to set a timeout, an amount of time to wait for the server to response.  The listener does not know how long the original client will wait for a timeout, the test author can provide a `:timeout` option when spawning the listener to control how long the listener will wait for its `GenServer.call/3`.  By default the listener will wait 5000ms for each call, the default for `GenServer.call/2`.
 
+Since `assert_receive/3` supports binding, we can use the `from` to match a call and a reply.
+
+```elixir
+defmodule PatchExample do
+  use ExUnit.Case
+  use Patch
+
+  test "matching calls and replies" do
+    Counter.start_link(0, name: Counter)
+
+    listen(:counter, Counter)
+
+    assert Counter.increment() == 1
+
+    assert_receive {:counter, {GenServer, :call, :increment, from}}  # Bind `from`
+    assert_receive {:counter, {GenServer, :reply, 1, ^from}}         # Match the pinned `from`
+  end
+end
+```
+
 If the test doesn't require the listener to capture replies to `GenServer.call` then the `:capture_replies` option can be set to false.  When this option is false the listener will simply forward the call onto the server.  Refer to the following diagram for details on how this works.
 
 ```text
@@ -104,6 +124,8 @@ If the test doesn't require the listener to capture replies to `GenServer.call` 
      |Test Process|          |client|                |listener|                          |server|
      '------------'          '------'                '--------'                          '------'
 ```
+
+
 
 ### Target Monitoring
 
