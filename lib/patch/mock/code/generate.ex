@@ -7,6 +7,7 @@ defmodule Patch.Mock.Code.Generate do
 
   - `Patch.Mock.Code.Generators.Delegate` for how `delegate` modules are generated
   - `Patch.Mock.Code.Generators.Facade` for how `facade` modules are generated
+  - `Patch.Mock.Code.Generators.Frozen` for how `frozen` modules are generated
   - `Patch.Mock.Code.Generators.Original` for how `original` modules are generated
   """
 
@@ -14,5 +15,6 @@ defmodule Patch.Mock.Code.Generate do
 
   defdelegate delegate(abstract_forms, module, exports), to: Generators.Delegate, as: :generate
   defdelegate facade(abstract_forms, module, exports), to: Generators.Facade, as: :generate
+  defdelegate frozen(abstract_forms, module), to: Generators.Frozen, as: :generate
   defdelegate original(abstract_forms, module, exports), to: Generators.Original, as: :generate
 end

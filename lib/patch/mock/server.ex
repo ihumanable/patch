@@ -4,6 +4,7 @@ defmodule Patch.Mock.Server do
 
   alias Patch.Mock
   alias Patch.Mock.Code
+  alias Patch.Mock.Code.Freezer
   alias Patch.Mock.Code.Unit
   alias Patch.Mock.History
   alias Patch.Mock.Naming
@@ -58,7 +59,7 @@ defmodule Patch.Mock.Server do
       options: options
     }
 
-    GenServer.start_link(__MODULE__, state, name: name)
+    Freezer.get(GenServer).start_link(__MODULE__, state, name: name)
   end
 
   @doc """
@@ -69,7 +70,7 @@ defmodule Patch.Mock.Server do
   def delegate(module, name, arguments) do
     server = Naming.server(module)
 
-    case GenServer.call(server, {:delegate, name, arguments}) do
+    case Freezer.get(GenServer).call(server, {:delegate, name, arguments}) do
       {:ok, reply} ->
         reply
 
@@ -88,7 +89,7 @@ defmodule Patch.Mock.Server do
   @spec expose(module :: module(), exposes:: Mock.exposes()) :: :ok | {:error, term()}
   def expose(module, exposes) do
     server = Naming.server(module)
-    GenServer.call(server, {:expose, exposes})
+    Freezer.get(GenServer).call(server, {:expose, exposes})
   end
 
   @doc """
@@ -114,7 +115,7 @@ defmodule Patch.Mock.Server do
   @spec register(module :: module(), name :: atom(), value :: Mock.Value.t()) :: :ok
   def register(module, name, value) do
     server = Naming.server(module)
-    GenServer.call(server, {:register, name, value})
+    Freezer.get(GenServer).call(server, {:register, name, value})
   end
 
   ## Server
@@ -182,7 +183,7 @@ defmodule Patch.Mock.Server do
     server = Naming.server(module)
 
     try do
-      GenServer.call(server, message)
+      Freezer.get(GenServer).call(server, message)
     catch
       :exit, {:noproc, _} ->
         default.()

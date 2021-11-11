@@ -10,6 +10,7 @@ defmodule Patch.Mock.Code.Transform do
   - `Patch.Mock.Code.Transforms.Filter` for how functions are filtered
   - `Patch.Mock.Code.Transforms.Remote` for how local calls are made remote
   - `Patch.Mock.Code.Transforms.Rename` for how a module is renamed
+  - `Patch.Mock.Code.Transforms.Reroute` for how remote calls are rerouted
   """
 
   alias Patch.Mock.Code.Transforms
@@ -19,4 +20,5 @@ defmodule Patch.Mock.Code.Transform do
   defdelegate filter(abstract_forms, exports), to: Transforms.Filter, as: :transform
   defdelegate remote(abstract_forms, module), to: Transforms.Remote, as: :transform
   defdelegate rename(abstract_forms, module), to: Transforms.Rename, as: :transform
+  defdelegate reroute(abstract_forms, source, destination), to: Transforms.Reroute, as: :transform
 end

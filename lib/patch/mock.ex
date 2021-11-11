@@ -1,6 +1,7 @@
 defmodule Patch.Mock do
   alias Patch.Mock
   alias Patch.Mock.Code
+  alias Patch.Mock.Code.Freezer
 
   @typedoc """
   What exposures should be made in a module.
@@ -198,6 +199,8 @@ defmodule Patch.Mock do
   @spec module(module :: module(), options :: [option()]) ::
           {:ok, pid()} | {:error, term()}
   def module(module, options \\ []) do
+    :ok = Freezer.put(module)
+
     case Mock.Supervisor.start_child(module, options) do
       {:ok, pid} ->
         {:ok, pid}
