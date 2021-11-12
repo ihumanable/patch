@@ -52,7 +52,7 @@ Add patch to your mix.exs
 ```elixir
 def deps do
   [
-    {:patch, "~> 0.8.0", only: [:test]}
+    {:patch, "~> 0.8.1", only: [:test]}
   ]
 end
 ```
