@@ -389,7 +389,7 @@ defmodule Patch.Assertions do
   @doc """
   Formats history entries like those returned by `Patch.Mock.match_history/1`.
   """
-  @spec format_history(module :: Module.t(), calls :: [{boolean(), {atom(), [term()]}}]) :: String.t()
+  @spec format_history(module :: module(), calls :: [{boolean(), {atom(), [term()]}}]) :: String.t()
   def format_history(module, calls) do
     calls
     |> Enum.reverse()
