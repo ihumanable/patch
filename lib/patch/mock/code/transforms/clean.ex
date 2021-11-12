@@ -5,7 +5,7 @@ defmodule Patch.Mock.Code.Transforms.Clean do
   The following forms are retained:
     - module attribute
     - exports
-    - no_auto_import compiler options
+    - no_auto_import compiler options (This is needed to prevent R14 shadow import warnings)
     - functions
   """
 
