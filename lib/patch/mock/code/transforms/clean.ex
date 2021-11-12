@@ -2,7 +2,11 @@ defmodule Patch.Mock.Code.Transforms.Clean do
   @moduledoc """
   Cleans abstract form to prepare it for subsequent generation.
 
-  Everything except for the module attribute, exports, and functions are removed.
+  The following forms are retained:
+    - module attribute
+    - exports
+    - no_auto_import compiler options
+    - functions
   """
 
   alias Patch.Mock.Code
@@ -14,6 +18,12 @@ defmodule Patch.Mock.Code.Transforms.Clean do
         true
 
       {:attribute, _, :export, _} ->
+        true
+
+      {:attribute, _, :compile, [:no_auto_import]} ->
+        true
+
+      {:attribute, _, :compile, [:no_auto_import, _]} ->
         true
 
       {:function, _, _, _, _} ->
