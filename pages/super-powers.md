@@ -104,7 +104,7 @@ defmodule ExampleTest do
       patch(Example, :valid?, false)
 
       assert {:error, :invalid} == Example.save(:thing)
-      refute_called Example.do_save(:_)
+      refute_called Example.do_save(_)
     end
   end
 end

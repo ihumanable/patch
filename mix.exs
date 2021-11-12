@@ -4,7 +4,7 @@ defmodule Patch.MixProject do
   def project do
     [
       app: :patch,
-      version: "0.7.0",
+      version: "0.8.0",
       elixir: "~> 1.7",
       erlc_paths: erlc_paths(Mix.env()),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -76,6 +76,7 @@ defmodule Patch.MixProject do
         ],
         "Mock Code": [
           Patch.Mock.Code,
+          Patch.Mock.Code.Freezer,
           Patch.Mock.Code.Generate,
           Patch.Mock.Code.Query,
           Patch.Mock.Code.Transform,
@@ -84,6 +85,7 @@ defmodule Patch.MixProject do
         "Mock Code Generators": [
           Patch.Mock.Code.Generators.Delegate,
           Patch.Mock.Code.Generators.Facade,
+          Patch.Mock.Code.Generators.Frozen,
           Patch.Mock.Code.Generators.Original
         ],
         "Mock Code Queries": [
@@ -96,6 +98,7 @@ defmodule Patch.MixProject do
           Patch.Mock.Code.Transforms.Filter,
           Patch.Mock.Code.Transforms.Remote,
           Patch.Mock.Code.Transforms.Rename,
+          Patch.Mock.Code.Transforms.Reroute
         ],
         "Mock Values": [
           Patch.Mock.Value,
@@ -105,7 +108,9 @@ defmodule Patch.MixProject do
           Patch.Mock.Values.Sequence,
         ],
         "Utilities": [
+          Patch.Access,
           Patch.Assertions,
+          Patch.Macro,
           Patch.Reflection,
           Patch.Supervisor
         ]
