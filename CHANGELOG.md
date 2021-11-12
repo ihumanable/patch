@@ -1,9 +1,42 @@
 # Change Log
 
+## 0.8.0 (2021-11-11)
+
+Improved call assertion to use full pattern matching.  Pattern matching works like ExUnit's `assert_receive/3` and `assert_received/2`.  Unpinned variables will be bound when asserting.
+
+### Breaking Changes
+
+- 💔 - Matching has been improved to use full pattern semantics.  Call matching that uses `:_` should be updated to `_`.  Call assertions can now use the full range of Elixir pattern matching.
+- 💔 - `inject/3` has been renamed to `replace/3`
+### Improvements
+
+- ⬆️ - Call Assertions now support full pattern matching.
+- ⬆️ - \[Internal\] Code Freezer for freezing the modules that Patch uses so test authors can patch modules Patch relies on without breaking the library.
+
+### Features
+
+- 🎁 - Renamed `inject/3` to `replace/3` which better conveys its functionality
+- 🎁 - Added `inject/4` which injects a listener into a running process.
+
+### Bugfixes
+
+- 🐞 - Code Freezer fixes a bug where patching `GenServer` caused Patch to deadlock.
+
+### Deprecations
+
+None
+
+### Removals
+
+- ⛔️ - `inject/3` was removed and renamed to `replace/3`
+
 ## 0.7.0 (2021-10-21)
 
 Support for call counts in assertions.  `assert_called/1` and `refute_called/1` are unchanged.
 
+### Breaking Changes
+
+None
 ### Improvements
 
 - ⬆️ - Exception messages have been improved to clearly indicate which calls have matched.
@@ -73,6 +106,10 @@ And as a bonus
 
 1.  Private functions can be converted into public functions for direct testing.
 
+### Breaking Changes
+
+- 💔 - Matching semantics have changed since `meck` is no longer the matching engine.  Matching is now literal instead of pseudo-matching, upgrade to version 0.8.0+ for improved matching.
+
 ### Improvements
 
 - ⬆️ - \[Internal\] `Patch.Mock` introduced to replace `meck`
@@ -107,6 +144,9 @@ None
 
 Better support for mocking erlang modules
 
+### Breaking Changes
+
+None
 ### Improvements
 
 - ⬆️ - \[Internal\] `patch.release` task to simplify releasing new versions of the library
@@ -132,6 +172,9 @@ None
 
 Support for working with Processes
 
+### Breaking Changes
+
+None
 ### Improvements
 
 - ⬆️ - \[Testing\] Testing Matrix updated to latest versions of Elixir / OTP
@@ -157,6 +200,9 @@ None
 
 Support for replacing a module wholesale via the `fake/2` function
 
+### Breaking Changes
+
+None
 ### Improvements
 
 - ⬆️ - [Internal] `Patch.Function.for_arity/2` now accepts an anonymous function it will call instead of a term to return.
@@ -183,6 +229,9 @@ None
 
 Removed Arity Limitations
 
+### Breaking Changes
+
+None
 ### Improvements
 
 - ⬆️ - Removed the arity limitation, can now patch functions of any arity
@@ -255,6 +304,10 @@ None
 ## 0.1.0 (2020-04-21)
 
 Initial Release
+
+### Breaking Changes
+
+None
 
 ### Improvements
 
