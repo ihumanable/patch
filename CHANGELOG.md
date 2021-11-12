@@ -1,5 +1,31 @@
 # Change Log
 
+## 0.8.2 (2021-11-12)
+
+Bugfix for handling module attributes in Call Assertions.  
+
+### Improvements
+
+None
+
+### Features
+
+None
+
+### Bugfixes
+
+- 🐞 - Fix in `Patch.Macro` to properly handle module attributes when matching.
+
+### Deprecations
+
+None
+
+### Removals
+
+None
+
+
+
 ## 0.8.1 (2021-11-12)
 
 Bugfix for handling modules with aggregate compile attributes.  This fixes a codegen bug introduced in 0.8.0.
