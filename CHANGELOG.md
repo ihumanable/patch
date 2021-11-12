@@ -1,5 +1,29 @@
 # Change Log
 
+## 0.8.1 (2021-11-12)
+
+Bugfix for handling modules with aggregate compile attributes.  This fixes a codegen bug introduced in 0.8.0.
+
+### Improvements
+
+None
+
+### Features
+
+None
+
+### Bugfixes
+
+- 🐞 - Fix in `Patch.Mock.Code.Transforms.Clean` to properly handle aggregate compile attributes.
+
+### Deprecations
+
+None
+
+### Removals
+
+None
+
 ## 0.8.0 (2021-11-11)
 
 Improved call assertion to use full pattern matching.  Pattern matching works like ExUnit's `assert_receive/3` and `assert_received/2`.  Unpinned variables will be bound when asserting.
