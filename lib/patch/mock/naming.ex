@@ -18,6 +18,14 @@ defmodule Patch.Mock.Naming do
   end
 
   @doc """
+  Canonical name for the frozen module for a provided module.
+  """
+  @spec frozen(module :: module()) :: module()
+  def frozen(module) do
+    Module.concat(Patch.Mock.Frozen.For, module)
+  end
+
+  @doc """
   Canonical name for the original module for a provided module.
   """
   @spec original(module :: module()) :: module()

@@ -48,6 +48,11 @@ defmodule Patch do
 
       setup do
         start_supervised!(Patch.Supervisor)
+
+        on_exit(fn ->
+          Patch.Mock.Code.Freezer.empty()
+        end)
+
         :ok
       end
     end

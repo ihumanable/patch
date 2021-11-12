@@ -187,6 +187,13 @@ defmodule Patch.Mock.Code do
   alias Patch.Mock.Code.Query
   alias Patch.Mock.Code.Unit
 
+  @type binary_error ::
+          :badfile
+          | :nofile
+          | :not_purged
+          | :on_load_failure
+          | :sticky_directory
+
   @type chunk_error ::
           :chunk_too_big
           | :file_error
@@ -196,6 +203,12 @@ defmodule Patch.Mock.Code do
           | :missing_chunk
           | :not_a_beam_file
           | :unknown_chunk
+
+  @type load_error ::
+          :embedded
+          | :badfile
+          | :nofile
+          | :on_load_failure
 
   @type compiler_option :: term()
 
@@ -208,10 +221,14 @@ defmodule Patch.Mock.Code do
   """
   @type option :: Mock.exposes_option()
 
+  @doc """
+  Extracts the abstract_forms from a module
+  """
   @spec abstract_forms(module :: module) ::
           {:ok, [form()]}
           | {:error, :abstract_forms_unavailable}
           | {:error, chunk_error()}
+          | {:error, load_error()}
   def abstract_forms(module) do
     with :ok <- ensure_loaded(module),
          {:ok, binary} <- binary(module) do
@@ -229,7 +246,12 @@ defmodule Patch.Mock.Code do
     end
   end
 
-  @spec attributes(module :: module()) :: {:ok, Keyword.t()} | {:error, :attributes_unavailable}
+  @doc """
+  Extracts the attribtues from a module
+  """
+  @spec attributes(module :: module()) ::
+          {:ok, Keyword.t()}
+          | {:error, :attributes_unavailable}
   def attributes(module) do
     with :ok <- ensure_loaded(module) do
       try do
@@ -260,8 +282,14 @@ defmodule Patch.Mock.Code do
   end
 
 
+  @doc """
+  Compiles the provided abstract_form with the given compiler_options
+
+  In addition to compiling, the module will be loaded.
+  """
   @spec compile(abstract_forms :: [form()], compiler_options :: [compiler_option()]) ::
           :ok
+          | {:error, binary_error()}
           | {:error, {:abstract_forms_invalid, [form()], term()}}
   def compile(abstract_forms, compiler_options \\ []) do
     case :compile.forms(abstract_forms, [:return_errors | compiler_options]) do
@@ -276,10 +304,14 @@ defmodule Patch.Mock.Code do
     end
   end
 
+  @doc """
+  Extracts the compiler options from a module.
+  """
   @spec compiler_options(module :: module()) ::
           {:ok, [compiler_option()]}
           | {:error, :compiler_options_unavailable}
           | {:error, chunk_error()}
+          | {:error, load_error()}
   def compiler_options(module) do
     with :ok <- ensure_loaded(module),
          {:ok, binary} <- binary(module) do
@@ -306,6 +338,11 @@ defmodule Patch.Mock.Code do
     end
   end
 
+  @doc """
+  Extracts the exports from the provided abstract_forms for the module.
+
+  The exports returned can be controlled by the exposes argument.
+  """
   @spec exports(abstract_forms :: [form()], module :: module(), exposes :: Mock.exposes()) :: exports()
   def exports(abstract_forms, module, :public) do
     exports = Query.exports(abstract_forms)
@@ -336,9 +373,24 @@ defmodule Patch.Mock.Code do
   end
 
   @doc """
+  Freezes a module by generating a copy of it under a frozen name with all remote calls to the
+  `target` module re-routed to the frozen module.
+  """
+  @spec freeze(module :: module) :: :ok | {:error, term}
+  def freeze(module) do
+    with {:ok, compiler_options} <- compiler_options(module),
+         {:ok, _} <- unstick_module(module),
+         {:ok, abstract_forms} <- abstract_forms(module),
+         frozen_forms = Generate.frozen(abstract_forms, module),
+         :ok <- compile(frozen_forms, compiler_options) do
+      :ok
+    end
+  end
+
+  @doc """
   Mocks a module by generating a set of modules based on the `target` module.
 
-  The `target` module's unchanged abstract_form is returned on success.
+  The `target` module's Unit is returned on success.
   """
   @spec module(module :: module(), options :: [option()]) :: {:ok, Unit.t()} | {:error, term}
   def module(module, options \\ []) do
@@ -366,27 +418,39 @@ defmodule Patch.Mock.Code do
     end
   end
 
+  @doc """
+  Purges a module from the code server
+  """
+  @spec purge(module :: module()) :: boolean()
   def purge(module) do
     :code.purge(module)
     :code.delete(module)
   end
 
+  @doc """
+  Marks a module a sticky
+  """
+  @spec stick_module(module :: module()) :: :ok | {:error, load_error()}
   def stick_module(module) do
     :code.stick_mod(module)
     ensure_loaded(module)
   end
 
-  def unstick_module(module) do
-    :ok = ensure_loaded(module)
+  @doc """
+  Unsticks a module
 
-    if :code.is_sticky(module) do
-      if :code.unstick_mod(module) do
-        {:ok, true}
+  Returns `{:ok, was_sticky?}` on success, `{:error, reason}` otherwise
+  """
+  @spec unstick_module(module :: module()) ::
+          {:ok, boolean()}
+          | {:error, load_error()}
+  def unstick_module(module) do
+    with :ok <- ensure_loaded(module) do
+      if :code.is_sticky(module) do
+        {:ok, :code.unstick_mod(module)}
       else
-        {:error, :unable_to_unstick}
+        {:ok, false}
       end
-    else
-      {:ok, false}
     end
   end
 
@@ -403,12 +467,7 @@ defmodule Patch.Mock.Code do
     end
   end
 
-  @spec ensure_loaded(module :: module()) ::
-          :ok
-          | {:error, :embedded}
-          | {:error, :badfile}
-          | {:error, :nofile}
-          | {:error, :on_load_failure}
+  @spec ensure_loaded(module :: module()) :: :ok | {:error, load_error()}
   defp ensure_loaded(module) do
     with {:module, ^module} <- Code.ensure_loaded(module) do
       :ok
@@ -434,11 +493,7 @@ defmodule Patch.Mock.Code do
 
   @spec load_binary(module :: module(), binary :: binary()) ::
           :ok
-          | {:error, :badfile}
-          | {:error, :nofile}
-          | {:error, :not_purged}
-          | {:error, :on_load_failure}
-          | {:error, :sticky_directory}
+          | {:error, binary_error()}
   defp load_binary(module, binary) do
     with {:module, ^module} <- :code.load_binary(module, '', binary) do
       :ok
