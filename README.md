@@ -67,7 +67,7 @@ use Patch
 
 This library comes with a comprehensive suite of unit tests.  These tests not only verify that the library is working correctly but are designed so that for every bit of functionality there is an easy to understand example for how to use that feature.  Check out the [User Tests](https://github.com/ihumanable/patch/tree/master/test/user) for examples of how to use each feature.
 
-Using Patch adds 10 core functions, 10 assertions, and 7 mock value builders to the test.
+Using Patch adds 11 core functions, 10 assertions, and 7 mock value builders to the test.
 
 ### Core Functions
 
