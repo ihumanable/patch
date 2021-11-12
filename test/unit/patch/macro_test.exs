@@ -4,6 +4,9 @@ defmodule Patch.Test.Unit.Patch.MacroTest do
 
   require Patch.Macro
 
+  @module_attribute :module_attribute
+  @other_attribute :other_attribute
+
   describe "match?/2" do
     test "can match literal expressions" do
       assert Patch.Macro.match?(1, 1)
@@ -19,6 +22,18 @@ defmodule Patch.Test.Unit.Patch.MacroTest do
 
     test "can match multiple wildcards" do
       assert Patch.Macro.match?({_, _}, {1, 2})
+    end
+
+    test "can match module attributes" do
+      assert Patch.Macro.match?(@module_attribute, @module_attribute)
+      assert Patch.Macro.match?(:module_attribute, @module_attribute)
+      assert Patch.Macro.match?(@module_attribute, :module_attribute)
+    end
+
+    test "can mismatch module attributes" do
+      refute Patch.Macro.match?(@module_attribute, @other_attribute)
+      refute Patch.Macro.match?(@module_attribute, :other_attribute)
+      refute Patch.Macro.match?(:module_attribute, @other_attribute)
     end
 
     test "can match pins" do
@@ -70,6 +85,26 @@ defmodule Patch.Test.Unit.Patch.MacroTest do
 
     test "can match multiple wildcards" do
       assert Patch.Macro.match({_, _}, {1, 2})
+    end
+
+    test "can match module attributes" do
+      assert Patch.Macro.match(@module_attribute, @module_attribute)
+      assert Patch.Macro.match(:module_attribute, @module_attribute)
+      assert Patch.Macro.match(@module_attribute, :module_attribute)
+    end
+
+    test "can mismatch module attributes" do
+      assert_raise MatchError, "no match of right hand side value: :other_attribute", fn ->
+        Patch.Macro.match(@module_attribute, @other_attribute)
+      end
+
+      assert_raise MatchError, "no match of right hand side value: :other_attribute", fn ->
+        Patch.Macro.match(:module_attribute, @other_attribute)
+      end
+
+      assert_raise MatchError, "no match of right hand side value: :other_attribute", fn ->
+        Patch.Macro.match(@module_attribute, :other_attribute)
+      end
     end
 
     test "can match pins" do

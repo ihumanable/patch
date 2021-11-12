@@ -4,6 +4,9 @@ defmodule Patch.Test.User.AssertCalledTest do
 
   alias Patch.Test.Support.User.AssertCalled
 
+  @module_attribute :module_attribute
+  @other_attribute :other_attribute
+
   describe "assert_called/1" do
     test "exact call can be asserted" do
       patch(AssertCalled, :example, :patched)
@@ -59,6 +62,24 @@ defmodule Patch.Test.User.AssertCalledTest do
 
       assert_raise Patch.MissingCall, fn ->
         assert_called AssertCalled.example(_, _)
+      end
+    end
+
+    test "module attribute match" do
+      patch(AssertCalled, :example, :patched)
+
+      assert AssertCalled.example(1, @module_attribute) == :patched
+
+      assert_called AssertCalled.example(1, @module_attribute)
+    end
+
+    test "module attribute raises MissingCall when no matching call present" do
+      patch(AssertCalled, :example, :patched)
+
+      assert AssertCalled.example(1, @module_attribute) == :patched
+
+      assert_raise Patch.MissingCall, fn ->
+        assert_called AssertCalled.example(1, @other_attribute)
       end
     end
 
@@ -281,6 +302,36 @@ defmodule Patch.Test.User.AssertCalledTest do
 
       assert_raise Patch.UnexpectedCall, fn ->
         assert_called AssertCalled.example(_, _), 1
+      end
+    end
+
+    test "module attribute call can be asserted" do
+      patch(AssertCalled, :example, :patched)
+
+      assert AssertCalled.example(1, @module_attribute) == :patched
+      assert AssertCalled.example(1, @module_attribute) == :patched
+
+      assert_called AssertCalled.example(1, @module_attribute), 2
+    end
+
+    test "module attribute call with too high an expected count raises MissingCall" do
+      patch(AssertCalled, :example, :patched)
+
+      assert AssertCalled.example(1, @module_attribute) == :patched
+
+      assert_raise Patch.MissingCall, fn ->
+        assert_called AssertCalled.example(1, @module_attribute), 2
+      end
+    end
+
+    test "module attribute call with too low an expected count raises UnexpectedCall" do
+      patch(AssertCalled, :example, :patched)
+
+      assert AssertCalled.example(1, @module_attribute) == :patched
+      assert AssertCalled.example(1, @module_attribute) == :patched
+
+      assert_raise Patch.UnexpectedCall, fn ->
+        assert_called AssertCalled.example(1, @module_attribute), 1
       end
     end
 

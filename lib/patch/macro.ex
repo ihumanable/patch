@@ -61,7 +61,7 @@ defmodule Patch.Macro do
 
   defp pattern_expression(pattern) do
     Macro.prewalk(pattern, fn
-      {:^, _, [{name, meta, _}]}  ->
+      {:^, _, [{name, meta, _}]} ->
         {name, meta, nil}
 
       {:_, _, _} ->
@@ -91,6 +91,10 @@ defmodule Patch.Macro do
     |> Macro.prewalk([], fn
       {:_, _, _} = node, acc ->
         {node, acc}
+
+      {:@, anno, _}, acc ->
+        # Replace module attribute with wildcard so we don't convert into a variable
+        {{:_, anno, nil}, acc}
 
       {name, meta, context} = node, acc when is_atom(name) and is_atom(context) ->
         ignored? =
