@@ -23,6 +23,10 @@ defmodule Patch do
 
   ## Exceptions
 
+  defmodule DeadlineException do
+    defexception [:message, :error]
+  end
+
   defmodule InvalidAnyCall do
     defexception [:message]
   end
@@ -102,6 +106,14 @@ defmodule Patch do
   """
   @spec assert_any_call(module :: module(), function :: atom()) :: nil
   defdelegate assert_any_call(module, function), to: Patch.Assertions
+
+  defmacro assert_call(call, milliseconds \\ 500) do
+    quote do
+      deadline(fn ->
+        assert_called(unquote(call))
+      end, unquote(milliseconds))
+    end
+  end
 
   @doc """
   Given a call will assert that a matching call was observed by the patched function.
@@ -183,6 +195,10 @@ defmodule Patch do
     end
   end
 
+  @spec deadline(function :: function(), milliseconds :: non_neg_integer()) :: term()
+  def deadline(function, milliseconds \\ 500) do
+    Patch.Deadline.deadline(function, milliseconds)
+  end
 
   @doc """
   Expose can be used to turn private functions into public functions for the
