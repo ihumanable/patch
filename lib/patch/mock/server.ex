@@ -236,8 +236,14 @@ defmodule Patch.Mock.Server do
     with {:ok, value} <- Map.fetch(state.mocks, name) do
       {next, reply} =
         try do
-          {next, reply} = Value.next(value, arguments)
-          {next, {:ok, reply}}
+          case Value.next(value, arguments) do
+            {:ok, next, reply} ->
+              {next, {:ok, reply}}
+
+            :error ->
+              next = Value.advance(value)
+              {next, :error}
+          end
         rescue
           exception ->
             next = Value.advance(value)

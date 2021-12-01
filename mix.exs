@@ -104,11 +104,14 @@ defmodule Patch.MixProject do
           Patch.Mock.Value,
           Patch.Mock.Values.Callable,
           Patch.Mock.Values.Cycle,
+          Patch.Mock.Values.Raises,
           Patch.Mock.Values.Scalar,
           Patch.Mock.Values.Sequence,
+          Patch.Mock.Values.Throws
         ],
         "Utilities": [
           Patch.Access,
+          Patch.Apply,
           Patch.Assertions,
           Patch.Macro,
           Patch.Reflection,

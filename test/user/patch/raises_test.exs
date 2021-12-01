@@ -56,5 +56,25 @@ defmodule Patch.Test.User.Patch.RaisesTest do
       assert Raises.example() == 2
       assert Raises.example() == 2
     end
+
+    test "can raise BadArityError" do
+      assert Raises.example() == :original
+
+      patch(Raises, :example, raises(BadArityError, function: fn -> :ok end, args: []))
+
+      assert_raise BadArityError, fn ->
+        Raises.example()
+      end
+    end
+
+    test "can raise FunctionClauseError" do
+      assert Raises.example() == :original
+
+      patch(Raises, :example, raises(FunctionClauseError, function: nil))
+
+      assert_raise FunctionClauseError, fn ->
+        Raises.example()
+      end
+    end
   end
 end

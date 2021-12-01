@@ -14,8 +14,8 @@ defmodule Patch.Mock.Values.Scalar do
     %__MODULE__{value: scalar}
   end
 
-  @spec next(scalar :: t(), arguments :: [term()]) :: {t(), term()}
+  @spec next(scalar :: t(), arguments :: [term()]) :: {:ok, t(), term()} | :error
   def next(%__MODULE__{} = scalar, _arguments) do
-    {scalar, scalar.value}
+    {:ok, scalar, scalar.value}
   end
 end
