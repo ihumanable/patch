@@ -4,7 +4,7 @@ defmodule Patch.MixProject do
   def project do
     [
       app: :patch,
-      version: "0.8.2",
+      version: "0.9.0",
       elixir: "~> 1.7",
       erlc_paths: erlc_paths(Mix.env()),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -125,7 +125,7 @@ defmodule Patch.MixProject do
 
   defp package() do
     [
-      description: "Ergonomic Patching for Elixir Unit Testing",
+      description: "Ergonomic Mocking for Elixir Unit Testing",
       licenses: ["MIT"],
       maintainers: ["Matt Nowack"],
       links: %{
