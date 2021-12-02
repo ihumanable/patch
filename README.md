@@ -153,11 +153,11 @@ Patch also takes inspiration from python's [unittest.mock.patch](https://docs.py
 
 Patch is made better everyday by developers requesting new features.  
 
-- [![daisyzhou's avatar](https://avatars.githubusercontent.com/u/384777?v=4&s=40) daisyzhou](https://github.com/daisyzhou)
+- [<img alt="daisyzhou's avatar" src="https://avatars.githubusercontent.com/u/384777?v=4&s=48" width="24" height="24" style="border-radius: 50%" /> daisyzhou](https://github.com/daisyzhou)
   - Suggested the new function pass through behavior introduced in v0.9.0
-- [![likeanocean's avatar](https://avatars.githubusercontent.com/u/53934150?v=4&s=40) likeanocean](https://github.com/likeanocean)
+- [<img alt="likeanocean's avatar" src="https://avatars.githubusercontent.com/u/53934150?v=4&s=48" width="24" height="24" style="border-radius: 50%" /> likeanocean](https://github.com/likeanocean)
   - Suggested `assert_called/2`, `assert_called_once/1`, `refute_called/2`, and `refute_called_once/1` introduced in v0.7.0
-- [![birarda's avatar](https://avatars.githubusercontent.com/u/724069?v=4&s=40) birarda](https://github.com/birarda)
+- [<img alt="birarda's avatar" src="https://avatars.githubusercontent.com/u/724069?v=4&s=48" width="24" height="24" style="border-radius: 50%" /> birarda](https://github.com/birarda)
   - Suggested `assert_any_call/2`, `refute_any_call/2` introduced in v0.2.0
 
 If you have a suggestion for improvements to this library, please open an issue.
