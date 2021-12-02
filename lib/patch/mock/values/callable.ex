@@ -1,4 +1,6 @@
 defmodule Patch.Mock.Values.Callable do
+  alias Patch.Apply
+
   @type dispatch_mode :: :apply | :list
 
   @type t :: %__MODULE__{
@@ -17,12 +19,16 @@ defmodule Patch.Mock.Values.Callable do
     %__MODULE__{dispatch: dispatch, target: target}
   end
 
-  @spec next(callable :: t(), arguments :: [term()]) :: {t(), term()}
+  @spec next(callable :: t(), arguments :: [term()]) :: {:ok, t(), term()} | :error
   def next(%__MODULE__{dispatch: :apply} = callable, arguments) do
-    {callable, apply(callable.target, arguments)}
+    with {:ok, result} <- Apply.safe(callable.target, arguments) do
+      {:ok, callable, result}
+    end
   end
 
   def next(%__MODULE__{dispatch: :list} = callable, arguments) do
-    {callable, apply(callable.target, [arguments])}
+    with {:ok, result} <- Apply.safe(callable.target, [arguments]) do
+      {:ok, callable, result}
+    end
   end
 end

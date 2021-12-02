@@ -6,16 +6,19 @@ defmodule Patch.Mock.Value do
   necessary.
   """
 
+  alias Patch.Apply
   alias Patch.Mock.Values
 
   @type t ::
           Values.Callable.t()
           | Values.Cycle.t()
+          | Values.Raises.t()
           | Values.Scalar.t()
           | Values.Sequence.t()
+          | Values.Throws.t()
           | term()
 
-  @value_modules [Values.Callable, Values.Cycle, Values.Scalar, Values.Sequence]
+  @value_modules [Values.Callable, Values.Cycle, Values.Raises, Values.Scalar, Values.Sequence, Values.Throws]
 
   @doc """
   Create a new `Values.Callable` to be used as the mock value.
@@ -196,10 +199,7 @@ defmodule Patch.Mock.Value do
   defguard is_value(module) when module in @value_modules
 
   @doc """
-  Creates a special `Values.Callable` to be used as a mock value.
-
-  This callable ignores the arguments passed in and unconditionally raises a RuntimeError with the
-  given message.
+  Creates a special value that raises a RuntimeError with the given message.
 
   ```elixir
   patch(Example, :example, raises("patched"))
@@ -209,16 +209,11 @@ defmodule Patch.Mock.Value do
   end
   ```
   """
-  @spec raises(message :: String.t()) :: Values.Callable.t()
-  def raises(message) do
-    callable(fn _ -> raise message end, :list)
-  end
+  @spec raises(message :: String.t()) :: Values.Raises.t()
+  defdelegate raises(message), to: Values.Raises, as: :new
 
   @doc """
-  Creates a special `Values.Callable` to be used as a mock value.
-
-  This callable ignores the arguments passed in and unconditionally raises the specified exception
-  with the given attributes.
+  Creates a special value that raises the given exception with the provided attributes.
 
   ```elixir
   patch(Example, :example, raises(ArgumentError, message: "patched"))
@@ -228,15 +223,11 @@ defmodule Patch.Mock.Value do
   end
   ```
   """
-  @spec raises(exception :: module(), attributes :: Keyword.t()) :: Values.Callable.t()
-  def raises(exception, attributes) do
-    callable(fn _ -> raise exception, attributes end, :list)
-  end
+  @spec raises(exception :: module(), attributes :: Keyword.t()) :: Values.Raises.t()
+  defdelegate raises(exception, attributes), to: Values.Raises, as: :new
 
   @doc """
-  Creates a special `Values.Callable` to be used as a mock value.
-
-  This callable ignores the arguments passed in and unconditionally throws the given value.
+  Creates a special values that throws the provided value when evaluated.
 
   ```elixir
   patch(Example, :example, throws(:patched))
@@ -244,10 +235,8 @@ defmodule Patch.Mock.Value do
   assert catch_throw(Example.example()) == :patched
   ```
   """
-  @spec throws(value :: term()) :: Values.Callable.t()
-  def throws(value) do
-    callable(fn _ -> throw value end, :list)
-  end
+  @spec throws(value :: term()) :: Values.Throws.t()
+  defdelegate throws(value), to: Values.Throws, as: :new
 
   @doc """
   Advances the given value.
@@ -266,22 +255,25 @@ defmodule Patch.Mock.Value do
   @doc """
   Generate the next return value and advance the underlying value.
   """
-  @spec next(value :: t(), arguments :: [term()]) :: {t(), term()}
+  @spec next(value :: t(), arguments :: [term()]) :: {:ok, t(), term()} | :error
   def next(%Values.Scalar{} = value, arguments) do
     Values.Scalar.next(value, arguments)
   end
 
   def next(%module{} = value, arguments) when is_value(module) do
-    {next, return_value} = module.next(value, arguments)
-    {_, return_value} = next(return_value, arguments)
-    {next, return_value}
+    with {:ok, next, return_value} <- module.next(value, arguments) do
+      {:ok, _, return_value} = next(return_value, arguments)
+      {:ok, next, return_value}
+    end
   end
 
   def next(callable, arguments) when is_function(callable) do
-    {callable, apply(callable, arguments)}
+    with {:ok, result} <- Apply.safe(callable, arguments) do
+      {:ok, callable, result}
+    end
   end
 
   def next(scalar, _arguments) do
-    {scalar, scalar}
+    {:ok, scalar, scalar}
   end
 end

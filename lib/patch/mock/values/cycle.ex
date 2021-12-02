@@ -21,17 +21,17 @@ defmodule Patch.Mock.Values.Cycle do
     %__MODULE__{values: values}
   end
 
-  @spec next(t(), arguments :: [term()]) :: {t(), term()}
+  @spec next(t(), arguments :: [term()]) :: {:ok, t(), term()} | :error
   def next(%__MODULE__{values: []} = cycle, _arguments) do
-    {cycle, nil}
+    {:ok, cycle, nil}
   end
 
   def next(%__MODULE__{values: [value]} = cycle, _arguments) do
-    {cycle, value}
+    {:ok, cycle, value}
   end
 
   def next(%__MODULE__{values: [head | rest]} = cycle, _arguments) do
     cycle = %__MODULE__{cycle | values: rest ++ [head]}
-    {cycle, head}
+    {:ok, cycle, head}
   end
 end

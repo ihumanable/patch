@@ -22,17 +22,17 @@ defmodule Patch.Mock.Values.Sequence do
     %__MODULE__{values: values}
   end
 
-  @spec next(sequence :: t(), arguments :: [term()]) :: {t(), term()}
+  @spec next(sequence :: t(), arguments :: [term()]) :: {:ok, t(), term()} | :error
   def next(%__MODULE__{values: []} = sequence, _arguments) do
-    {sequence, nil}
+    {:ok, sequence, nil}
   end
 
   def next(%__MODULE__{values: [last]} = sequence, _arguments) do
-    {sequence, last}
+    {:ok, sequence, last}
   end
 
   def next(%__MODULE__{values: [head | rest]} = sequence, _arguments) do
     sequence = %__MODULE__{sequence | values: rest}
-    {sequence, head}
+    {:ok, sequence, head}
   end
 end
