@@ -1,5 +1,32 @@
 # Change Log
 
+## 0.9.0 (2021-12-02)
+
+Changes how function patches work so that the test author can only patch out a subset of function calls.
+
+### Breaking Changes
+
+- 💔 - When patching a function, calls that fail to match the patched function's clauses will passthrough to the original code.  Tests that relied on the old behavior should add a catch-all clause.
+### Improvements
+
+- ⬆️ - Improved experience when working with complex functions.  Consider a callback function like `GenServer.handle_call/3`, a test author may wish to only patch out certain messages, allowing other messages to pass through to the original code.  This is now supported, when a patched function fails to match because of either `BadArityError` or `FunctionClauseError` the original code will be called instead.
+
+### Features
+
+None
+
+### Bugfixes
+
+None
+
+### Deprecations
+
+None
+
+### Removals
+
+None
+
 ## 0.8.2 (2021-11-12)
 
 Bugfix for handling module attributes in Call Assertions.  
