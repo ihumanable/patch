@@ -157,7 +157,7 @@ Patch is made better everyday by developers requesting new features.
   - Suggested the new function pass through behavior introduced in v0.9.0
 - [![likeanocean's avatar](https://avatars.githubusercontent.com/u/53934150?v=4&s=40) likeanocean](https://github.com/likeanocean)
   - Suggested `assert_called/2`, `assert_called_once/1`, `refute_called/2`, and `refute_called_once/1` introduced in v0.7.0
-- [![birarda's avatar](https://avatars.githubusercontent.com/u/724069?v=4&s=40)](https://github.com/birarda)
+- [![birarda's avatar](https://avatars.githubusercontent.com/u/724069?v=4&s=40) birarda](https://github.com/birarda)
   - Suggested `assert_any_call/2`, `refute_any_call/2` introduced in v0.2.0
 
 If you have a suggestion for improvements to this library, please open an issue.
