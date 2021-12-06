@@ -73,19 +73,19 @@ Using Patch adds 11 core functions, 10 assertions, and 7 mock value builders to 
 
 Core functions let us apply patches, patch processes, intercept messages, and query our patched modules.
 
-| Core Function                                                | Description                                                                |
-|--------------------------------------------------------------|----------------------------------------------------------------------------|
-| [expose/2](https://hexdocs.pm/patch/Patch.html#expose/2)     | Expose private functions as public for the purposes of testing             |
-| [fake/2](https://hexdocs.pm/patch/Patch.html#fake/2)         | Replaces a module with a fake module                                       |
-| [history/1,2](https://hexdocs.pm/patch/Patch.html#history/2) | Returns the call history for a mock                                        |
-| [inject/3,4](https://hexdocs.pm/patch/Patch.html#inject/4)   | Injects a listener into a GenServer                                        |
-| [listen/3](https://hexdocs.pm/patch/Patch.html#listen/3)     | Intercepts messages to a process and forwards them to the test process     |
-| [patch/3](https://hexdocs.pm/patch/Patch.html#patch/3)       | Patches a function so that it returns a mock value                         |
-| [private/1](https://hexdocs.pm/patch/Patch.html#private/1)   | Macro to call exposed private functions without raising a compiler warning |
-| [real/1](https://hexdocs.pm/patch/Patch.html#real/1)         | Resolves the real module for a patched module                              |
-| [replace/3](https://hexdocs.pm/patch/Patch.html#replace/3)   | Replaces part of the state of a GenServer                                  |
-| [restore/1](https://hexdocs.pm/patch/Patch.html#restore/1)   | Restores a module to its pre-patched form                                  |
-| [spy/1](https://hexdocs.pm/patch/Patch.html#spy/1)           | Patches a module so calls can be asserted without changing behavior        |
+| Core Function                                                | Description                                                                          |
+|--------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| [expose/2](https://hexdocs.pm/patch/Patch.html#expose/2)     | Expose private functions as public for the purposes of testing                       |
+| [fake/2](https://hexdocs.pm/patch/Patch.html#fake/2)         | Replaces a module with a fake module                                                 |
+| [history/1,2](https://hexdocs.pm/patch/Patch.html#history/2) | Returns the call history for a mock                                                  |
+| [inject/3,4](https://hexdocs.pm/patch/Patch.html#inject/4)   | Injects a listener into a GenServer                                                  |
+| [listen/3](https://hexdocs.pm/patch/Patch.html#listen/3)     | Intercepts messages to a process and forwards them to the test process               |
+| [patch/3](https://hexdocs.pm/patch/Patch.html#patch/3)       | Patches a function so that it returns a mock value                                   |
+| [private/1](https://hexdocs.pm/patch/Patch.html#private/1)   | Macro to call exposed private functions without raising a compiler warning           |
+| [real/1](https://hexdocs.pm/patch/Patch.html#real/1)         | Resolves the real module for a patched module                                        |
+| [replace/3](https://hexdocs.pm/patch/Patch.html#replace/3)   | Replaces part of the state of a GenServer                                            |
+| [restore/1,2](https://hexdocs.pm/patch/Patch.html#restore/1) | Restores an entire module or just a function within a module to its pre-patched form |
+| [spy/1](https://hexdocs.pm/patch/Patch.html#spy/1)           | Patches a module so calls can be asserted without changing behavior                  |
 
 ### Assertions
 
@@ -108,15 +108,15 @@ Assertions make it easy to assert that a patched module has or has not observed 
 
 Patched functions aren't limited to only returning simple scalar values, a host of Value Builders are provided for all kinds of testing scenarios.  See the [patch](https://hexdocs.pm/patch/Patch.html#patch/3) documentation for details.
 
-| Value Builder                                                             | Description                                                                              |
-|---------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
-| [callable/1,2](https://hexdocs.pm/patch/Patch.Mock.Value.html#callable/2) | Callable that will be invoked on every patch invocation, dispatch mode can be customized |
-| [cycle/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#cycle/1)         | Cycles through the values provided on every invocation                                   |
-| [raises/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#raises/1)       | Raises a RuntimeException with the given message upon invocation                         |
-| [raises/2](https://hexdocs.pm/patch/Patch.Mock.Value.html#raises/2)       | Raises the specified Exception with the given attribtues upon invocation                 |
-| [scalar/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#scalar/1)       | Returns the argument as a literal, useful for returning functions                        |
-| [sequence/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#sequence/2)   | Returns the values in order, repeating the last value indefinitely                       |
-| [throws/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#throws/1)       | Throws the given value upon invocation                                                   |
+| Value Builder                                                             | Description                                                                                              |
+|---------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| [callable/1,2](https://hexdocs.pm/patch/Patch.Mock.Value.html#callable/2) | Callable that will be invoked on every patch invocation, dispatch and evaluation modes can be customized |
+| [cycle/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#cycle/1)         | Cycles through the values provided on every invocation                                                   |
+| [raises/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#raises/1)       | Raises a RuntimeException with the given message upon invocation                                         |
+| [raises/2](https://hexdocs.pm/patch/Patch.Mock.Value.html#raises/2)       | Raises the specified Exception with the given attribtues upon invocation                                 |
+| [scalar/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#scalar/1)       | Returns the argument as a literal, useful for returning functions                                        |
+| [sequence/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#sequence/2)   | Returns the values in order, repeating the last value indefinitely                                       |
+| [throws/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#throws/1)       | Throws the given value upon invocation                                                                   |
 
 
 ## Guide Book
@@ -153,11 +153,11 @@ Patch also takes inspiration from python's [unittest.mock.patch](https://docs.py
 
 Patch is made better everyday by developers requesting new features.  
 
-- [<img alt="daisyzhou's avatar" src="https://avatars.githubusercontent.com/u/384777?v=4&s=48" width="24" height="24" style="border-radius: 50%" /> daisyzhou](https://github.com/daisyzhou)
+- [daisyzhou](https://github.com/daisyzhou)
   - Suggested the new function pass through behavior introduced in v0.9.0
-- [<img alt="likeanocean's avatar" src="https://avatars.githubusercontent.com/u/53934150?v=4&s=48" width="24" height="24" style="border-radius: 50%" /> likeanocean](https://github.com/likeanocean)
+- [likeanocean](https://github.com/likeanocean)
   - Suggested `assert_called/2`, `assert_called_once/1`, `refute_called/2`, and `refute_called_once/1` introduced in v0.7.0
-- [<img alt="birarda's avatar" src="https://avatars.githubusercontent.com/u/724069?v=4&s=48" width="24" height="24" style="border-radius: 50%" /> birarda](https://github.com/birarda)
+- [birarda](https://github.com/birarda)
   - Suggested `assert_any_call/2`, `refute_any_call/2` introduced in v0.2.0
 
 If you have a suggestion for improvements to this library, please open an issue.

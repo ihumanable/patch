@@ -235,4 +235,14 @@ defmodule Patch.Mock do
   def restore(module) do
     Mock.Server.restore(module)
   end
+
+  @doc """
+  Restores a function in a module to pre-patch functionality.
+
+  If the module or function are not already mocked, this function no-ops.
+  """
+  @spec restore(mdoule :: module(), name :: atom()) :: :ok
+  def restore(module, name) do
+    Mock.Server.restore(module, name)
+  end
 end

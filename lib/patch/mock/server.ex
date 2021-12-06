@@ -9,6 +9,7 @@ defmodule Patch.Mock.Server do
   alias Patch.Mock.History
   alias Patch.Mock.Naming
   alias Patch.Mock.Value
+  alias Patch.Mock.Values
 
   @default_history_limit :infinity
 
@@ -109,6 +110,14 @@ defmodule Patch.Mock.Server do
   end
 
   @doc """
+  Restores a function in a module to its original state
+  """
+  @spec restore(module :: module(), name :: atom()) :: :ok
+  def restore(module, name) do
+    call(module, {:restore, name}, fn -> :ok end)
+  end
+
+  @doc """
   Registers a mock value to be returned whenever the specified function is
   called on the module.
   """
@@ -168,6 +177,10 @@ defmodule Patch.Mock.Server do
     {:stop, {:shutdown, {:restore, do_restore(state)}}, :ok, state}
   end
 
+  def handle_call({:restore, name}, _from, state) do
+    {:reply, :ok, do_restore(state, name)}
+  end
+
   def handle_call({:register, name, value}, _from, state) do
     {:reply, :ok, do_register(state, name, value)}
   end
@@ -203,6 +216,20 @@ defmodule Patch.Mock.Server do
   end
 
   @spec do_register(state :: t(), name :: atom(), value :: term()) :: t()
+  defp do_register(%__MODULE__{} = state, name, %Values.Callable{} = value) do
+    case Map.fetch(state.mocks, name) do
+      {:ok, %Values.Callable{} = existing} ->
+        stack = Values.CallableStack.new([value, existing])
+        do_register(state, name, stack)
+
+      {:ok, %Values.CallableStack{} = stack} ->
+        do_register(state, name, Values.CallableStack.push(stack, value))
+
+      _ ->
+        %__MODULE__{state | mocks: Map.put(state.mocks, name, value)}
+    end
+  end
+
   defp do_register(%__MODULE__{} = state, name, value) do
     %__MODULE__{state | mocks: Map.put(state.mocks, name, value)}
   end
@@ -218,6 +245,10 @@ defmodule Patch.Mock.Server do
 
   def do_restore(%__MODULE__{} = state) do
     Unit.restore(state.unit)
+  end
+
+  def do_restore(%__MODULE__{} = state, name) do
+    %__MODULE__{state | mocks: Map.delete(state.mocks, name)}
   end
 
   @spec record(state :: t(), name :: atom(), arguments :: [term()]) :: t()

@@ -52,42 +52,229 @@ end
 
 Every time we call `String.upcase/1` it will run our function and return the length of the input.  
 
-## Other Values
+### Passthrough vs Strict Evaluation
 
-There are other types of values supported by `Patch`, see [Chapter 3: Mock Values](03-mock-values.html)
+By default `Patch` will evaluate the callable in `:passthrough` mode.  In passthrough mode if the callable raises either `BadArityError` or `FunctionClauseError` then the original function will be called.  In `:strict` mode these errors will be returned.
 
-### Callables with Multiple Arities
-
-`String.upcase` actually comes in 2 arities, `String.upcase/1` and `String.upcase/2`.  In the above we only define a callable that handles arity 1 calls.  A first attempt might be to provide multiple clauses in our anonymous function.  
-
-**This code doesn't work**
+One of the core design principles underlying `Patch` is that it tries to obey the intent of the test author.  Consider the following example.
 
 ```elixir
-    # The function can be patched to run custom code
-    patch(String, :upcase, fn 
-      s -> 
-        String.length(s) 
+defmodule Example do
+  use GenServer
 
-      s, _ ->
-        String.length(s)
-    end)
+  # Snip all the GenServer boilerplat
+
+  def handle_call({:a, argument}, _from, state) do
+    # Operation A Definition
+    {:reply, result, state}
+  end
+
+  def handle_call({:b, argument}, _from, sate) do
+    # Operation B Definition
+    {:reply, result, state}
+  end
+end
+```
+
+When a test author writes the following test code, how should `Patch` interpret it?
+
+```elixir
+patch(Example, :handle_call fn
+  {:a, _argument}, _from, state ->
+    {:reply, :ok, state}
+end)
+```
+
+There are two possible interpretations, either the test author wants to patch the callback responsible for handling messages shaped like `{:a, argument}` or the test author intends to replace all handle_call callback with one only capable of handling `{:a, argument}`.
+
+`Patch` already has an opinion on which of these to prefer, we can see it in how `Patch` handles patching out one function in a module.  The assumption is that the test author will apply the minimum patch possible, so patching a single function in a module leaves all the other functions in the module as they were.  Applying a similar "default passthrough" behavior to this situation it leads us to one conclusion, the test author probably just wants to replace the functionality handling `{:a, argument}` and should leave the other callbacks alone.
+
+There are always exceptions to the default rule, and `Patch` wants to make it possible to express the other idea.  The test author can inform `Patch` of their intention by using the `:strict` evaluation mode.
+
+```elixir
+patch(Example, :handle_call, callable(fn
+  {:a, _argument}, _from, state ->
+    {:reply, :ok, state}
+end, evaluate: :strict))
+```
+
+### Stacked Callables
+
+Callables stack as they are defined in the test.  Every time a function is patched with a callable, that callable is pushed to the top of the stack.  When the patched function is called, the stack is walked from the top to bottom to find a callable that can handle it.
+
+There are two problems that are nicely solved by Stacked Callables.  Patching functions with multiple arities and making pattern matching in patching composable.
+#### Stacking and Multiple Arities
+
+The first problem that Stacked Callables solves is patching functions with multiple arities.  Consider this example module.
+
+```elixir
+defmodule Example do
+  def example(a) do
+    {:original, a}
+  end
+
+  def example(a, b, c) do
+    {:original, a, b, c}
+  end
+end
+```
+
+This module defines two functions `example/1` and `example/3`.  How can we patch both functions?  Our first attempt might look something like this:
+
+ **Note: this code is invalid and won't compile**
+
+```elixir
+patch(Example, :example, fn
+  a ->
+    {:patched, a}
+    
+  a, b, c ->
+    {:patched, a, b, c}
+end)
 ```
 
 This code is illegal in Elixir, the compiler will throw a CompileError and explain that you "cannot mix clauses with different arities in anonymous functions."
 
-This is where the callable "dispatch mode" kicks in.  By default `Patch` will use the `:apply` mode, which calls the function with the same arity as the patched function was called.  There is an alternative "dispatch mode" called `:list` which will pass all the arguments as a single argument, a list of the arguments.
+The first solution for this was introduced in v0.6.0 and took the form of a "dispatch mode." By default `Patch` will use the `:apply` mode, which calls the function with the same arity as the patched function was called.  There is an alternative "dispatch mode" called `:list` which will pass all the arguments as a single argument, a list of the arguments.
 
-**This code will work**
+**This code will work, but is unwieldy** 
 
 ```elixir
-    # The function can be patched to run custom code
-    patch(String, :upcase, callable(fn 
-      [s | _] -> 
-        String.length(s) 
-    end, :list)
+patch(Example, :example, callable(fn 
+  [a] ->
+    {:patched, a}
+
+  [a, b, c] ->
+    {:patched, a, b, c}
+end, dispatch: :list)
 ```
 
-So now we have a function that gets a list of arguments.  It only ever cares about the first argument so it pattern matches that value out.  The second argument to `callable/2` defines the "dispatch mode."
+This solution made it possible to handle multiple arities, but it is pretty clunky.  With stacked callables we can actually just define two separate callables, one for arity 1, and one for arity 3.
+
+**This code works and is easy to read and write**
+
+```elixir
+patch(Example, :example, fn a -> {:patched, a} end)
+patch(Example, :example, fn a, b, c -> {:patched, a, b, c} end)
+```
+
+To understand how this works, let's look at how a call to `example/1` and a call to `example/3` work.  The first thing we have to understand is what the Callable Stack looks like, so let's diagram it.
+
+```elixir
+# Top of Stack (latest defined callable)
+[
+  fn a, b, c -> {:patched, a, b, c} end,
+  fn a -> {:patched, a} end
+]
+# Bottom of Stack (earliest defined callable)
+```
+
+`Patch` will run each function until one returns a valid value, the first function to respond with a return value will cause evaluation to complete.
+
+When `Example.example(1)` is evaluated it will try the first function.  This function has a different arity so it will raise `BadArityError`, this is one of the two errors that engages passthrough behavior.  Since the first entry in the stack resulted in a logical passthrough `Patch` will try the next entry.  The next entry has the right arity and results in `{:patched, 1}` being returned.  
+
+When `Example.example(1, 2, 3)` is evaluated, it's a bit simpler.  The first function is tried and it matches in arity so it immediately retruns `{:patched, 1, 2, 3}` and evaluation is completed.
+
+#### Stacking and Matching
+
+Another problem that Stacked Callables helps solve is composablity when patching with pattern matching.  Consider the following example module.
+
+```elixir
+defmodule Example do
+  def handle(:a) do
+    {:original, :a}
+  end
+
+  def handle(:b) do
+    {:original, :b}
+  end
+
+  def handle(:c) do
+    {:original, :c}
+  end
+end
+```
+
+If a test author wanted to provide patched behavior for `:a` and `:b` they can do so like this.
+
+```elixir
+patch(Example, :handle, fn
+  :a ->
+    {:patched, :a}
+    
+  :b ->
+    {:patched, :b}
+end)
+```
+
+Which is a very convenient use of built-in Elixir feature, namely that anonymous functions can have multiple clauses.  But what if we want to have a common behavior for patching out the handling of `:a` and the handling of `:b`.  Perhaps in one test we want patch out `:a`, in another `:a` and `:b`, and in a third just `:b`.  Is there any way that we can DRY up this code and make it composable?
+
+Stacked Callables make this quite nice because it makes it possible to patch multiple clauses at different times.  
+
+```elixir
+defmodule ExampleTest do
+  use ExUnit
+  use Patch
+
+  def patch_a do
+    patch(Example, :handle, fn :a -> {:patched, a} end)
+  end
+
+  def patch_b do
+    patch(Example, :handle, fn :b -> {:patched, b} end)
+  end
+
+  test "that cares about :a" do
+    patch_a()
+
+    assert Example.handle(:a) == {:patched, :a}
+  end
+
+  test "that cares about :a and :b" do
+    patch_a()
+    patch_b()
+
+    assert Example.handle(:a) == {:patched, :a}
+    assert Example.handle(:b) == {:patched, :b}
+  end
+
+  test "that cares about :b" do
+    patch_b()
+
+    assert Example.handle(:b) == {:patched, :b}
+  end
+end
+```
+
+Besides improving composability, it can also just make test code easier to read by breaking multiple logical patches into multiple calls.
+
+Compare
+
+```elixir
+patch(Example, :handle, fn
+  :a ->
+    {:patched, :a}
+    
+  :b ->
+    {:patched, :b}
+end)
+```
+
+with
+
+```elixir
+patch(Example, :handle, fn :a -> {:patched, :a} end) 
+patch(Example, :handle, fn :b -> {:patched, :b} end)
+```
+
+The power of this mechanism becomes readily apparent when applied to something like GenServer
+
+```elixir
+patch(Example, :handle_call, fn {:a, _args}, _from, state -> {:reply, :ok, state} end)
+patch(Example, :handle_call, fn {:b, _args}, _from, state -> {:reply, :ok, state} end)
+```
+
+It is common for a GenServer to have many handle_call, handle_cast, and handle_info callbacks.  Being able to define the patches by the pattern makes it easy to patch out a subset of the GenServer's behavior
 
 ### Functions as Scalars
 
@@ -106,6 +293,9 @@ defmodule PatchExample do
   end
 end
 ```
+## Other Values
+
+There are other types of values supported by `Patch`, see [Chapter 3: Mock Values](03-mock-values.html)
 
 ## Ergonomics
 
@@ -147,8 +337,7 @@ defmodule PatchExample do
 end
 ```
 
-`assert_called/1` supports full pattern matching and non-hygienic binds.  This is similar to how
-ExUnit's `assert_receive/3` and `assert_received/2` work.
+`assert_called/1` supports full pattern matching and non-hygienic binds.  This is similar to how ExUnit's `assert_receive/3` and `assert_received/2` work.
 
 ```elixir
 # Wildcards are supported

@@ -11,11 +11,9 @@ defmodule Patch.Test.User.RestoreTest do
       assert Restore.example() == :original
 
       patch(Restore, :example, :patched)
-
       assert Restore.example() == :patched
 
       restore(Restore)
-
       assert Restore.example() == :original
     end
 
@@ -23,11 +21,9 @@ defmodule Patch.Test.User.RestoreTest do
       assert Real.example(:a) == {:real, {:example, :a}}
 
       fake(Real, Fake)
-
       assert Real.example(:a) == {:fake, {:example, :a}}
 
       restore(Real)
-
       assert Real.example(:a) == {:real, {:example, :a}}
     end
 
@@ -35,7 +31,45 @@ defmodule Patch.Test.User.RestoreTest do
       assert Restore.example() == :original
 
       restore(Restore)
+      assert Restore.example() == :original
+    end
+  end
 
+  describe "restore/2" do
+    test "functions can be restored" do
+      assert Restore.example() == :original
+
+      patch(Restore, :example, :patched)
+      assert Restore.example() == :patched
+
+      restore(Restore, :example)
+      assert Restore.example() == :original
+    end
+
+    test "function restoration is isolated" do
+      assert Restore.example() == :original
+      assert Restore.other() == :original
+
+      patch(Restore, :example, :patched)
+      patch(Restore, :other, :patched)
+      assert Restore.example() == :patched
+      assert Restore.other() == :patched
+
+      restore(Restore, :example)
+      assert Restore.example() == :original
+      assert Restore.other() == :patched
+    end
+
+    test "restoring works on stacked callables" do
+      assert Restore.example() == :original
+
+      patch(Restore, :example, :first)
+      assert Restore.example() == :first
+
+      patch(Restore, :example, :second)
+      assert Restore.example() == :second
+
+      restore(Restore, :example)
       assert Restore.example() == :original
     end
   end

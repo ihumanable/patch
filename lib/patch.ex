@@ -23,6 +23,10 @@ defmodule Patch do
 
   ## Exceptions
 
+  defmodule ConfigurationError do
+    defexception [:message]
+  end
+
   defmodule InvalidAnyCall do
     defexception [:message]
   end
@@ -677,6 +681,28 @@ defmodule Patch do
   @spec restore(module :: module()) :: :ok | {:error, term()}
   def restore(module) do
     Mock.restore(module)
+  end
+
+  @doc """
+  Remove any patches associated with a function in a module.
+
+  ```elixir
+  original = Example.example()
+
+  patch(Example, :example, :example_patch)
+  patch(Example, :other, :other_patch)
+
+  assert Example.example() == :example_patch
+  assert Example.other() == :other_patch
+
+  restore(Example, :example)
+
+  assert Example.example() == original
+  assert Example.other() == :other_patch
+  """
+  @spec restore(module :: module(), name :: atom()) :: :ok | {:error, term()}
+  def restore(module, name) do
+    Mock.restore(module, name)
   end
 
   @doc """
