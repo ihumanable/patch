@@ -1,5 +1,40 @@
 # Change Log
 
+## 0.10.0 (2021-12-05)
+
+Changes how function patches work by introducing "Stacked Callables."  
+
+Stacked Callables are a large new feature that builds on the passthrough evaluation feature introduced in v0.9.0.
+
+[Chapter 2 of the Guidebook](https://hexdocs.pm/patch/02-patching.html#stacked-callables) has a new section that explains this design in detail.
+
+### Breaking Changes
+
+- 💔 - Subsequent calls to patch a function with a callable result in the callables stacking.  This may break some tests if the tests rely on one callable completely replacing the previous callable.  Use `restore/2` to clear the manually clear the previous callable.
+
+### Improvements
+
+- ⬆️ - Stacked Callables provide a more ergonomic way to deal with multiple arities than the previous solution of using `:list` dispatch.  See [Stacking and Multiple Arities](https://hexdocs.pm/patch/02-patching.html#stacking-and-multiple-arities)
+- ⬆️ - Stacked Callables provide a more composable way to deal with multiple patches that rely on pattern matching. See [Stacking and Matching](https://hexdocs.pm/patch/02-patching.html#stacking-and-matching)
+- ⬆️ - `callable/2` now allows the caller to configured both the `dispatch` mode and the `evaluation` mode.  This provides a cleaner upgrade path for anyone impacted by the breaking change introduced in v0.9.0.  Using `evaluate: :strict` on a callable will make the callable act like a pre-v0.9.0 callable.
+
+### Features
+
+- 🎁 - `restore/2` has been added, it's similar to `restore/1` but allows the test author to restore a function in a module instead of the entire module.
+- 🎁 - `callable/2` has a new clause that accepts a `Keyword.t` of options.  Supports `dispatch` which has the current dispatch modes (`:apply`, the default, or `:list`) as well as a new option `evaluate` which accepts either `:passthrough` (the default) or `:strict`.  Strict evaluation behaves like pre-v0.9.0
+
+### Bugfixes
+
+none
+
+### Deprecations
+
+- ⚠️ - `callable/2` will still accept an `atom` as the second argument.  When it is provided it will be used as the `dispatch` mode and the `evaluate` mode will be set to `passthrough` (the default).  This is a candidate for removal in future versions.
+
+### Removals
+
+None
+
 ## 0.9.0 (2021-12-02)
 
 Changes how function patches work so that the test author can only patch out a subset of function calls.

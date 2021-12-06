@@ -203,6 +203,26 @@ defmodule Patch.Test.User.Patch.CallableTest do
     end
   end
 
+  describe "callable configuration" do
+    test "unknown keys in the configuration raises a ConfigurationError" do
+      assert_raise Patch.ConfigurationError, fn ->
+        callable(fn -> :ok end, unknown: :option)
+      end
+    end
+
+    test "invalid dispatch modes raises a ConfigurationError" do
+      assert_raise Patch.ConfigurationError, fn ->
+        callable(fn -> :ok end, dispatch: :invalid)
+      end
+    end
+
+    test "invalid evaluate modes raises a ConfigurationError" do
+      assert_raise Patch.ConfigurationError, fn ->
+        callable(fn -> :ok end, evaluate: :invalid)
+      end
+    end
+  end
+
   describe "callable embedding" do
     test "can be embedded in a cycle" do
       assert Callable.example(:a) == {:original, :a}
