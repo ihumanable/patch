@@ -11,6 +11,7 @@ defmodule Patch.Mock.Value do
 
   @type t ::
           Values.Callable.t()
+          | Values.CallableStack.t()
           | Values.Cycle.t()
           | Values.Raises.t()
           | Values.Scalar.t()
@@ -18,7 +19,15 @@ defmodule Patch.Mock.Value do
           | Values.Throws.t()
           | term()
 
-  @value_modules [Values.Callable, Values.Cycle, Values.Raises, Values.Scalar, Values.Sequence, Values.Throws]
+  @value_modules [
+    Values.Callable,
+    Values.CallableStack,
+    Values.Cycle,
+    Values.Raises,
+    Values.Scalar,
+    Values.Sequence,
+    Values.Throws
+  ]
 
   @doc """
   Create a new `Values.Callable` to be used as the mock value.
@@ -38,31 +47,39 @@ defmodule Patch.Mock.Value do
   Any function literal will automatically be promoted into a `Values.Callable` unless it is
   wrapped in a `scalar/1` call.
 
-  ```
-  patch(Example, :example, fn arg -> {:patched, arg} end)
+  See `callable/2` for more configuration options.  `callable/1` calls use the default
+  configuration options
 
-  assert Example.example(1) == {:patched, 1}   # passes
-  assert Example.example(2) == {:patched, 2}   # passes
-  assert Example.example(3) == {:patched, 3}   # passes
-  ```
+  - dispatch: :apply
+  - evaluate: :passthrough
+  """
+  @spec callable(target :: function()) :: Values.Callable.t()
+  def callable(target) do
+    callable(target, [])
+  end
 
-  `callable/2` allows the test author to provide a `dispatch_mode` of either `:apply` or `:list`.
+  @doc """
+  `callable/2` allows the test author to provide additional configuration.
 
-  When `:apply` is used the function is called with the same arity of the patched function.  When
-  `:list` is used the function is always called with a single argument, a list of arguments to the
-  patched function.
+  There are two options
+
+  ## `:dispatch`
+
+  Controls how the arguments are dispatched to the callable.
+
+  - `:apply` is the default.  It will call the function with the same arity as the incoming call.
+  - `:list` will always call the callable with a single argument, a list of all the incoming
+    arguments.
+
+  ### Apply Example
 
   ```elixir
   patch(Example, :example, callable(fn a, b, c -> {:patched, a, b, c} end), :apply)
 
   assert Example.example(1, 2, 3)  == {:patched, 1, 2, 3}   # passes
-
-  assert_raise BadArityError, fn ->
-    Example.example(:test)
-  end
   ```
 
-  Compare this with using list dispatch
+  ### List Example
 
   ```elixir
   patch(Example, :example, callable(fn
@@ -77,10 +94,69 @@ defmodule Patch.Mock.Value do
   assert Example.example(1) == {:patched, 1}   # passes
   ```
 
-  When multiple arity support is needed, use `:list` dispatch.
+  ## `:evaluate`
+
+  Controls how the callable is evaluated.
+
+  - `:passthrough` is the default.  It will passthrough to the original function if the provided
+    callable fails to pattern match to the incoming call
+  - `:strict` will bubble up any `BadArityError` or `FunctionClauseErrors`.
+
+  ## Legacy Configuration Behavior (may be deprecated)
+
+  This function accepts either a single atom, in which case it will assign that to the `:dispatch`
+  configuration and use the default `:evaluate` option.
+
+  The following calls are equivalent
+
+  ```elixir
+  # Using legacy configuration convention
+  patch(Example, :example, callable(fn args -> {:patched, args}, :apply))
+
+  # Using explicit options without evaluate
+  patch(Example, :example, callable(fn args -> {:patched, args}, dispatch: :apply))
+
+  # Using fully specified explicit options
+  patch(Example, :example, callable(fn args -> {:patched, args}, dispatch: :apply, evaluate: :passthrough))
+  ```
+
+  ## Multiple Arities
+
+  `dispatch: :list` used to be the preferred way to deal with multiple arities, here's an example.
+
+  ```elixir
+  patch(Example, :example, callable(fn
+    [a] ->
+      {:patched, a}
+
+    [a, b, c] ->
+      {:patched, a, b, c}
+  end, dispatch: :list))
+
+  assert Example.example(1) == {:patched, 1}
+  assert Example.example(1, 2, 3) == {:patched, 1, 2, 3}
+  ```
+
+  Patch now has "Stacked Callables" so the preferred method is to use the equivalent code
+
+  ```elixir
+  patch(Example, :example, fn a -> {:patched, a} end)
+  patch(Example, :example, fn a, b, c -> {:patched, a, b, c} end)
+
+  assert Example.example(1) == {:patched, 1}
+  assert Example.example(1, 2, 3) == {:patched, 1, 2, 3}
+  ```
   """
+
   @spec callable(target :: function(), dispatch :: Values.Callable.dispatch_mode()) :: Values.Callable.t()
-  defdelegate callable(target, dispatch \\ :apply), to: Values.Callable, as: :new
+  def callable(target, dispatch) when is_atom(dispatch) do
+    callable(target, dispatch: dispatch)
+  end
+
+  @spec callable(target :: function(), options :: [Values.Callable.option()]) :: Values.Callable.t()
+  def callable(target, options) when is_list(options) do
+    Values.Callable.new(target, options)
+  end
 
   @doc """
   Create a new `Values.Cycle` to be used as the mock value.
