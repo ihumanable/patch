@@ -5,6 +5,16 @@ defmodule Patch.Test.User.Patch.CallableStackTest do
   alias Patch.Test.Support.User.Patch.CallableStack
 
   describe "patch/3 with Stacked Callables" do
+    test "callable can replace non-callable without stacking" do
+      assert CallableStack.example(:a) == {:original, :a}
+
+      patch(CallableStack, :example, :patched)
+      assert CallableStack.example(:a) == :patched
+
+      patch(CallableStack, :example, fn a -> {:patched, a} end)
+      assert CallableStack.example(:a) == {:patched, :a}
+    end
+
     test "without matching, last assignment wins" do
       assert CallableStack.example(:a) == {:original, :a}
 
