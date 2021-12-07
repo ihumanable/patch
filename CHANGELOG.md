@@ -1,5 +1,18 @@
 # Change Log
 
+## 0.10.1 (2021-12-07)
+
+Minor fix to `.formatter.exs`.  Exported format options were not being honored because of a typo, `export` is the honored key but `exports` was being used.
+
+### Improvements
+
+- ⬆️ - \[Change Log\] Removed sections that have no content, except for `Breaking Changes`.  Sections will only be included in the Change Log if some change has actually occurred.  To aid developers upgrading where between versions where breaking changes are allowed, `Breaking Changes` will be included when there are no breaking changes with the description `None` to clearly indicate that no breaking changes have occurred.
+### Bugfixes
+
+- 🐞 - Fixed the `.formatter.exs` so assertion functions won't be parenthesized by projects using `import_deps`
+
+
+
 ## 0.10.0 (2021-12-05)
 
 Changes how function patches work by introducing "Stacked Callables."  
@@ -23,17 +36,9 @@ Stacked Callables are a large new feature that builds on the passthrough evaluat
 - 🎁 - `restore/2` has been added, it's similar to `restore/1` but allows the test author to restore a function in a module instead of the entire module.
 - 🎁 - `callable/2` has a new clause that accepts a `Keyword.t` of options.  Supports `dispatch` which has the current dispatch modes (`:apply`, the default, or `:list`) as well as a new option `evaluate` which accepts either `:passthrough` (the default) or `:strict`.  Strict evaluation behaves like pre-v0.9.0
 
-### Bugfixes
-
-none
-
 ### Deprecations
 
 - ⚠️ - `callable/2` will still accept an `atom` as the second argument.  When it is provided it will be used as the `dispatch` mode and the `evaluate` mode will be set to `passthrough` (the default).  This is a candidate for removal in future versions.
-
-### Removals
-
-None
 
 ## 0.9.0 (2021-12-02)
 
@@ -42,75 +47,27 @@ Changes how function patches work so that the test author can only patch out a s
 ### Breaking Changes
 
 - 💔 - When patching a function, calls that fail to match the patched function's clauses will passthrough to the original code.  Tests that relied on the old behavior should add a catch-all clause.
+
 ### Improvements
 
 - ⬆️ - Improved experience when working with complex functions.  Consider a callback function like `GenServer.handle_call/3`, a test author may wish to only patch out certain messages, allowing other messages to pass through to the original code.  This is now supported, when a patched function fails to match because of either `BadArityError` or `FunctionClauseError` the original code will be called instead.
-
-### Features
-
-None
-
-### Bugfixes
-
-None
-
-### Deprecations
-
-None
-
-### Removals
-
-None
 
 ## 0.8.2 (2021-11-12)
 
 Bugfix for handling module attributes in Call Assertions.  
 
-### Improvements
-
-None
-
-### Features
-
-None
-
 ### Bugfixes
 
 - 🐞 - Fix in `Patch.Macro` to properly handle module attributes when matching.
-
-### Deprecations
-
-None
-
-### Removals
-
-None
-
 
 
 ## 0.8.1 (2021-11-12)
 
 Bugfix for handling modules with aggregate compile attributes.  This fixes a codegen bug introduced in 0.8.0.
 
-### Improvements
-
-None
-
-### Features
-
-None
-
 ### Bugfixes
 
 - 🐞 - Fix in `Patch.Mock.Code.Transforms.Clean` to properly handle aggregate compile attributes.
-
-### Deprecations
-
-None
-
-### Removals
-
-None
 
 ## 0.8.0 (2021-11-11)
 
@@ -120,6 +77,7 @@ Improved call assertion to use full pattern matching.  Pattern matching works li
 
 - 💔 - Matching has been improved to use full pattern semantics.  Call matching that uses `:_` should be updated to `_`.  Call assertions can now use the full range of Elixir pattern matching.
 - 💔 - `inject/3` has been renamed to `replace/3`
+
 ### Improvements
 
 - ⬆️ - Call Assertions now support full pattern matching.
@@ -134,10 +92,6 @@ Improved call assertion to use full pattern matching.  Pattern matching works li
 
 - 🐞 - Code Freezer fixes a bug where patching `GenServer` caused Patch to deadlock.
 
-### Deprecations
-
-None
-
 ### Removals
 
 - ⛔️ - `inject/3` was removed and renamed to `replace/3`
@@ -149,6 +103,7 @@ Support for call counts in assertions.  `assert_called/1` and `refute_called/1` 
 ### Breaking Changes
 
 None
+
 ### Improvements
 
 - ⬆️ - Exception messages have been improved to clearly indicate which calls have matched.
@@ -164,18 +119,10 @@ None
 - 🎁 - Added the `refute_called/2` assertion.  The second argument is a call count, this assertion will pass as long as the numebr of matching calls does not equal the provided call count.
 - 🎁 - Added the `refute_called_once/1` assertion.  This assertion will pass if there are any number of matching calls besides 1.
 
-### Bugfixes
-
-None
-
 ### Deprecations
 
 - ⚠️ - Soft Deprecation for `assert_any_call/2`.  This function is **not** slated for removal but should be reserved for advanced use cases.  Test authors should prefer `assert_any_call/1` when possible.
 - ⚠️ - Soft Deprecation for `refute_any_call/2`.  This function is **not** slated for removal but should be reserved for advanced use cases.  Test authors should prefer `refute_any_call/1` when possible.
-
-### Removals
-
-None
 
 ## 0.6.1 (2021-10-17)
 
@@ -184,18 +131,6 @@ Minor release to improve the documentation and reduce the scope of imported symb
 ### Improvements
 
 - ⬆️ - \[Documentation\] Guide Book broken into Chapters, additional information about core concepts.
-
-### Features
-
-None
-
-### Bugfixes
-
-None
-
-### Deprecations
-
-None
 
 ### Removals
 
@@ -240,14 +175,6 @@ And as a bonus
 - 🎁 - Added the `sequence/1` value builder to create sequence mock values.
 - 🎁 - Added the `throws/1` value builder to cause a mocked function to throw a value.
 
-### Bugfixes
-
-None
-
-### Deprecations
-
-None
-
 ### Removals
 
 - ⛔️ - \[Dependency\] `meck` was removed as a dependency
@@ -264,21 +191,9 @@ None
 - ⬆️ - \[Internal\] `patch.release` task to simplify releasing new versions of the library
 - ⬆️ - Support for mocking erlang modules (both sticky and non-sticky)
 
-### Features
-
-None
-
 ### Bugfixes
 
 - 🐞 - Mocking erlang modules actually works now
-
-### Deprecations
-
-None
-
-### Removals
-
-None
 
 ## 0.4.0 (2021-08-09)
 
@@ -297,17 +212,6 @@ None
 
 - 🎁 - Added the `listen/3` function to support listening to a process's messages
 - 🎁 - Added the `inject/3` function to support updating the state of a running process.
-### Bugfixes
-
-None
-### Deprecations
-
-None
-
-### Removals
-
-None
-
 ## 0.3.0 (2021-07-12)
 
 Support for replacing a module wholesale via the `fake/2` function
@@ -325,18 +229,6 @@ None
 - 🎁 - Added the `fake/2` function to add support for module fakes.
 - 🎁 - Added the `real/1` function so module fakes can call the real module.
 
-### Bugfixes
-
-None
-
-### Deprecations
-
-None
-
-### Removals
-
-None
-
 ## 0.2.0 (2021-03-03)
 
 Removed Arity Limitations
@@ -352,18 +244,6 @@ None
 
 - 🎁 - Added the `assert_any_call/2` and `refute_any_call/2` assertion functions
 
-### Bugfixes
-
-None
-
-### Deprecations
-
-None
-
-### Removals
-
-None
-
 ## 0.1.2 (2021-01-28)
 
 Increased Elixir Compatibility
@@ -371,23 +251,6 @@ Increased Elixir Compatibility
 ### Improvements
 
 - ⬆️ - Relaxed Elixir version requirement down to 1.7
-
-### Features
-
-None
-
-### Bugfixes
-
-None
-
-### Deprecations
-
-None
-
-### Removals
-
-None
-
 
 ## 0.1.1 (2020-04-27)
 
@@ -397,21 +260,9 @@ Bugfix Release
 
 - ⬆️ - Made the library actually work
 
-### Features
-
-None
-
 ### Bugfixes
 
 - 🐞 - Bugfix to make the library actually work
-
-### Deprecations
-
-None
-
-### Removals
-
-None
 
 ## 0.1.0 (2020-04-21)
 
@@ -433,15 +284,3 @@ None
 - 🎁 - `restore/1` allows removing patches and spies from a module.
 - 🎁 - `assert_called/1` allows for asserting that a patched or spied function has been called with the expected pattern of arguments.
 - 🎁 - `refute_called/1` allows for refuting that a patched or spied function has been called with the expected pattern of arguments.
-
-### Bugfixes
-
-None
-
-### Deprecations
-
-None
-
-### Removals
-
-None
