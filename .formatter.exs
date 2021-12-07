@@ -13,7 +13,7 @@
     refute_called: 2,
     refute_called_once: 1
   ],
-  exports: [
+  export: [
     locals_without_parens: [
       assert_any_call: 1,
       assert_any_call: 2,
