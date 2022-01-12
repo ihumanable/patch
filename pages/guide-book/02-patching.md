@@ -69,7 +69,7 @@ defmodule Example do
     {:reply, result, state}
   end
 
-  def handle_call({:b, argument}, _from, sate) do
+  def handle_call({:b, argument}, _from, state) do
     # Operation B Definition
     {:reply, result, state}
   end
@@ -173,11 +173,11 @@ To understand how this works, let's look at how a call to `example/1` and a call
 
 When `Example.example(1)` is evaluated it will try the first function.  This function has a different arity so it will raise `BadArityError`, this is one of the two errors that engages passthrough behavior.  Since the first entry in the stack resulted in a logical passthrough `Patch` will try the next entry.  The next entry has the right arity and results in `{:patched, 1}` being returned.  
 
-When `Example.example(1, 2, 3)` is evaluated, it's a bit simpler.  The first function is tried and it matches in arity so it immediately retruns `{:patched, 1, 2, 3}` and evaluation is completed.
+When `Example.example(1, 2, 3)` is evaluated, it's a bit simpler.  The first function is tried and it matches in arity so it immediately returns `{:patched, 1, 2, 3}` and evaluation is completed.
 
 #### Stacking and Matching
 
-Another problem that Stacked Callables helps solve is composablity when patching with pattern matching.  Consider the following example module.
+Another problem that Stacked Callables helps solve is composability when patching with pattern matching.  Consider the following example module.
 
 ```elixir
 defmodule Example do
@@ -320,7 +320,7 @@ This allows the test author to combine creating fixture data with patching.
 
 ## Asserting / Refuting Calls
 
-After a patch is applied, all subsequent calls to the module become "Observered Calls" and tests can assert that an expected call has occurred by using the `assert_called/1` macro.
+After a patch is applied, all subsequent calls to the module become "Observed Calls" and tests can assert that an expected call has occurred by using the `assert_called/1` macro.
 
 ```elixir
 defmodule PatchExample do

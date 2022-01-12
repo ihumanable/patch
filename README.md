@@ -98,8 +98,8 @@ Assertions make it easy to assert that a patched module has or has not observed 
 | [assert_called/1](https://hexdocs.pm/patch/Patch.html#assert_called/1)           | Asserts that a particular call has occurred on a mocked module                                                |
 | [assert_called/2](https://hexdocs.pm/patch/Patch.html#assert_called/2)           | Asserts that a particular call has occurred a given number of times on a mocked module                        |
 | [assert_called_once/1](https://hexdocs.pm/patch/Patch.html#assert_called_once/2) | Asserts that a particular call has occurred exactly once on a mocked module                                   |
-| [refute_any_call/1](https://hexdocs.pm/patch/Patch.html#refute_any_call/1)       | Refutes that any call of any arity has occured on the mocked module for a function name (preferred macro)     |
-| [refute_any_call/2](https://hexdocs.pm/patch/Patch.html#refute_any_call/2)       | Refutes that any call of any arity has occured on the mocked module for a function name (advanced use cases)  |
+| [refute_any_call/1](https://hexdocs.pm/patch/Patch.html#refute_any_call/1)       | Refutes that any call of any arity has occurred on the mocked module for a function name (preferred macro)     |
+| [refute_any_call/2](https://hexdocs.pm/patch/Patch.html#refute_any_call/2)       | Refutes that any call of any arity has occurred on the mocked module for a function name (advanced use cases)  |
 | [refute_called/1](https://hexdocs.pm/patch/Patch.html#refute_called/1)           | Refutes that a particular call has occurred on a mocked module                                                |
 | [refute_called/2](https://hexdocs.pm/patch/Patch.html#refute_called/2)           | Refutes that a particular call has occurred a given number of time on a mocked module                         |
 | [refute_called_once/1](https://hexdocs.pm/patch/Patch.html#refute_called_once/1) | Refutes that a particular call has occurred exactly once on a mocked module                                   |
