@@ -29,7 +29,7 @@ defmodule Patch.MixProject do
     ]
   end
 
-  # Specifies which erlang paths to compile per environemnt
+  # Specifies which erlang paths to compile per environment
   defp erlc_paths(:test), do: ["test/support"]
   defp erlc_paths(_), do: []
 

@@ -541,7 +541,7 @@ defmodule Patch.Test.User.ListenTest do
   describe "listen/3 with named process when messages sent to name" do
     setup [:start_named_process]
 
-    test "recipient recieves message" do
+    test "recipient receives message" do
       listen(:target, Target)
 
       send(Target, :test_message)

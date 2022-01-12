@@ -210,7 +210,7 @@ defmodule ExampleTest do
       assert private(Example.private_function(10)) == 10_000
     end
 
-    test "values betwen 20 and 80 are reduced by 3" do
+    test "values between 20 and 80 are reduced by 3" do
       expose(Example, private_function: 1)
 
       assert private(Example.private_function(50)) == 47

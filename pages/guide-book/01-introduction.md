@@ -16,7 +16,7 @@ Throughout this guide book we are going to use some common terminology, let's de
 
 ### Patch
 
-Patch is used as both a verb and a noun.  To "patch" a function is to replace it with an alternative implementation.  The alternative implemention is the noun form of "patch" sometimes called the "patched function."  
+Patch is used as both a verb and a noun.  To "patch" a function is to replace it with an alternative implementation.  The alternative implementation is the noun form of "patch" sometimes called the "patched function."  
 
 ```elixir
 patch(Example, :example, :patched)

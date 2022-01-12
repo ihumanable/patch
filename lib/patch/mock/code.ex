@@ -126,7 +126,7 @@ defmodule Patch.Mock.Code do
            [Original Value] <--------------------------------------'
   ```
 
-  Calling a public funtion will either return the mocked value if it exists, or fall back to
+  Calling a public function will either return the mocked value if it exists, or fall back to
   calling the original function.
 
   ### Private Function Calls
@@ -159,7 +159,7 @@ defmodule Patch.Mock.Code do
            [Original Value] <----------------------------'
   ```
 
-  Since the call is redirected to the `delegate`, calling a public funtion will either return the
+  Since the call is redirected to the `delegate`, calling a public function will either return the
   mocked value if it exists, or fall back to calling the original function.
 
   ### Private Function Call Flow
@@ -174,7 +174,7 @@ defmodule Patch.Mock.Code do
            [Original Value] <----------------------------'
   ```
 
-  Since the call is redirected to the `delegate`, calling a private funtion will either return the
+  Since the call is redirected to the `delegate`, calling a private function will either return the
   mocked value if it exists, or fall back to calling the original function.
 
   ## Code Generation

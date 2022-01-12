@@ -412,7 +412,7 @@ defmodule Patch do
   end
   ```
 
-  The function `sequence/1` can be given a list which will be used until a singal value is
+  The function `sequence/1` can be given a list which will be used until a single value is
   remaining, the remaining value will be returned on all subsequent calls.
 
   ```elixir

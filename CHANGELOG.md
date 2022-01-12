@@ -116,7 +116,7 @@ None
 - 🎁 - Added the `assert_called/2` assertion.  The second argument is a call count, this assertion will only pass if there is exactly call count matching calls.
 - 🎁 - Added the `assert_called_once/1` assertion.  This assertion only passes if there is one and only one matching call.
 - 🎁 - Added the `refute_any_call/1` macro.  This is now preferred over `refute_any_call/2`, it allows the test author to write `refute_any_call Module.function` instead of `refute_any_call Module, :function`
-- 🎁 - Added the `refute_called/2` assertion.  The second argument is a call count, this assertion will pass as long as the numebr of matching calls does not equal the provided call count.
+- 🎁 - Added the `refute_called/2` assertion.  The second argument is a call count, this assertion will pass as long as the number of matching calls does not equal the provided call count.
 - 🎁 - Added the `refute_called_once/1` assertion.  This assertion will pass if there are any number of matching calls besides 1.
 
 ### Deprecations
