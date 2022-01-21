@@ -33,8 +33,8 @@ defmodule Patch.Mock.Code.Transforms.Remote do
 
   @spec expression(abstract_form :: Code.form(), module :: module(), exports :: Code.exports()) ::
           Code.form()
-  defp expression({:call, _, {:remote, _, _, _}, _} = remote_call, _, _) do
-    remote_call
+  defp expression({:call, anno, {:remote, _, _, _} = remote, arguments}, module, exports) do
+    {:call, anno, remote, expressions(arguments, module, exports)}
   end
 
   defp expression({:call, anno, local, arguments}, module, exports) do
