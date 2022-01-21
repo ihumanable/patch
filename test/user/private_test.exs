@@ -19,4 +19,18 @@ defmodule Patch.Test.User.PrivateTest do
       assert private(Private.private_function(:test_argument)) == :patched
     end
   end
+
+  describe "private/2" do
+    test "can pipeline into a private call" do
+      expose(Private, :all)
+
+      patch(Private, :private_function, fn argument -> {:patched, argument} end)
+
+      result =
+        :test
+        |> private(Private.private_function())
+
+      assert result == {:patched, :test}
+    end
+  end
 end
