@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.10.2 (2022-01-20)
+
+Major fix to `Patch.Mock.Code.Transforms.Remote`.  Previously this transform completely ignored remote calls.  This would cause an issue when one of the arguments to the remote call was itself a local call.  This has been corrected and the `Patch.Test.User.Patch.LocalCallTest` was updated to prevent regressions.
+
+### Bugfixes
+
+- 🐞 - Fixed the `Patch.Mock.Code.Transforms.Remote` transformer to correctly handle the arguments of a Remote Call.
+
 ## 0.10.1 (2021-12-07)
 
 Minor fix to `.formatter.exs`.  Exported format options were not being honored because of a typo, `export` is the honored key but `exports` was being used.
