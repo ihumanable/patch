@@ -1,5 +1,32 @@
 # Change Log
 
+## 0.11.0 (2022-01-21)
+
+New `private/2` macro to assist with using exposed functions.  
+
+Introduces "Tagged Histories" to prevent a race condition that causes confusing output when using Patch assertions.
+
+Race Condition Description:
+
+1. Assertion function checks the history for a matching call, none is found.
+2. Assertion function pulls the history to format an error message.
+
+Between 1 and 2 if a matching call arrived then the assertion would fail but print out a message with a matching call.
+
+This race condition has been defeated by only pulling the history once and using it for both checking for the existence of a call and formatting an error message.
+
+In addition a bunch of code that was littering Patch.Mock has been moved to a more appropriate location by introducing the concept of a "Tagged History" (Patch.Mock.History.Tagged)
+
+Tagged Histories have the same entries as a History.  One generates a Tagged History from a History and some matching criteria.  Ever entry in the Tagged History is the entry from the History tagged with a boolean that indicates whether or not it matched the construction criteria.
+
+### Features
+
+- 🎁 - `private/2` has been added, it's similar to `private/1` but allows the test author to pipe a value into `private/2` and have it end up in the call that's being wrapped.
+
+### Bugfixes
+
+- 🐞 - Fixed the behavior of Patch Assertion functions to prevent the race condition described above.
+
 ## 0.10.2 (2022-01-20)
 
 Major fix to `Patch.Mock.Code.Transforms.Remote`.  Previously this transform completely ignored remote calls.  This would cause an issue when one of the arguments to the remote call was itself a local call.  This has been corrected and the `Patch.Test.User.Patch.LocalCallTest` was updated to prevent regressions.
