@@ -1,21 +1,25 @@
 defmodule Patch.Mock.History do
   @type name :: atom()
-  @type arguments :: [term()]
-  @type entry :: {name(), arguments()}
+  @type argument :: term()
+  @type entry :: {name(), [argument()]}
+  @type limit :: non_neg_integer() | :infinity
+  @type sorting :: :asc | :desc
 
   @type t :: %__MODULE__{
           count: non_neg_integer(),
           entries: [entry()],
-          limit: non_neg_integer() | :infinity
+          limit: limit()
         }
   defstruct count: 0,
             entries: [],
             limit: :infinity
 
+  @spec new(limit :: limit()) :: t()
   def new(limit \\ :infinity) do
     %__MODULE__{limit: limit}
   end
 
+  @spec entries(history :: t(), sorting :: sorting()) :: [entry()]
   def entries(history, sorting \\ :asc)
 
   def entries(%__MODULE__{} = history, :asc) do
@@ -26,6 +30,7 @@ defmodule Patch.Mock.History do
     history.entries
   end
 
+  @spec put(history :: t(), name :: name(), arguments :: [argument()]) :: t()
   def put(%__MODULE__{limit: 0} = history, _name, _arguments) do
     # When the limit is 0, no-op.
     history
