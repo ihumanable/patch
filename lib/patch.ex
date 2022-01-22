@@ -45,9 +45,10 @@ defmodule Patch do
       import unquote(__MODULE__)
       import Patch.Mock.Value, except: [advance: 1, next: 2]
 
+      require Patch.Assertions
       require Patch.Macro
       require Patch.Mock
-      require Patch.Assertions
+      require Patch.Mock.History.Tagged
 
 
       setup do

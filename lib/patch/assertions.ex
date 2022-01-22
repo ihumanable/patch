@@ -1,6 +1,7 @@
 defmodule Patch.Assertions do
   alias Patch.MissingCall
   alias Patch.Mock
+  alias Patch.Mock.History
   alias Patch.UnexpectedCall
 
   @doc """
@@ -21,7 +22,12 @@ defmodule Patch.Assertions do
   """
   @spec assert_any_call(module :: module(), function :: atom()) :: nil
   def assert_any_call(module, function) do
-    unless Mock.called?(module, function) do
+    history =
+      module
+      |> Mock.history()
+      |> History.Tagged.for_function(function)
+
+    unless History.Tagged.any?(history) do
       message = """
       \n
       Expected any call to the following function:
@@ -30,7 +36,7 @@ defmodule Patch.Assertions do
 
       Calls which were received (matching calls are marked with *):
 
-      #{format_calls_matching_any(module, function)}
+      #{History.Tagged.format(history, module)}
       """
 
       raise MissingCall, message: message
@@ -49,9 +55,9 @@ defmodule Patch.Assertions do
   Example.function(1, 2, 3)
 
   Patch.Assertions.assert_called(Example, :function, [1, 2, 3])   # passes
-  Patch.Assertions.assert_called(Example, :function, [1, _, 3])  # passes
+  Patch.Assertions.assert_called(Example, :function, [1, _, 3])   # passes
   Patch.Assertions.assert_called(Example, :function, [4, 5, 6])   # fails
-  Patch.Assertions.assert_called(Example, :function, [4, _, 6])  # fails
+  Patch.Assertions.assert_called(Example, :function, [4, _, 6])   # fails
   ```
 
   There is a convenience macro in the Developer Interface, `Patch.assert_called/1` which should be
@@ -62,9 +68,12 @@ defmodule Patch.Assertions do
     {module, function, patterns} = Macro.decompose_call(call)
 
     quote do
-      unless Patch.Mock.called?(unquote(call)) do
-        history = Patch.Mock.match_history(unquote(call))
+      history =
+        unquote(module)
+        |> Patch.Mock.history()
+        |> Patch.Mock.History.Tagged.for_call(unquote(call))
 
+      unless Patch.Mock.History.Tagged.any?(history) do
         message = """
         \n
         Expected but did not receive the following call:
@@ -73,13 +82,13 @@ defmodule Patch.Assertions do
 
         Calls which were received (matching calls are marked with *):
 
-        #{Patch.Assertions.format_history(unquote(module), history)}
+        #{Patch.Mock.History.Tagged.format(history, unquote(module))}
         """
 
         raise MissingCall, message: message
       end
 
-      {:ok, {unquote(function), arguments}} = Patch.Mock.latest_match(unquote(call))
+      {:ok, {unquote(function), arguments}} = Patch.Mock.History.Tagged.first(history)
       Patch.Macro.match(unquote(patterns), arguments)
     end
   end
@@ -113,7 +122,13 @@ defmodule Patch.Assertions do
     {module, function, patterns} = Macro.decompose_call(call)
 
     quote do
-      call_count = Patch.Mock.call_count(unquote(call))
+      history =
+        unquote(module)
+        |> Patch.Mock.history()
+        |> Patch.Mock.History.Tagged.for_call(unquote(call))
+
+      call_count = Patch.Mock.History.Tagged.count(history)
+
       unless call_count == unquote(count) do
         exception =
           if call_count < unquote(count) do
@@ -121,8 +136,6 @@ defmodule Patch.Assertions do
           else
             UnexpectedCall
           end
-
-        history = Patch.Mock.match_history(unquote(call))
 
         message = """
         \n
@@ -132,13 +145,13 @@ defmodule Patch.Assertions do
 
         Calls which were received (matching calls are marked with *):
 
-        #{Patch.Assertions.format_history(unquote(module), history)}
+        #{Patch.Mock.History.Tagged.format(history, unquote(module))}
         """
 
         raise exception, message
       end
 
-      {:ok, {unquote(function), arguments}} = Patch.Mock.latest_match(unquote(call))
+      {:ok, {unquote(function), arguments}} = Patch.Mock.History.Tagged.first(history)
       Patch.Macro.match(unquote(patterns), arguments)
     end
   end
@@ -171,7 +184,12 @@ defmodule Patch.Assertions do
     {module, function, patterns} = Macro.decompose_call(call)
 
     quote do
-      call_count = Patch.Mock.call_count(unquote(call))
+      history =
+        unquote(module)
+        |> Patch.Mock.history()
+        |> Patch.Mock.History.Tagged.for_call(unquote(call))
+
+      call_count = Patch.Mock.History.Tagged.count(history)
 
       unless call_count == 1 do
         exception =
@@ -181,8 +199,6 @@ defmodule Patch.Assertions do
             UnexpectedCall
           end
 
-        history = Patch.Mock.match_history(unquote(call))
-
         message = """
         \n
         Expected the following call to occur exactly once, but call occurred #{call_count} times:
@@ -191,13 +207,13 @@ defmodule Patch.Assertions do
 
         Calls which were received (matching calls are marked with *):
 
-        #{Patch.Assertions.format_history(unquote(module), history)}
+        #{Patch.Mock.History.Tagged.format(history, unquote(module))}
         """
 
         raise exception, message
       end
 
-      {:ok, {unquote(function), arguments}} = Patch.Mock.latest_match(unquote(call))
+      {:ok, {unquote(function), arguments}} = Patch.Mock.History.Tagged.first(history)
       Patch.Macro.match(unquote(patterns), arguments)
     end
   end
@@ -220,7 +236,12 @@ defmodule Patch.Assertions do
   """
   @spec refute_any_call(module :: module(), function :: atom()) :: nil
   def refute_any_call(module, function) do
-    if Mock.called?(module, function) do
+    history =
+      module
+      |> Mock.history()
+      |> History.Tagged.for_function(function)
+
+    if History.Tagged.any?(history) do
       message = """
       \n
       Unexpected call received, expected no calls:
@@ -229,7 +250,7 @@ defmodule Patch.Assertions do
 
       Calls which were received (matching calls are marked with *):
 
-      #{format_calls_matching_any(module, function)}
+      #{History.Tagged.format(history, module)}
       """
 
       raise UnexpectedCall, message: message
@@ -260,9 +281,12 @@ defmodule Patch.Assertions do
     {module, function, patterns} = Macro.decompose_call(call)
 
     quote do
-      if Patch.Mock.called?(unquote(call)) do
-        history = Patch.Mock.match_history(unquote(call))
+      history =
+        unquote(module)
+        |> Patch.Mock.history()
+        |> Patch.Mock.History.Tagged.for_call(unquote(call))
 
+      if Patch.Mock.History.Tagged.any?(history) do
         message = """
         \n
         Unexpected call received:
@@ -271,7 +295,7 @@ defmodule Patch.Assertions do
 
         Calls which were received (matching calls are marked with *):
 
-        #{Patch.Assertions.format_history(unquote(module), history)}
+        #{Patch.Mock.History.Tagged.format(history, unquote(module))}
         """
 
         raise UnexpectedCall, message: message
@@ -307,11 +331,14 @@ defmodule Patch.Assertions do
     {module, function, patterns} = Macro.decompose_call(call)
 
     quote do
-      call_count = Patch.Mock.call_count(unquote(call))
+      history =
+        unquote(module)
+        |> Patch.Mock.history()
+        |> Patch.Mock.History.Tagged.for_call(unquote(call))
+
+      call_count = Patch.Mock.History.Tagged.count(history)
 
       if call_count == unquote(count) do
-        history = Patch.Mock.match_history(unquote(call))
-
         message = """
         \n
         Expected any count except #{unquote(count)} of the following calls, but found #{call_count}:
@@ -320,7 +347,7 @@ defmodule Patch.Assertions do
 
         Calls which were received (matching calls are marked with *):
 
-        #{Patch.Assertions.format_history(unquote(module), history)}
+        #{Patch.Mock.History.Tagged.format(history, unquote(module))}
         """
 
         raise UnexpectedCall, message
@@ -355,11 +382,14 @@ defmodule Patch.Assertions do
     {module, function, patterns} = Macro.decompose_call(call)
 
     quote do
-      call_count = Patch.Mock.call_count(unquote(call))
+      history =
+        unquote(module)
+        |> Patch.Mock.history()
+        |> Patch.Mock.History.Tagged.for_call(unquote(call))
+
+      call_count = Patch.Mock.History.Tagged.count(history)
 
       if call_count == 1 do
-        history = Patch.Mock.match_history(unquote(call))
-
         message = """
         \n
         Expected the following call to occur any number of times but once, but it occurred once:
@@ -368,7 +398,7 @@ defmodule Patch.Assertions do
 
         Calls which were received (matching calls are marked with *):
 
-        #{Patch.Assertions.format_history(unquote(module), history)}
+        #{Patch.Mock.History.Tagged.format(history, unquote(module))}
         """
 
         raise UnexpectedCall, message
@@ -386,61 +416,4 @@ defmodule Patch.Assertions do
     |> String.slice(1..-2)
   end
 
-  @doc """
-  Formats history entries like those returned by `Patch.Mock.match_history/1`.
-  """
-  @spec format_history(module :: module(), calls :: [{boolean(), {atom(), [term()]}}]) :: String.t()
-  def format_history(module, calls) do
-    calls
-    |> Enum.reverse()
-    |> Enum.with_index(1)
-    |> Enum.map(fn {{matches, {function, arguments}}, i} ->
-      marker =
-        if matches do
-          "* "
-        else
-          "  "
-        end
-
-      "#{marker}#{i}. #{inspect(module)}.#{function}(#{format_arguments(arguments)})"
-    end)
-    |> case do
-      [] ->
-        "  [No Calls Received]"
-      calls ->
-        Enum.join(calls, "\n")
-    end
-  end
-
-  ## Private
-
-  @spec format_arguments(arguments :: [term()]) :: String.t()
-  defp format_arguments(arguments) do
-    arguments
-    |> Enum.map(&Kernel.inspect/1)
-    |> Enum.join(", ")
-  end
-
-  @spec format_calls_matching_any(module :: module(), expected_function :: atom()) :: String.t()
-  defp format_calls_matching_any(module, expected_function) do
-    module
-    |> Patch.history()
-    |> Enum.with_index(1)
-    |> Enum.map(fn {{actual_function, arguments}, i} ->
-      marker =
-        if expected_function == actual_function do
-          "* "
-        else
-          "  "
-        end
-
-      "#{marker}#{i}. #{inspect(module)}.#{actual_function}(#{format_arguments(arguments)})"
-    end)
-    |> case do
-      [] ->
-        "  [No Calls Received]"
-      calls ->
-        Enum.join(calls, "\n")
-    end
-  end
 end
