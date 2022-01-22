@@ -207,8 +207,8 @@ defmodule Patch do
   ```
 
   After exposing a function, attempting to call the exposed function will cause the Elixir
-  Compiler to flag calls to exposed functions as a warning.  There is a companion macro
-  `private/1` that test authors can wrap their calls with to prevent warnings.
+  Compiler to flag calls to exposed functions as a warning.  There are companion macros
+  `private/1` and `private/2` that test authors can wrap their calls with to prevent warnings.
   """
   @spec expose(module :: module, exposes :: Patch.Mock.exposes()) :: :ok | {:error, term()}
   def expose(module, exposes) do
@@ -492,6 +492,42 @@ defmodule Patch do
 
     quote do
       apply(unquote(module), unquote(function), unquote(arguments))
+    end
+  end
+
+  @doc """
+  Suppress warnings for using exposed private functions in tests.
+
+  Patch allows you to make a private function public via the `expose/2` function.  Exposure
+  happens dynamically at test time. The Elixir Compiler will flag calls to exposed functions as a
+  warning.
+
+  One way around this is to change the normal function call into an `apply/3` but this is
+  cumbersome and makes tests harder to read.
+
+  This macro just rewrites a normal looking call into an `apply/3` so the compiler won't complain
+  about calling an exposed function, with support for pipelines.
+
+  ```elixir
+  expose(Example, :all)
+
+  example_that_warns =
+    Example.new()
+    |> Example.private_function()  # Compiler will warn about call to undefined function
+
+
+  example_that_does_not_warn
+    Example.new()
+    |> private(Example.private_function())  # Compiler will not warn and Example.new() is provided
+                                            # as the first argument to Example.private_function/1
+  ```
+  """
+  @spec private(Macro.t(), Macro.t()) :: Macro.t()
+  defmacro private(argument, call) do
+    {module, function, arguments} = Macro.decompose_call(call)
+
+    quote do
+      apply(unquote(module), unquote(function), [unquote(argument) | unquote(arguments)])
     end
   end
 
