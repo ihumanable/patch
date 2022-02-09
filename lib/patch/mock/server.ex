@@ -73,17 +73,22 @@ defmodule Patch.Mock.Server do
 
     case Freezer.get(GenServer).call(server, {:delegate, name, arguments}) do
       {:ok, reply} ->
+        debug(module, name, arguments, "mock returned", reply)
         reply
 
       {:raise, exception} ->
+        debug(module, name, arguments, "mock raised", exception)
         raise exception
 
       {:throw, value} ->
+        debug(module, name, arguments, "mock threw", value)
         throw value
 
       :error ->
         original_module = Naming.original(module)
-        apply(original_module, name, arguments)
+        result = apply(original_module, name, arguments)
+        debug(module, name, arguments, "no matching mock, using original, which returned", result)
+        result
     end
   end
 
@@ -201,6 +206,21 @@ defmodule Patch.Mock.Server do
       :exit, {:noproc, _} ->
         default.()
     end
+  end
+
+  @spec debug(module :: module(), name :: atom(), arguments :: [term()], label :: String.t(), value :: term()) :: :ok
+  defp debug(module, name, arguments, label, value) do
+    if Application.get_env(:patch, :debug, false) do
+      argument_list =
+        arguments
+        |> Enum.map(&inspect/1)
+        |> Enum.join(", ")
+
+      message = "Patch :: #{inspect(module)}.#{name}(#{argument_list}) #{label} #{inspect(value)}"
+      Logger.debug(message)
+    end
+
+    :ok
   end
 
   @spec do_expose(state :: t(), current_exposes :: Code.exposes(), desired_exposes :: Code.exposes()) :: {:ok, t()} | {:error, term()}
