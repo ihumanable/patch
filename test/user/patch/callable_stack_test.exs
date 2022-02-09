@@ -80,5 +80,25 @@ defmodule Patch.Test.User.Patch.CallableStackTest do
       assert CallableStack.example(:a) == {:original, :a}
       assert CallableStack.example(:a, :b, :c) == {:original, :a, :b, :c}
     end
+
+    test "mock functions can raise FunctionClauseError" do
+      patch(CallableStack, :example, fn _ ->
+        raise FunctionClauseError
+      end)
+
+      assert_raise FunctionClauseError, fn ->
+        CallableStack.example(:a)
+      end
+    end
+
+    test "mock functions can raise BadArityError" do
+      patch(CallableStack, :example, fn _ ->
+        raise BadArityError, function: &String.trim/1, args: []
+      end)
+
+      assert_raise BadArityError, fn ->
+        CallableStack.example(:a)
+      end
+    end
   end
 end

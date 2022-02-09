@@ -20,11 +20,24 @@ defmodule Patch.Apply do
 
       {:ok, result}
     rescue
-      BadArityError ->
-        :error
-
-      FunctionClauseError ->
-        :error
+      e in [BadArityError, FunctionClauseError] ->
+        if direct_exception?(function, e) do
+          :error
+        else
+          reraise e, __STACKTRACE__
+        end
     end
+  end
+
+  ## Private
+
+  @spec direct_exception?(function :: function(), error :: Exception.t()) :: boolean()
+  defp direct_exception?(function, %BadArityError{} = error) do
+    function == error.function
+  end
+
+  defp direct_exception?(function, %FunctionClauseError{} = error) do
+    info = Function.info(function)
+    info[:arity] == error.arity and info[:name] == error.function
   end
 end
