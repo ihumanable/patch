@@ -8,7 +8,6 @@ If a passthrough mock function's implementation raised `BadArityError` or `Funct
 
 Added a new `debug/0,1` facility that can be used to enable library level debugging in for a test function.  This functionality can also be controlled by the `:patch` `:debug` configuration value.
 
-
 ### Features
 
 - 🎁 - `debug/0,1` has been added. By default it will enable debugging for the test it is invoked in.  If debugging has been enabled suite wide via the `:patch` `:debug` configuration value, then `debug/1` can be used with the argument `false` to disable testing for the test it is invoked in.
@@ -16,6 +15,14 @@ Added a new `debug/0,1` facility that can be used to enable library level debugg
 ### Bugfixes
 
 - 🐞 - Fixed the issue where defective mocks would cause the mock system to call the original function.
+
+### Improvements
+
+- ⬆️ - \[CI\] Updated CI tests from 1.12.2 to 1.12.3 and added 1.13.2 tests to the compatibility matrix.
+
+### Breaking Changes
+
+None
 
 ## 0.11.0 (2022-01-21)
 
@@ -43,6 +50,10 @@ Tagged Histories have the same entries as a History.  One generates a Tagged His
 ### Bugfixes
 
 - 🐞 - Fixed the behavior of Patch Assertion functions to prevent the race condition described above.
+
+### Breaking Changes
+
+None
 
 ## 0.10.2 (2022-01-20)
 
