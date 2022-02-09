@@ -1,5 +1,22 @@
 # Change Log
 
+## 0.12.0 (2022-02-08)
+
+Fixed a bug where defective mock functions would be incorrectly classified as unmocked functions, this would engage the passthrough functionality and call the original function.
+
+If a passthrough mock function's implementation raised `BadArityError` or `FunctionClauseError` it would be incorrectly classified by the mock system as an unmocked function.  The internal mechanisms have been updated to differentiate between exceptions arising directly from the function call vs exceptions in caused by executing the code in the function.
+
+Added a new `debug/0,1` facility that can be used to enable library level debugging in for a test function.  This functionality can also be controlled by the `:patch` `:debug` configuration value.
+
+
+### Features
+
+- 🎁 - `debug/0,1` has been added. By default it will enable debugging for the test it is invoked in.  If debugging has been enabled suite wide via the `:patch` `:debug` configuration value, then `debug/1` can be used with the argument `false` to disable testing for the test it is invoked in.
+
+### Bugfixes
+
+- 🐞 - Fixed the issue where defective mocks would cause the mock system to call the original function.
+
 ## 0.11.0 (2022-01-21)
 
 New `private/2` macro to assist with using exposed functions.  

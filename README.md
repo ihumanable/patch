@@ -52,7 +52,7 @@ Add patch to your mix.exs
 ```elixir
 def deps do
   [
-    {:patch, "~> 0.11.0", only: [:test]}
+    {:patch, "~> 0.12.0", only: [:test]}
   ]
 end
 ```
@@ -67,7 +67,7 @@ use Patch
 
 This library comes with a comprehensive suite of unit tests.  These tests not only verify that the library is working correctly but are designed so that for every bit of functionality there is an easy to understand example for how to use that feature.  Check out the [User Tests](https://github.com/ihumanable/patch/tree/master/test/user) for examples of how to use each feature.
 
-Using Patch adds 11 core functions, 10 assertions, and 7 mock value builders to the test.
+Using Patch adds 11 core functions, 10 assertions, 7 mock value builders, and 1 utility function to the test.
 
 ### Core Functions
 
@@ -118,6 +118,13 @@ Patched functions aren't limited to only returning simple scalar values, a host 
 | [sequence/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#sequence/2)   | Returns the values in order, repeating the last value indefinitely                                       |
 | [throws/1](https://hexdocs.pm/patch/Patch.Mock.Value.html#throws/1)       | Throws the given value upon invocation                                                                   |
 
+### Utility Functions
+
+Patch comes with some utilities that can assist when tests aren't behaving as expected.
+
+| Utility Function                                         | Description                                   |
+|----------------------------------------------------------|-----------------------------------------------|
+| [debug/0,1](https://hexdocs.pm/patch/Patch.html#debug/1) | Enable or Disable debug mode for a given test |
 
 ## Guide Book
 
@@ -129,13 +136,13 @@ For a guided tour and deep dive of Patch, see the [Guide Book](https://hexdocs.p
 
 Tests automatically run against a matrix of OTP and Elixir Versions, see the [ci.yml](https://github.com/ihumanable/patch/tree/master/.github/workflows/ci.yml) for details.
 
-| OTP \ Elixir | 1.7  | 1.8  | 1.9  | 1.10 | 1.11 | 1.12 |
-|:------------:|:----:|:----:|:----:|:----:|:----:|:----:|
-| 20           | ✅   | ✅   | ✅   | N/A  | N/A  | N/A  |
-| 21           | ✅   | ✅   | ✅   | ✅   | ✅   | N/A  |
-| 22           | ✅   | ✅   | ✅   | ✅   | ✅   | ✅   |
-| 23           | N/A  | N/A  | N/A  | ✅   | ✅   | ✅   |
-| 24           | N/A  | N/A  | N/A  | N/A  | ✅   | ✅   |
+| OTP \ Elixir | 1.7  | 1.8  | 1.9  | 1.10 | 1.11 | 1.12 | 1.13 |
+|:------------:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|
+| 20           | ✅   | ✅   | ✅   | N/A  | N/A  | N/A  | N/A  |
+| 21           | ✅   | ✅   | ✅   | ✅   | ✅   | N/A  | N/A  |
+| 22           | ✅   | ✅   | ✅   | ✅   | ✅   | ✅   | ✅   |
+| 23           | N/A  | N/A  | N/A  | ✅   | ✅   | ✅   | ✅   |
+| 24           | N/A  | N/A  | N/A  | N/A  | ✅   | ✅   | ✅   |
 
 ## Limitations
 
