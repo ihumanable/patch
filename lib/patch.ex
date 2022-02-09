@@ -52,10 +52,19 @@ defmodule Patch do
 
 
       setup do
+        debug = Application.fetch_env(:patch, :debug)
         start_supervised!(Patch.Supervisor)
 
         on_exit(fn ->
           Patch.Mock.Code.Freezer.empty()
+
+          case debug do
+            {:ok, value} ->
+              Application.put_env(:patch, :debug, value)
+
+            :error ->
+              Application.delete_env(:patch, :debug)
+          end
         end)
 
         :ok
@@ -188,6 +197,26 @@ defmodule Patch do
     end
   end
 
+  @doc """
+  Enable or disable library level debugging.
+
+  There is a suite level configuration that can be set by using
+
+  ```elixir
+  config :patch,
+    debug: true # or false
+  ```
+
+  Calling this helper will enable or disable debugging for a given test.
+
+  Library level debugging can be useful when patch behavior isn't meeting expectations.
+  Additional logging will occur at the debug log level using Logger to provide insight into how
+  Patch is working.
+  """
+  @spec debug(value :: boolean()) :: :ok
+  def debug(value \\ true) do
+    Application.put_env(:patch, :debug, value)
+  end
 
   @doc """
   Expose can be used to turn private functions into public functions for the
