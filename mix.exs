@@ -42,6 +42,7 @@ defmodule Patch.MixProject do
       name: "Patch",
       extras: [
         "README.md",
+        "pages/cheatsheet.cheatmd",
         "pages/super-powers.md",
         "pages/guide-book/01-introduction.md",
         "pages/guide-book/02-patching.md",
@@ -70,6 +71,7 @@ defmodule Patch.MixProject do
         "Mock": [
           Patch.Mock,
           Patch.Mock.History,
+          Patch.Mock.History.Tagged,
           Patch.Mock.Naming,
           Patch.Mock.Server,
           Patch.Mock.Supervisor
@@ -103,6 +105,7 @@ defmodule Patch.MixProject do
         "Mock Values": [
           Patch.Mock.Value,
           Patch.Mock.Values.Callable,
+          Patch.Mock.Values.CallableStack,
           Patch.Mock.Values.Cycle,
           Patch.Mock.Values.Raises,
           Patch.Mock.Values.Scalar,

@@ -1,0 +1,308 @@
+# Cheatsheet
+
+This cheatsheet provides simple examples for how to use Patch, for more details see the linked documentation.
+
+## Installation
+{: .col-2}
+
+### Add Patch to your Dependencies
+
+In the `deps/0` function in the mix.exs file add a line for Patch.
+
+#### mix.exs
+```elixir
+def deps do
+  [
+    {:patch, "~> 0.12.0", only: [:test]}
+  ]
+end
+```
+
+### Use Patch in your Test Case
+
+In any ExUnit.Case based Test Case add a line to use Patch.
+
+#### test/example_test.exs
+```elixir
+defmodule ExampleTest do
+  use ExUnit.Case
+  use Patch
+
+  # ... snip the rest of the module ...
+end
+```
+
+## Patching
+{: .col-2}
+
+### Scalars
+
+```elixir
+test "can patch with scalar values" do
+  assert String.upcase("Pre-Patched") == "PRE-PATCHED"
+  
+  patch(String, :upcase, "PATCHED")
+
+  assert String.upcase("Post-Patched") == "PATCHED"
+end
+```
+
+### Callables
+
+```elixir
+test "can patch with a callable" do
+  assert String.upcase("Pre-Patched") == "PRE-PATCHED"
+
+  patch(String, :upcase, fn s -> String.length(s) end)
+
+  assert String.upcase("Post-Patched") == 12
+end
+```
+
+### Cycles
+
+```elixir
+test "can patch with a cycle" do
+  assert String.upcase("Pre-Patched") == "PRE-PATCHED"
+
+  patch(String, :upcase, cycle([1, 2, 3]))
+
+  assert String.upcase("Post-Patched") == 1
+  assert String.upcase("Post-Patched") == 2
+  assert String.upcase("Post-Patched") == 3
+  assert String.upcase("Post-Patched") == 1
+  assert String.upcase("Post-Patched") == 2
+end
+```
+
+### Sequences
+
+```elixir
+test "can patch with a sequence" do
+  assert String.upcase("Pre-Patched") == "PRE-PATCHED"
+
+  patch(String, :upcase, cycle([1, 2, 3]))
+
+  assert String.upcase("Post-Patched") == 1
+  assert String.upcase("Post-Patched") == 2
+  assert String.upcase("Post-Patched") == 3
+  assert String.upcase("Post-Patched") == 3
+  assert String.upcase("Post-Patched") == 3
+end
+```
+
+### Raises
+
+```elixir
+test "can patch to raise a RuntimeError" do
+  assert String.upcase("Pre-Patched") == "PRE-PATCHED"
+  
+  patch(String, :upcase, raises("patched"))
+
+  assert_raise RuntimeError, "patched", fn ->
+    String.upcase("Post-Patched")
+  end
+end
+
+test "can patch to raise any exception" do
+  assert String.upcase("Pre-Patched") == "PRE-PATCHED"
+  
+  patch(String, :upcase, raises(ArgumentError, message: "patched"))
+
+  assert_raise ArgumentError, "patched", fn ->
+    String.upcase("Post-Patched")
+  end
+end
+```
+
+### Throws
+
+```elixir
+test "can patch to throw a value" do
+  assert String.upcase("Pre-Patched") == "PRE-PATCHED"
+
+  patch(String, :upcase, throws(:patched))
+
+  assert catch_throw(String.upcase("Post-Patched")) == :patched
+end
+```
+
+## Assertions
+{: .col-2}
+
+### assert_called
+
+```elixir
+test "can assert calls on patched functions" do
+  assert String.upcase("Pre-Patched") == "PRE-PATCHED"
+  
+  patch(String, :upcase, "PATCHED")
+
+  assert String.upcase("Post-Patched") == "PATCHED"
+  assert_called String.upcase("Post-Patched")
+
+  ## Arguments can be bound or pattern-matched
+  assert_called String.upcase(argument)
+  assert argument == "Post-Patched"
+
+  ## The number of calls can be specified
+  assert_called String.upcase("Post-Patched"), 1
+end
+```
+
+### refute_called
+
+```elixir
+test "can refute calls on patched functions" do
+  assert String.upcase("Pre-Patched") == "PRE-PATCHED"
+
+  patch(String, :upcase, "PATCHED")
+
+  assert String.upcase("Post-Patched") == "PATCHED"
+  refute_called String.upcase("Other")
+end
+```
+
+### assert_any_call
+
+```elixir
+test "can assert that a patched function was called with any arity" do
+  assert String.upcase("Pre-Patched") == "PRE-PATCHED"
+
+  patch(String, :upcase, "PATCHED")
+
+  assert String.upcase("Post-Patched") == "PATCHED"
+  assert_any_call String, :upcase
+end
+```
+
+### refute_any_call
+
+```elixir
+test "can refute that a patched function was called with any arity" do
+  assert String.upcase("Pre-Patched") == "PRE-PATCHED"
+  
+  patch(String, :upcase, "PATCHED")
+
+  refute_any_call String, :upcase
+end
+```
+
+### spy
+
+```elixir
+test "can assert / refute calls on spied modules without changing behavior" do
+  spy(String)
+
+  assert String.upcase("Example") == "EXAMPLE"
+
+  assert_called String.upcase("Example")
+  refute_called String.upcase("Other")
+end
+```
+
+### history
+
+```elixir
+test "can retrieve the list of all calls to a patched module" do
+  spy(String)
+
+  assert String.upcase("Example") == "EXAMPLE"
+  assert String.downcase("Example") == "example"
+
+  assert history(String) == [{:upcase, ["Example"]}, {:downcase, ["Example"]}]
+  assert history(String, :asc) == [{:upcase, ["Example"]}, {:downcase, ["Example"]}]
+  assert history(String, :desc) == [{:downcase, ["Example"]}, {:upcase, ["Example"]}]
+end
+```
+
+## Private Functions
+{: .col-2}
+
+### expose
+
+```elixir
+test "can expose private functions for testing" do
+  expose(Example, private_function: 1)
+
+  assert Example.private_function(:argument) == {:ok, :argument}
+end
+```
+
+### private
+
+```elixir
+test "can suppress warnings about calling private functions" do
+  expose(Example, private_function: 1)
+
+  assert private(Example.private_function(:argument)) == {:ok, :argument}
+end
+```
+
+## Processes
+{: .col-2}
+
+### listen
+
+```elixir
+test "can listen to the messages sent to a named process" do
+  listen(:tag, ExampleNamedProcess)
+
+  send(ExampleNamedProcess, :hello)
+
+  assert_receive {:tag, :hello}
+end
+```
+
+```elixir
+test "can listen to the messages sent to a pid" do
+  pid = Example.start_link()
+
+  listen(:tag, pid)
+
+  send(pid, :hello)
+
+  assert_receive {:tag, :hello}
+end
+```
+
+```elixir
+test "can listen to GenServer messages" do
+  Counter.start_link(0, name: Counter)
+
+  listen(:tag, Counter)
+
+  assert Counter.increment() == 1
+
+  assert_receive {:tag, {GenServer, :call, :increment, from}}  # Bind `from`
+  assert_receive {:tag, {GenServer, :reply, 1, ^from}}         # Match the pinned `from`
+end
+```
+
+### inject
+
+```elixir
+test "listeners can be injected into another processes state" do
+  {:ok, parent_pid} = Parent.start_link()
+
+  inject(:tag, parent_pid, [:child_pid])
+
+  assert Parent.ask_child() == :ok
+
+  assert_recieve {:tag, :ask}
+end
+```
+
+### replace
+
+```elixir
+test "process state can be replaced by key" do
+  {:ok, pid} = Example.start_link()
+
+  assert :sys.get_state(pid).field == :original
+
+  replace(pid, [:field], :updated)
+
+  assert :sys.get_state(pid).field == :updated
+end
+```
