@@ -27,7 +27,7 @@ defmodule PatchExample do
 end
 ```
 
-### Fakes
+## Fakes
 
 Sometimes we want to replace one module with another for testing, for example we might want to replace a module that connects to a real datastore with a fake that stores data in memory while providing the same API.
 
@@ -53,3 +53,24 @@ end
 ```
 
 This fake module uses the real module to actually get the record from the database and then makes sure that a minimum amount of latency, in this case 20 seconds, is introduced before returning the result.
+
+To swap out our real Database with our fake HighLatencyDatabase in a test we can now do the following
+
+```elixir
+defmodule PatchExample do
+  use ExUnit.Case
+  use Patch
+
+  def example(value) do
+    String.upcase(value)
+  end
+
+  test "API raises TimeoutError when database is experiencing high latency" do
+    fake(Database, HighLatencyDatabase)
+
+    assert_raises TimeoutError, fn ->
+      API.get(:user, 1)
+    end
+  end
+end
+```

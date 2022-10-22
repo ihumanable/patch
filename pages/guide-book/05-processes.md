@@ -165,7 +165,7 @@ defmodule Target do
 end
 ```
 
-Our `Target` module isn't very interested, it can do some `work/1` where the caller sends it a number and it multiplies it by the `multiplier` it was started with and returns it.
+Our `Target` module isn't very interesting, it can do some `work/1` where the caller sends it a number and it multiplies it by the `multiplier` it was started with and returns it.
 
 Next let's look at our `Caller`
 
