@@ -59,23 +59,23 @@ jobs:
             otp-version: 24.3
           - elixir-version: 1.13.4
             otp-version: 25.1
-          - elixir-version: 1.14.0
+          - elixir-version: 1.14.1
             otp-version: 23.3
-          - elixir-version: 1.14.0
+          - elixir-version: 1.14.1
             otp-version: 24.3
-          - elixir-version: 1.14.0
+          - elixir-version: 1.14.1
             otp-version: 25.1
-          
+
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Elixir
-      uses: erlef/setup-elixir@v1
+      uses: erlef/setup-beam@v1
       with:
         elixir-version: ${{ matrix.elixir-version }}
         otp-version: ${{ matrix.otp-version }}
     - name: Restore dependencies cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: deps
         key: ${{ runner.os }}-${{ matrix.elixir-version }}-${{ matrix.otp-version}}-mix-${{ hashFiles('**/mix.lock') }}
