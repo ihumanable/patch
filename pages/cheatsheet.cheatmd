@@ -81,7 +81,7 @@ end
 test "can patch with a sequence" do
   assert String.upcase("Pre-Patched") == "PRE-PATCHED"
 
-  patch(String, :upcase, cycle([1, 2, 3]))
+  patch(String, :upcase, sequence([1, 2, 3]))
 
   assert String.upcase("Post-Patched") == 1
   assert String.upcase("Post-Patched") == 2
