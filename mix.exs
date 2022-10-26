@@ -122,6 +122,7 @@ defmodule Patch.MixProject do
         ]
       ],
       main: "readme",
+      source_ref: "master",
       source_url: "https://github.com/ihumanable/patch"
     ]
   end
