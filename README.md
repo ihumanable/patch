@@ -171,6 +171,8 @@ Patch is made better everyday by developers requesting new features.
   - Suggested `assert_any_call/2`, `refute_any_call/2` introduced in v0.2.0
 - [kianmeng](https://github.com/kianmeng)
   - Corrected several typographical errata
+- [Dorgan](https://github.com/doorgan)
+  - Reported erratum in the Patch Cheatsheet
 
 If you have a suggestion for improvements to this library, please open an issue.
 ## Changelog
