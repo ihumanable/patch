@@ -39,36 +39,10 @@ defmodule Patch do
     defexception [:message]
   end
 
-  defmacro __using__(_) do
+  defmacro __using__(options \\ []) do
     quote do
-      require unquote(__MODULE__)
-      import unquote(__MODULE__)
-      import Patch.Mock.Value, except: [advance: 1, next: 2]
-
-      require Patch.Assertions
-      require Patch.Macro
-      require Patch.Mock
-      require Patch.Mock.History.Tagged
-
-
-      setup do
-        debug = Application.fetch_env(:patch, :debug)
-        start_supervised!(Patch.Supervisor)
-
-        on_exit(fn ->
-          Patch.Mock.Code.Freezer.empty()
-
-          case debug do
-            {:ok, value} ->
-              Application.put_env(:patch, :debug, value)
-
-            :error ->
-              Application.delete_env(:patch, :debug)
-          end
-        end)
-
-        :ok
-      end
+      use Patch.Importer, unquote(options)
+      use Patch.Case
     end
   end
 
@@ -280,9 +254,12 @@ defmodule Patch do
         patch(
           real_module,
           name,
-          callable(fn args ->
-            apply(fake_module, name, args)
-          end, :list)
+          callable(
+            fn args ->
+              apply(fake_module, name, args)
+            end,
+            :list
+          )
         )
       end
     end)
@@ -480,7 +457,8 @@ defmodule Patch do
     value
   end
 
-  @spec patch(module :: module(), function :: atom(), callable) :: callable when callable: function()
+  @spec patch(module :: module(), function :: atom(), callable) :: callable
+        when callable: function()
   def patch(module, function, callable) when is_function(callable) do
     patch(module, function, callable(callable))
     callable
