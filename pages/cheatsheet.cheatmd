@@ -18,6 +18,32 @@ def deps do
 end
 ```
 
+### Optionally Including / Excluding Imports
+
+`:only` will cause only a subset of symbols to be imported
+
+#### test/example_only_test.exs
+```elixir
+defmodule ExampleOnlyTest do
+  use ExUnit.Case
+  use Patch, only: [:expose, :patch, :private]
+
+  # ... snip the rest of the module ...
+end
+```
+
+`:except` will import all symbols except the ones specified
+
+#### test/example_except_test.exs
+```elixir
+defmodule ExampleExceptTest do
+  use ExUnit.Case
+  use Patch, except: [:fake, :history]
+
+  # ... snip the rest of the module ...
+end
+```
+
 ### Use Patch in your Test Case
 
 In any ExUnit.Case based Test Case add a line to use Patch.
@@ -27,6 +53,20 @@ In any ExUnit.Case based Test Case add a line to use Patch.
 defmodule ExampleTest do
   use ExUnit.Case
   use Patch
+
+  # ... snip the rest of the module ...
+end
+```
+
+### Aliasing Imports
+
+`:alias` allows the test author to import a symbol while renaming it.
+
+#### test/example_alias_test.exs
+```elixir
+defmodule ExampleAliasTest do
+  use ExUnit.Case
+  use Patch, alias: [patch: :mock]
 
   # ... snip the rest of the module ...
 end
