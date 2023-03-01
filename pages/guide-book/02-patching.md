@@ -26,7 +26,7 @@ defmodule PatchExample do
 end
 ```
 
-No many how many times we call `String.upcase/1` from here on in and no matter what arguments we pass, we will always get back the value `:patched`.
+No matter how many times we call `String.upcase/1` from here on in and no matter what arguments we pass, we will always get back the value `:patched`.
 
 ## Callable Values
 
@@ -62,7 +62,7 @@ One of the core design principles underlying `Patch` is that it tries to obey th
 defmodule Example do
   use GenServer
 
-  # Snip all the GenServer boilerplat
+  # Snip all the GenServer boilerplate
 
   def handle_call({:a, argument}, _from, state) do
     # Operation A Definition
@@ -476,7 +476,7 @@ assert_called String.upcase(argument), 3
 assert argument == "hello"
 ```
 
-Tests can also refute that a call has happened some an exact number of times with the `refute_called/2` macro.  This macro works in much the same way as `assert_called/2` and also has full pattern support.
+Tests can also refute that a call has happened an exact number of times with the `refute_called/2` macro.  This macro works in much the same way as `assert_called/2` and also has full pattern support.
 
 ```elixir
 defmodule PatchExample do
