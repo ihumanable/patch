@@ -40,6 +40,7 @@ For more information about Patch's Super Powers see the [Super Powers Documentat
   - [Core Functions](#core-functions)
   - [Assertions](#assertions)
   - [Value Builders](#value-builders)
+  - [Customizing Imports](#customizing-imports)
 - [Guide Book](#guide-book)
 - [Support Matrix](#support-matrix)
 - [Limitations](#limitations)
@@ -67,7 +68,7 @@ use Patch
 
 This library comes with a comprehensive suite of unit tests.  These tests not only verify that the library is working correctly but are designed so that for every bit of functionality there is an easy to understand example for how to use that feature.  Check out the [User Tests](https://github.com/ihumanable/patch/tree/master/test/user) for examples of how to use each feature.
 
-Using Patch adds 11 core functions, 10 assertions, 7 mock value builders, and 1 utility function to the test.
+Using Patch adds 11 core functions, 10 assertions, 7 mock value builders, and 1 utility function to the test.  These imports can be controlled, see the [Customizing Imports](#customizing-imports) for details.
 
 See the [Cheatsheet](https://hexdocs.pm/patch/cheatsheet.html) for an overview of how the library can be used and as a handy reference.  Continue below for links to more in-depth documentation including the [Guidebook](https://hexdocs.pm/patch/01-introduction.html).
 
@@ -127,6 +128,30 @@ Patch comes with some utilities that can assist when tests aren't behaving as ex
 | Utility Function                                         | Description                                   |
 |----------------------------------------------------------|-----------------------------------------------|
 | [debug/0,1](https://hexdocs.pm/patch/Patch.html#debug/1) | Enable or Disable debug mode for a given test |
+
+### Customizing Imports
+
+By default, Patch will import the functions listed in the previous sections.  Imports can be customized through the `:only`, `:except` and `:alias` options.
+
+`:only` and `:except` work similiarly to how they work for the `import` except the values are either a list of symbol atoms or the special atom `:all`.
+
+Here's how only the `expose`, `patch`, and `private` symbols can be imported.
+
+```elixir
+use Patch, only: [:expose, :patch, :private]
+```
+
+Here's how every symbol except `throws` can be imported
+
+```elixir
+use Patch, except: [:throws]
+```
+
+Patch also allows you to alias imported symbols, to import `patch` as `mock` the following would be used.
+
+```elixir
+use Patch, alias: [patch: :mock]
+```
 
 ## Guide Book
 
