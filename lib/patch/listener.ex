@@ -13,7 +13,7 @@ defmodule Patch.Listener do
   @typedoc """
   Listeners listen to a target.
   """
-  @type target :: GenServer.server()
+  @type target :: GenServer.server() | nil
 
   @typedoc """
   Option to control whether or not to capture GenServer.call replies.
@@ -62,9 +62,24 @@ defmodule Patch.Listener do
     }
   end
 
-  @spec start_link(recipient :: atom(), tag :: tag(), target :: pid() | atom(), [option()]) ::
+  @spec start_link(recipient :: atom(), tag :: tag(), target :: target(), [option()]) ::
           {:ok, pid()} | {:error, :not_found}
   def start_link(recipient, tag, target, options \\ [])
+
+  def start_link(recipient, tag, target, options) when is_pid(target) or is_nil(target) do
+    capture_replies = Keyword.get(options, :capture_replies, @default_capture_replies)
+    timeout = Keyword.get(options, :timeout, @default_timeout)
+
+    state = %__MODULE__{
+      capture_replies: capture_replies,
+      recipient: recipient,
+      tag: tag,
+      target: target,
+      timeout: timeout
+    }
+
+    GenServer.start_link(__MODULE__, state)
+  end
 
   def start_link(recipient, tag, target, options) when is_atom(target) do
     case Process.whereis(target) do
@@ -80,21 +95,6 @@ defmodule Patch.Listener do
     end
   end
 
-  def start_link(recipient, tag, target, options) when is_pid(target) do
-    capture_replies = Keyword.get(options, :capture_replies, @default_capture_replies)
-    timeout = Keyword.get(options, :timeout, @default_timeout)
-
-    state = %__MODULE__{
-      capture_replies: capture_replies,
-      recipient: recipient,
-      tag: tag,
-      target: target,
-      timeout: timeout
-    }
-
-    GenServer.start_link(__MODULE__, state)
-  end
-
   def target(listener) do
     GenServer.call(listener, {__MODULE__, :target})
   end
@@ -103,7 +103,10 @@ defmodule Patch.Listener do
 
   @spec init(t()) :: {:ok, t()}
   def init(%__MODULE__{} = state) do
-    Process.monitor(state.target)
+    if is_pid(state.target) do
+      Process.monitor(state.target)
+    end
+
     {:ok, state}
   end
 
@@ -111,40 +114,62 @@ defmodule Patch.Listener do
     {:reply, state.target, state}
   end
 
+  def handle_call(message, from, %__MODULE__{target: nil} = state) do
+    report(state, {GenServer, :call, message, from})
+    report(state, {:EXIT, :no_listener_target})
+    Process.exit(self(), :no_listener_target)
+  end
+
   def handle_call(message, from, %__MODULE__{capture_replies: false} = state) do
-    send(state.recipient, {state.tag, {GenServer, :call, message, from}})
-    send(state.target, {:"$gen_call", from, message})
+    report(state, {GenServer, :call, message, from})
+    forward(state, {:"$gen_call", from, message})
     {:noreply, state}
   end
 
   def handle_call(message, from, state) do
-    send(state.recipient, {state.tag, {GenServer, :call, message, from}})
+    report(state, {GenServer, :call, message, from})
 
     try do
       response = GenServer.call(state.target, message, state.timeout)
-      send(state.recipient, {state.tag, {GenServer, :reply, response, from}})
+      report(state, {GenServer, :reply, response, from})
       {:reply, response, state}
     catch
       :exit, {reason, _call} ->
-        send(state.recipient, {state.tag, {:EXIT, reason}})
+        report(state, {:EXIT, reason})
         Process.exit(self(), reason)
     end
   end
 
   def handle_cast(message, state) do
-    send(state.recipient, {state.tag, {GenServer, :cast, message}})
+    report(state, {GenServer, :cast, message})
     GenServer.cast(state.target, message)
     {:noreply, state}
   end
 
   def handle_info({:DOWN, _, :process, pid, reason}, %__MODULE__{target: pid} = state) do
-    send(state.recipient, {state.tag, {:DOWN, reason}})
+    report(state, {:DOWN, reason})
     {:stop, {:shutdown, {:DOWN, reason}}, state}
   end
 
   def handle_info(message, state) do
-    send(state.recipient, {state.tag, message})
-    send(state.target, message)
+    report(state, message)
+    forward(state, message)
     {:noreply, state}
+  end
+
+  ## Private
+
+  @compile {:inline, report: 2}
+  defp report(%__MODULE__{} = state, message) do
+    send(state.recipient, {state.tag, message})
+  end
+
+  @compile {:inline, forward: 2}
+  defp forward(%__MODULE__{target: nil}, _) do
+    :ok
+  end
+
+  defp forward(%__MODULE__{} = state, message) do
+    send(state.target, message)
   end
 end

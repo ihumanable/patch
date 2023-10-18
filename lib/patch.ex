@@ -315,6 +315,8 @@ defmodule Patch do
   Each listener should provide a unique `tag` that will be used when forwarding messages to the
   test process.
 
+  ## Named Processes
+
   When used on a named process, this is sufficient to begin intercepting all messages to the named
   process.
 
@@ -322,23 +324,58 @@ defmodule Patch do
   listen(:listener, Example)
   ```
 
+  ## Unnamed Processes
+
   When used on an unnamed process, the process that is spawned will forward any messages to the
   caller and target process but any processes holding a reference to the old pid will need to be
   updated.
 
-  `inject/3` can be used to inject a listener into a running process.
+  `replace/3` can be used to replace part of a running process with the listener
 
   ```elixir
   {:ok, listener} = listen(:listener, original)
-  inject(target, :original, listener)
+  replace(target, [:original], listener)
   ```
+
+  `inject/3` provides a nice convenience when you want to wrap a listener around the pid in the
+  state.
+
+  ```elixir
+  inject(:listener, target, [:original])
+  ```
+
+  This code will look for the key `:original` in the `target` process's state, and wrap it with
+  a listener tagged with `:listener`
+
+  ## Substituting for a Process
+
+  Listeners can also act as a complete substitute for a process.  This is useful in scenarios
+  where one Process starts other Processes but starting those Processes is outside of the bounds
+  of the test.  In those cases you can start a "targetless listener."
+
+  `replace/3` can be used to replace part of a running process with the substitute listener.
+
+  ```elixir
+  {:ok, listener} = listen(:listener)
+  replace(target, [:original], listener)
+  ```
+
+  `inject/3` provides a nice conveninece when the state already has a nil that you want to replace
+  with a listener
+
+  ```elixir
+  inject(:listener, target, [:original])
+  ```
+
+  This code will look for the key `:original` in the `target` process's state, finding it `nil` it
+  will create a "targetless listener" tagged with `:listener` and put it in the state.
   """
   @spec listen(
           tag :: Patch.Listener.tag(),
           target :: Patch.Listener.target(),
           options :: [Patch.Listener.option()]
         ) :: {:ok, pid()} | {:error, :not_found}
-  def listen(tag, target, options \\ []) do
+  def listen(tag, target \\ nil, options \\ []) do
     Patch.Listener.Supervisor.start_child(self(), tag, target, options)
   end
 

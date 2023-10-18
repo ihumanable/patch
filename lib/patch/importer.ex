@@ -148,6 +148,7 @@ defmodule Patch.Importer do
 
   defp delegate({:listen, symbol}) do
     quote do
+      defdelegate unquote(symbol)(tag), to: Patch, as: :listen
       defdelegate unquote(symbol)(tag, target), to: Patch, as: :listen
       defdelegate unquote(symbol)(tag, target, options), to: Patch, as: :listen
     end

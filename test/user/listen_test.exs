@@ -637,4 +637,37 @@ defmodule Patch.Test.User.ListenTest do
       refute Process.alive?(listener)
     end
   end
+
+  describe "listen/3 without target" do
+    test "recipient is notified when messages sent to targetless listener" do
+      {:ok, listener} = listen(:target)
+
+      send(listener, :test_message)
+
+      assert_receive {:target, :test_message}
+    end
+
+    test "recipient is notified when GenServer.cast sent to targetless listener" do
+      {:ok, listener} = listen(:target)
+
+      GenServer.cast(listener, :test_cast)
+
+      assert_receive {:target, {GenServer, :cast, :test_cast}}
+    end
+
+    test "recipient is notified and targetless listener crashes on GenServer.call" do
+      {:ok, listener} = listen(:target)
+
+      try do
+        GenServer.call(listener, :test_call)
+        flunk("Targetless listener accepted a GenServer.call")
+      catch
+        :exit, {reason, _call} ->
+          assert reason == :no_listener_target
+      end
+
+      assert_receive {:target, {GenServer, :call, :test_call, _from}}
+      assert_receive {:target, {:EXIT, :no_listener_target}}
+    end
+  end
 end
