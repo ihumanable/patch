@@ -1,5 +1,19 @@
 # Change Log
 
+## 0.13.0 (2023-10-17)
+
+Added the ability to control how Patch functions are imported in test modules.  Added the ability to `listen/3` without a target, useful when a process is spawned by another process and the spawning of that process is not within the testing boundaries.
+
+### Features
+
+- 🎁 - `listen/1` can now be used to construct a listener without a target.
+- 🎁 - `inject/4` can now be used to inject a listener without a target.
+- 🎁 - `use Patch` now accepts `:alias`, `:only`, and `:except` to control exactly which Patch helpers are being pulled in and how they will be named.
+
+### Breaking Changes
+
+None
+
 ## 0.12.0 (2022-02-08)
 
 Fixed a bug where defective mock functions would be incorrectly classified as unmocked functions, this would engage the passthrough functionality and call the original function.
