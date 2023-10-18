@@ -135,7 +135,7 @@ Listeners will automatically monitor the target process they are listening to.  
 
 `listen/3` works well for named processes when callers are using the name to send messages to the target process.  What should we do when callers are sending to a pid instead of a name?  This is where the `inject/4` function can be used.
 
-`inject/4` will extract a pid out of a GenServer's state, wrap it with a listener and then replace the pid in the GenServer's state with the listener pid.
+`inject/4` will extract a pid out of a GenServer's state, wrap it with a listener and then replace the pid in the GenServer's state with the listener pid.  `inject/4` will also work with keys in the GenServer's state that are `nil`, it will generate a targetless listener and replace the `nil` with that listner's pid.  This latter behavior is nice when working with a process that will spawn another process and keep track of its pid in state if the spawning behavior is outside the scope of your test.
 
 Here's a simple example, we will have 2 modules, `Target` and `Caller`.
 
@@ -228,6 +228,16 @@ end
 ```
 
 `inject/4` accepts the same options as `listen/3` and returns the `{:ok, listener_pid}` after successfully injecting the listener.
+
+### Targetless Listeners
+
+Listeners can also be used in place of a real process.  Targetless listeners are nearly identical to listeners with one key exception, `GenServer.call/3`.  A Targetless Listener will happily forward a normal message sent with `send/3` or a `GenServer.cast/2` message to nowhere, but `GenServer.call/3` expects a reply and there isn't one coming when the Listener has no Target.
+
+To make this failure mode more apparent, since it likely means that the author didn't intend to set up a Targetless Listener, attempting to `GenServer.call/3` at a Targetless Listener will have the following effects.
+
+1. The listener will forward `{tag, {GenServer, :call, message, from}}` to the test process
+2. The listener will forward `{tag, {:EXIT, :no_listener_target}}` to the test process
+3. The listener will crash with the reason `:no_listener_target`
 
 ## Replacing State
 
