@@ -46,6 +46,7 @@ For more information about Patch's Super Powers see the [Super Powers Documentat
 - [Limitations](#limitations)
 - [Prior Art](#prior-art)
 - [Changelog](#changelog)
+
 ## Installation
 
 Add patch to your mix.exs
@@ -53,7 +54,7 @@ Add patch to your mix.exs
 ```elixir
 def deps do
   [
-    {:patch, "~> 0.12.0", only: [:test]}
+    {:patch, "~> 0.13.0", only: [:test]}
   ]
 end
 ```
@@ -194,12 +195,15 @@ Patch is made better everyday by developers requesting new features.
   - Suggested `assert_called/2`, `assert_called_once/1`, `refute_called/2`, and `refute_called_once/1` introduced in v0.7.0
 - [birarda](https://github.com/birarda)
   - Suggested `assert_any_call/2`, `refute_any_call/2` introduced in v0.2.0
+  - Suggested `listen/1` introduced in v0.13.0 to listen without a target.
 - [kianmeng](https://github.com/kianmeng)
   - Corrected several typographical errata
+  - Improved the ci.yml, brining it up to date with best practices.
 - [Dorgan](https://github.com/doorgan)
   - Reported erratum in the Patch Cheatsheet
 
 If you have a suggestion for improvements to this library, please open an issue.
+
 ## Changelog
 
 See the [Changelog](CHANGELOG.md)
