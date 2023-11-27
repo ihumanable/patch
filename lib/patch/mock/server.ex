@@ -190,6 +190,11 @@ defmodule Patch.Mock.Server do
     {:reply, :ok, do_register(state, name, value)}
   end
 
+  def handle_info(_, state) do
+    # To silence logs of unexpected messages received
+    {:noreply, state}
+  end
+
   def terminate(_, state) do
     do_restore(state)
   end
