@@ -4,9 +4,9 @@ defmodule Patch.Test.User.Patch.ErlangTest do
 
   describe "patching erlang modules" do
     test "non-sticky erlang modules can be patched" do
-      patch(:cpu_sup, :avg1, :test_value)
+      patch(:erlang_unsticky, :example_function, :test_value)
 
-      assert :cpu_sup.avg1() == :test_value
+      assert :erlang_unsticky.example_function() == :test_value
     end
 
 
