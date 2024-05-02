@@ -67,7 +67,7 @@ defmodule Patch.Assertions do
   defmacro assert_called(call) do
     {module, function, patterns} = Macro.decompose_call(call)
 
-    quote do
+    quote generated: true do
       history =
         unquote(module)
         |> Patch.Mock.history()
@@ -121,7 +121,7 @@ defmodule Patch.Assertions do
   defmacro assert_called(call, count) do
     {module, function, patterns} = Macro.decompose_call(call)
 
-    quote do
+    quote generated: true do
       history =
         unquote(module)
         |> Patch.Mock.history()
@@ -183,7 +183,7 @@ defmodule Patch.Assertions do
   defmacro assert_called_once(call) do
     {module, function, patterns} = Macro.decompose_call(call)
 
-    quote do
+    quote generated: true do
       history =
         unquote(module)
         |> Patch.Mock.history()
@@ -280,7 +280,7 @@ defmodule Patch.Assertions do
   defmacro refute_called(call) do
     {module, function, patterns} = Macro.decompose_call(call)
 
-    quote do
+    quote generated: true do
       history =
         unquote(module)
         |> Patch.Mock.history()
@@ -330,7 +330,7 @@ defmodule Patch.Assertions do
   defmacro refute_called(call, count) do
     {module, function, patterns} = Macro.decompose_call(call)
 
-    quote do
+    quote generated: true do
       history =
         unquote(module)
         |> Patch.Mock.history()
@@ -381,7 +381,7 @@ defmodule Patch.Assertions do
   defmacro refute_called_once(call) do
     {module, function, patterns} = Macro.decompose_call(call)
 
-    quote do
+    quote generated: true do
       history =
         unquote(module)
         |> Patch.Mock.history()
@@ -413,7 +413,7 @@ defmodule Patch.Assertions do
   defmacro format_patterns(patterns) do
     patterns
     |> Macro.to_string()
-    |> String.slice(1..-2)
+    |> String.slice(1..-2//1)
   end
 
 end
