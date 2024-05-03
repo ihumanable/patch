@@ -1,5 +1,16 @@
 # Change Log
 
+## 0.13.1 (2024-05-02)
+
+Minor bugfix to correct an issue with negative step ranges in `String.slice/2` raised by 
+- [Josephine](https://github.com/josephineweidner)
+- [Hissssst](https://github.com/hissssst) 
+- [Luca Corti](https://github.com/lucacorti)
+
+### Bugfixes
+
+- 🐞 - Fixed a warning raised from using a range with a negative step in `String.slice/2`
+
 ## 0.13.0 (2023-10-17)
 
 Added the ability to control how Patch functions are imported in test modules.  Added the ability to `listen/3` without a target, useful when a process is spawned by another process and the spawning of that process is not within the testing boundaries.
