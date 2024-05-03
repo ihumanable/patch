@@ -54,7 +54,7 @@ Add patch to your mix.exs
 ```elixir
 def deps do
   [
-    {:patch, "~> 0.13.0", only: [:test]}
+    {:patch, "~> 0.13.1", only: [:test]}
   ]
 end
 ```
@@ -202,6 +202,8 @@ Patch is made better everyday by developers requesting new features.
   - Improved the ci.yml, brining it up to date with best practices.
 - [Dorgan](https://github.com/doorgan)
   - Reported erratum in the Patch Cheatsheet
+- [Luca Corti](https://github.com/lucacorti)
+  - Reported an issue with warning being emitted by the library on Elixir 1.16 which served as the basis for a bugfix in v0.13.1
 
 If you have a suggestion for improvements to this library, please open an issue.
 
