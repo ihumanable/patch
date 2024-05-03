@@ -413,7 +413,7 @@ defmodule Patch.Assertions do
   defmacro format_patterns(patterns) do
     patterns
     |> Macro.to_string()
-    |> String.slice(1..-2//1)
+    |> String.slice(1..-2)
   end
 
 end
