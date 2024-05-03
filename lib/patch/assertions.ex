@@ -411,9 +411,8 @@ defmodule Patch.Assertions do
   """
   @spec format_patterns(patterns :: [term()]) :: String.t()
   defmacro format_patterns(patterns) do
-    patterns
-    |> Macro.to_string()
-    |> String.slice(1..-2)
+    string = Macro.to_string(patterns)
+    stop = max(String.length(string) - 2, 0)
+    String.slice(string, 1, stop)
   end
-
 end
