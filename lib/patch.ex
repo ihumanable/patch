@@ -489,7 +489,14 @@ defmodule Patch do
   """
   @spec patch(module :: module(), function :: atom(), value :: Value.t()) :: Value.t()
   def patch(module, function, %value_module{} = value) when is_value(value_module) do
-    {:ok, _} = Patch.Mock.module(module)
+    case Patch.Mock.module(module) do
+      {:ok, _} ->
+        :ok
+
+      {:error, :nofile} ->
+        raise %UndefinedFunctionError{module: module, function: function, arity: 0}
+    end
+
     :ok = Patch.Mock.register(module, function, value)
     value
   end
