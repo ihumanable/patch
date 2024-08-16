@@ -5,7 +5,7 @@ defmodule Patch.MixProject do
     [
       app: :patch,
       version: "0.14.0",
-      elixir: "~> 1.13",
+      elixir: "~> 1.9",
       erlc_paths: erlc_paths(Mix.env()),
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
