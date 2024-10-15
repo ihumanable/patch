@@ -18,13 +18,12 @@ defmodule Patch.Mock.Server do
   """
   @type option :: Mock.option()
 
-
   @type t :: %__MODULE__{
           history: History.t(),
           mocks: %{atom() => term()},
           module: module(),
           options: [Code.option()],
-          unit: Unit.t(),
+          unit: Unit.t()
         }
   defstruct history: History.new(:infinity),
             mocks: %{},
@@ -71,18 +70,29 @@ defmodule Patch.Mock.Server do
   def delegate(module, name, arguments) do
     server = Naming.server(module)
 
-    case Freezer.get(GenServer).call(server, {:delegate, name, arguments}) do
+    result =
+      with {:ok, value} <- Freezer.get(GenServer).call(server, {:delegate, name, arguments}) do
+        {next, result} = value(value, arguments)
+        :ok = Freezer.get(GenServer).call(server, {:register, name, value, next})
+
+        case result do
+          {:raise, exception} ->
+            debug(module, name, arguments, "mock raised", exception)
+            raise exception
+
+          {:throw, value} ->
+            debug(module, name, arguments, "mock threw", value)
+            throw(value)
+
+          _ ->
+            result
+        end
+      end
+
+    case result do
       {:ok, reply} ->
         debug(module, name, arguments, "mock returned", reply)
         reply
-
-      {:raise, exception} ->
-        debug(module, name, arguments, "mock raised", exception)
-        raise exception
-
-      {:throw, value} ->
-        debug(module, name, arguments, "mock threw", value)
-        throw value
 
       :error ->
         original_module = Naming.original(module)
@@ -92,7 +102,7 @@ defmodule Patch.Mock.Server do
     end
   end
 
-  @spec expose(module :: module(), exposes:: Mock.exposes()) :: :ok | {:error, term()}
+  @spec expose(module :: module(), exposes :: Mock.exposes()) :: :ok | {:error, term()}
   def expose(module, exposes) do
     server = Naming.server(module)
     Freezer.get(GenServer).call(server, {:expose, exposes})
@@ -153,13 +163,7 @@ defmodule Patch.Mock.Server do
   def handle_call({:delegate, name, arguments}, _from, state) do
     state = record(state, name, arguments)
 
-    case value(state, name, arguments) do
-      {:ok, state, reply} ->
-        {:reply, reply, state}
-
-      :error ->
-        {:reply, :error, state}
-    end
+    {:reply, Map.fetch(state.mocks, name), state}
   end
 
   def handle_call({:expose, exposes}, _from, state) do
@@ -190,6 +194,10 @@ defmodule Patch.Mock.Server do
     {:reply, :ok, do_register(state, name, value)}
   end
 
+  def handle_call({:register, name, value, next}, _from, state) do
+    {:reply, :ok, do_register(state, name, value, next)}
+  end
+
   def terminate(_, state) do
     do_restore(state)
   end
@@ -208,7 +216,13 @@ defmodule Patch.Mock.Server do
     end
   end
 
-  @spec debug(module :: module(), name :: atom(), arguments :: [term()], label :: String.t(), value :: term()) :: :ok
+  @spec debug(
+          module :: module(),
+          name :: atom(),
+          arguments :: [term()],
+          label :: String.t(),
+          value :: term()
+        ) :: :ok
   defp debug(module, name, arguments, label, value) do
     if Application.get_env(:patch, :debug, false) do
       argument_list =
@@ -223,7 +237,11 @@ defmodule Patch.Mock.Server do
     :ok
   end
 
-  @spec do_expose(state :: t(), current_exposes :: Code.exposes(), desired_exposes :: Code.exposes()) :: {:ok, t()} | {:error, term()}
+  @spec do_expose(
+          state :: t(),
+          current_exposes :: Code.exposes(),
+          desired_exposes :: Code.exposes()
+        ) :: {:ok, t()} | {:error, term()}
   defp do_expose(%__MODULE__{} = state, same, same) do
     {:ok, state}
   end
@@ -282,30 +300,26 @@ defmodule Patch.Mock.Server do
     %__MODULE__{state | history: History.put(state.history, name, arguments)}
   end
 
-  @spec value(state :: t(), name :: atom(), arguments :: [term()]) :: {:ok, t(), term()} | {:raise, t(), term()} | {:throw, t(), term()} | :error
-  defp value(state, name, arguments) do
-    with {:ok, value} <- Map.fetch(state.mocks, name) do
-      {next, reply} =
-        try do
-          case Value.next(value, arguments) do
-            {:ok, next, reply} ->
-              {next, {:ok, reply}}
+  @spec value(value :: Value.t(), arguments :: [term()]) ::
+          {:ok, t(), term()} | {:raise, t(), term()} | {:throw, t(), term()} | :error
+  defp value(value, arguments) do
+    try do
+      case Value.next(value, arguments) do
+        {:ok, next, reply} ->
+          {next, {:ok, reply}}
 
-            :error ->
-              next = Value.advance(value)
-              {next, :error}
-          end
-        rescue
-          exception ->
-            next = Value.advance(value)
-            {next, {:raise, exception}}
-        catch
-          :throw, thrown ->
-            next = Value.advance(value)
-            {next, {:throw, thrown}}
-        end
-
-      {:ok, do_register(state, name, value, next), reply}
+        :error ->
+          next = Value.advance(value)
+          {next, :error}
+      end
+    rescue
+      exception ->
+        next = Value.advance(value)
+        {next, {:raise, exception}}
+    catch
+      :throw, thrown ->
+        next = Value.advance(value)
+        {next, {:throw, thrown}}
     end
   end
 end
