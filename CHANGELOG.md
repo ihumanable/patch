@@ -1,5 +1,38 @@
 # Change Log
 
+## 0.14.0 (2024-10-15)
+
+Changes where mocks are evaluated to prevent misuse and allow for common patterns that were not previously supported.
+
+Pre-0.14.0 mocks would be intercepted by the `Patch.Mock.Server` and the mock value would be calculated by the server.  This works for most cases, but has surprising behavior when the mock function cares about the process executing the function.  Consider the following example.
+
+```elixir
+defmodule ExampleTest do
+  use ExUnit.Case
+  use Patch
+
+  test "example" do
+    patch(Example, :get_pid, fn -> self() end)
+
+    assert Example.get_pid() == self()
+  end
+end
+```
+
+This would fail in pre-0.14.0 because the `fn -> self() end` would be executed by the `Patch.Mock.Server` and the pid returned would be the pid for the `Patch.Mock.Server` and not the caller's pid as the test author might expect.
+
+0.14.0 changes this behavior and now will execute the `fn -> self() end` in the caller and return the expected result.  
+
+This also makes it much more difficult to address the `Patch.Mock.Server` directly, which is generally discouraged as this server is an implementation detail and should only be addressed by the Patch code itself.  This should prevent a class of errors and confusing bugs caused by tests accidentally capturing the pid of, monitoring, or linking to the `Patch.Mock.Server`
+
+### Improvements
+
+- ⬆️ - \[Internal\] Mocks are now evaluated in the caller process instead of the `Patch.Mock.Server` process, see above for details.
+
+### Breaking Changes
+
+- 💔 - Mocks are now evaluated in the caller process instead of the `Patch.Mock.Server` process.  Using the `Patch.Mock.Server` pid or interacting with the process is not advised but if your tests relied on being able to do this they may break due to this change.
+
 ## 0.13.1 (2024-05-02)
 
 Minor bugfix to correct an issue with negative step ranges in `String.slice/2` raised by 

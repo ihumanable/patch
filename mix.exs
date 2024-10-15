@@ -4,7 +4,7 @@ defmodule Patch.MixProject do
   def project do
     [
       app: :patch,
-      version: "0.13.1",
+      version: "0.14.0",
       elixir: "~> 1.7",
       erlc_paths: erlc_paths(Mix.env()),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -25,7 +25,7 @@ defmodule Patch.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
 
@@ -57,18 +57,18 @@ defmodule Patch.MixProject do
           "pages/guide-book/02-patching.md",
           "pages/guide-book/03-mock-values.md",
           "pages/guide-book/04-spies-and-fakes.md",
-          "pages/guide-book/05-processes.md",
+          "pages/guide-book/05-processes.md"
         ]
       ],
       groups_for_modules: [
         "Developer Interface": [
           Patch
         ],
-        "Listener": [
+        Listener: [
           Patch.Listener,
           Patch.Listener.Supervisor
         ],
-        "Mock": [
+        Mock: [
           Patch.Mock,
           Patch.Mock.History,
           Patch.Mock.History.Tagged,
@@ -112,7 +112,7 @@ defmodule Patch.MixProject do
           Patch.Mock.Values.Sequence,
           Patch.Mock.Values.Throws
         ],
-        "Utilities": [
+        Utilities: [
           Patch.Access,
           Patch.Apply,
           Patch.Assertions,
