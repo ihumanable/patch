@@ -1,5 +1,23 @@
 # Change Log
 
+## 0.15.0 (2024-12-27)
+
+No new functionality in this release but an update to the supported versions.
+
+Thanks to [Moosieus](https://github.com/Moosieus) Patch now compiles cleanly on Elixir 1.9+ with the removal of some outdated language constructs in favor of more modern constructs.
+
+0.15.0 removes support for Elixir 1.7 (released in July of 2018) and 1.8 (released in January of 2019).  This version also adds 1.17 and 1.18 to the support matrix.
+
+If you are still running on 1.7 or 1.8 you should continue to use the 0.14.0 release, if you require ongoing support you should open an issue to discuss.  
+
+### Improvements
+
+- ⬆️ - \[Versions\] Elixir 1.17 and 1.18 are now supported and part of CI.
+
+### Breaking Changes
+
+- 💔 - Elixir 1.7 and Elixir 1.8 are no longer supported.
+
 ## 0.14.0 (2024-10-15)
 
 Changes where mocks are evaluated to prevent misuse and allow for common patterns that were not previously supported.
@@ -128,6 +146,7 @@ Minor fix to `.formatter.exs`.  Exported format options were not being honored b
 ### Improvements
 
 - ⬆️ - \[Change Log\] Removed sections that have no content, except for `Breaking Changes`.  Sections will only be included in the Change Log if some change has actually occurred.  To aid developers upgrading where between versions where breaking changes are allowed, `Breaking Changes` will be included when there are no breaking changes with the description `None` to clearly indicate that no breaking changes have occurred.
+
 ### Bugfixes
 
 - 🐞 - Fixed the `.formatter.exs` so assertion functions won't be parenthesized by projects using `import_deps`
