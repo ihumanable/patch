@@ -495,7 +495,7 @@ defmodule Patch.Mock.Code do
           :ok
           | {:error, binary_error()}
   defp load_binary(module, binary) do
-    with {:module, ^module} <- :code.load_binary(module, '', binary) do
+    with {:module, ^module} <- :code.load_binary(module, ~c'', binary) do
       :ok
     end
   end
