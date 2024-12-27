@@ -13,7 +13,7 @@ In the `deps/0` function in the mix.exs file add a line for Patch.
 ```elixir
 def deps do
   [
-    {:patch, "~> 0.14.0", only: [:test]}
+    {:patch, "~> 0.15.0", only: [:test]}
   ]
 end
 ```
