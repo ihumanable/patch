@@ -57,18 +57,18 @@ defmodule Patch.MixProject do
           "pages/guide-book/02-patching.md",
           "pages/guide-book/03-mock-values.md",
           "pages/guide-book/04-spies-and-fakes.md",
-          "pages/guide-book/05-processes.md",
+          "pages/guide-book/05-processes.md"
         ]
       ],
       groups_for_modules: [
         "Developer Interface": [
           Patch
         ],
-        "Listener": [
+        Listener: [
           Patch.Listener,
           Patch.Listener.Supervisor
         ],
-        "Mock": [
+        Mock: [
           Patch.Mock,
           Patch.Mock.History,
           Patch.Mock.History.Tagged,
@@ -112,7 +112,7 @@ defmodule Patch.MixProject do
           Patch.Mock.Values.Sequence,
           Patch.Mock.Values.Throws
         ],
-        "Utilities": [
+        Utilities: [
           Patch.Access,
           Patch.Apply,
           Patch.Assertions,
