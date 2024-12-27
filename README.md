@@ -171,7 +171,7 @@ Tests automatically run against a matrix of OTP and Elixir Versions, see the [ci
 | 22           | ✅   | ✅   | ✅   | ✅   | ✅   | N/A  | N/A  | N/A  | N/A  | N/A  |
 | 23           | N/A  | ✅   | ✅   | ✅   | ✅   | ✅   | N/A  | N/A  | N/A  | N/A  |
 | 24           | N/A  | N/A  | ✅   | ✅   | ✅   | ✅   | ✅   | N/A  | N/A  | N/A  |
-| 25           | N/A  | N/A  | N/A   | N/A   | ✅   | ✅   | ✅   | ✅   | ✅   | ✅   |
+| 25           | N/A  | N/A  | N/A   | N/A   | ✅   | ✅   | ✅   | ✅   | ✅   | ?    |
 | 26           | N/A  | N/A  | N/A   | N/A   | N/A   | ✅   | ✅   | ✅   | ✅   | ✅   |
 | 27           | N/A  | N/A  | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   | ✅   | ✅   |
 
