@@ -9,46 +9,18 @@ on:
 jobs:
   build:
     name: Build and test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-          - elixir-version: 1.9.4
-            otp-version: 20.3
-          - elixir-version: 1.9.4
-            otp-version: 21.3
-          - elixir-version: 1.9.4
-            otp-version: 22.3
-          - elixir-version: 1.10.4
-            otp-version: 21.3
-          - elixir-version: 1.10.4
-            otp-version: 22.3
-          - elixir-version: 1.10.4
-            otp-version: 23.3
-          - elixir-version: 1.11.4
-            otp-version: 21.3
-          - elixir-version: 1.11.4
-            otp-version: 22.3
-          - elixir-version: 1.11.4
-            otp-version: 23.3
           - elixir-version: 1.11.4
             otp-version: 24.3
           - elixir-version: 1.12.3
-            otp-version: 22.3
-          - elixir-version: 1.12.3
-            otp-version: 23.3
-          - elixir-version: 1.12.3
             otp-version: 24.3
-          - elixir-version: 1.13.4
-            otp-version: 22.3
-          - elixir-version: 1.13.4
-            otp-version: 23.3
           - elixir-version: 1.13.4
             otp-version: 24.3
           - elixir-version: 1.13.4
             otp-version: 25.3
-          - elixir-version: 1.14.5
-            otp-version: 23.3
           - elixir-version: 1.14.5
             otp-version: 24.3
           - elixir-version: 1.14.5
@@ -72,12 +44,11 @@ jobs:
           - elixir-version: 1.17.3
             otp-version: 26.2
           - elixir-version: 1.17.3
-            otp-version: 27.2
-          - elixir-version: 1.18.1
+            otp-version: 27.3
+          - elixir-version: 1.18.4
             otp-version: 26.2
-          - elixir-version: 1.18.1
-            otp-version: 27.2
-
+          - elixir-version: 1.18.4
+            otp-version: 27.3
     steps:
     - uses: actions/checkout@v3
     - name: Set up Elixir

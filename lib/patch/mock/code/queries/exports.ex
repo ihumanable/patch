@@ -9,7 +9,8 @@ defmodule Patch.Mock.Code.Queries.Exports do
     abstract_forms
     |> Enum.filter(&match?({:attribute, _, :export, _}, &1))
     |> Enum.reduce([], fn {_, _, _, exports}, acc ->
-      Keyword.merge(acc, exports)
+      [exports | acc]
     end)
+    |> List.flatten()
   end
 end
