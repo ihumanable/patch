@@ -164,16 +164,13 @@ For a guided tour and deep dive of Patch, see the [Guide Book](https://hexdocs.p
 
 Tests automatically run against a matrix of OTP and Elixir Versions, see the [ci.yml](https://github.com/ihumanable/patch/tree/master/.github/workflows/ci.yml) for details.
 
-| OTP \ Elixir | 1.9  | 1.10 | 1.11 | 1.12 | 1.13 | 1.14 | 1.15 | 1.16 | 1.17 | 1.18 |
-|:------------:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|
-| 20           | ✅   | N/A  | N/A  | N/A  | N/A  | N/A  | N/A  | N/A  | N/A  | N/A  |
-| 21           | ✅   | ✅   | ✅   | N/A  | N/A  | N/A  | N/A  | N/A  | N/A  | N/A  |
-| 22           | ✅   | ✅   | ✅   | ✅   | ✅   | N/A  | N/A  | N/A  | N/A  | N/A  |
-| 23           | N/A  | ✅   | ✅   | ✅   | ✅   | ✅   | N/A  | N/A  | N/A  | N/A  |
-| 24           | N/A  | N/A  | ✅   | ✅   | ✅   | ✅   | ✅   | N/A  | N/A  | N/A  |
-| 25           | N/A  | N/A  | N/A   | N/A   | ✅   | ✅   | ✅   | ✅   | ✅   | ?    |
-| 26           | N/A  | N/A  | N/A   | N/A   | N/A   | ✅   | ✅   | ✅   | ✅   | ✅   |
-| 27           | N/A  | N/A  | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   | ✅   | ✅   |
+| OTP \ Elixir | 1.11 | 1.12 | 1.13 | 1.14 | 1.15 | 1.16 | 1.17 | 1.18 |
+|:------------:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|
+| 24           | ✅   | ✅   | ✅   | ✅   | ✅   | N/A  | N/A  | N/A  |
+| 25           | N/A   | N/A   | ✅   | ✅   | ✅   | ✅   | ✅   | N/A    |
+| 26           | N/A   | N/A   | N/A   | ✅   | ✅   | ✅   | ✅   | ✅   |
+| 27           | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   | ✅   | ✅   |
+| 28           | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   | ✅   |
 
 ## Limitations
 
