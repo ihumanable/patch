@@ -54,10 +54,18 @@ Add patch to your mix.exs
 ```elixir
 def deps do
   [
-    {:patch, "~> 0.15.0", only: [:test]}
+    {:patch, "~> 0.16.0", only: [:dev, :test]}
   ]
 end
 ```
+
+Patch also provides formatter rules for `mix format` if you would like to use these rules add
+
+```elixir
+import_deps: [:patch]
+```
+
+to your `.formatter.exs` file.
 
 ## Quickstart
 
@@ -201,6 +209,8 @@ Patch is made better everyday by developers requesting new features.
   - Reported erratum in the Patch Cheatsheet
 - [Luca Corti](https://github.com/lucacorti)
   - Reported an issue with warning being emitted by the library on Elixir 1.16 which served as the basis for a bugfix in v0.13.1
+- [Steve Cohen](https://github.com/scohen)
+  - Reported an issue with incorrect export handling which served as the basis for a bugfix in v0.16.0
 
 If you have a suggestion for improvements to this library, please open an issue.
 

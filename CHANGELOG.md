@@ -1,5 +1,21 @@
 # Change Log
 
+## 0.16.0 (2025-06-03)
+
+No new functionality in this release but an update to the CI/CD versions and bugfix.
+
+Patch should continue to work on older versions of Elixir but CI/CD runner versions have been updated to re-enable CI/CD.
+
+Thanks to [Steve Cohen](https://github.com/scohen) who reported a bug where patch would incorrectly handle multiple export attributes.  This bug has been fixed and a test added.
+
+### Bugfixes
+
+- 🐞 - Fixed a bug in handling multiple exports for the same function with different arities.
+
+### Breaking Changes
+
+- 💔 - Elixir 1.9 and Elixir 1.10 are no longer part of the CI/CD matrix.
+
 ## 0.15.0 (2024-12-27)
 
 No new functionality in this release but an update to the supported versions.
