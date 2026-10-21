@@ -121,7 +121,7 @@ defmodule Patch.Test.Unit.Patch.MacroTest do
     test "raise MatchError on mismatch pins" do
       x = 1
 
-      assert_raise MatchError, "no match of right hand side value: 2", fn ->
+      assert_raise MatchError, match_error("2"), fn ->
         Patch.Macro.match(^x, 2)
       end
     end
