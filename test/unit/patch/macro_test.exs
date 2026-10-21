@@ -7,6 +7,12 @@ defmodule Patch.Test.Unit.Patch.MacroTest do
   @module_attribute :module_attribute
   @other_attribute :other_attribute
 
+  defp match_error(match) do
+    # Different versions of elixir have differently formatted match errors
+    # this regular expression handles those formatting differences
+    ~r"^no match of right hand side value:\s*#{match}\s*$"
+  end
+
   describe "match?/2" do
     test "can match literal expressions" do
       assert Patch.Macro.match?(1, 1)
@@ -37,8 +43,8 @@ defmodule Patch.Test.Unit.Patch.MacroTest do
     end
 
     test "can match pins" do
-     x = 1
-     assert Patch.Macro.match?(^x, 1)
+      x = 1
+      assert Patch.Macro.match?(^x, 1)
     end
 
     test "can mismatch pins" do
@@ -74,7 +80,7 @@ defmodule Patch.Test.Unit.Patch.MacroTest do
     end
 
     test "raise MatchError on literal expressions mismatch" do
-      assert_raise MatchError, "no match of right hand side value: 2", fn ->
+      assert_raise MatchError, match_error("2"), fn ->
         Patch.Macro.match(1, 2)
       end
     end
@@ -94,22 +100,22 @@ defmodule Patch.Test.Unit.Patch.MacroTest do
     end
 
     test "can mismatch module attributes" do
-      assert_raise MatchError, "no match of right hand side value: :other_attribute", fn ->
+      assert_raise MatchError, match_error(":other_attribute"), fn ->
         Patch.Macro.match(@module_attribute, @other_attribute)
       end
 
-      assert_raise MatchError, "no match of right hand side value: :other_attribute", fn ->
+      assert_raise MatchError, match_error(":other_attribute"), fn ->
         Patch.Macro.match(:module_attribute, @other_attribute)
       end
 
-      assert_raise MatchError, "no match of right hand side value: :other_attribute", fn ->
+      assert_raise MatchError, match_error(":other_attribute"), fn ->
         Patch.Macro.match(@module_attribute, :other_attribute)
       end
     end
 
     test "can match pins" do
-     x = 1
-     assert Patch.Macro.match(^x, 1)
+      x = 1
+      assert Patch.Macro.match(^x, 1)
     end
 
     test "raise MatchError on mismatch pins" do
