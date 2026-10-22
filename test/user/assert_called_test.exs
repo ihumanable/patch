@@ -115,6 +115,30 @@ defmodule Patch.Test.User.AssertCalledTest do
       assert y == 2
     end
 
+    test "when multiple calls match the latest is returned" do
+      patch(AssertCalled, :example, :patched)
+
+      assert AssertCalled.example(1, 2) == :patched
+
+      assert_called AssertCalled.example(a, b)
+      assert a == 1
+      assert b == 2
+
+      assert AssertCalled.example(3, 4) == :patched
+
+      assert_called AssertCalled.example(a, b)
+      assert a == 3
+      assert b == 4
+
+
+      assert AssertCalled.example(5, 6) == :patched
+      assert AssertCalled.example(7, 8) == :patched
+
+      assert_called AssertCalled.example(a, b)
+      assert a == 7
+      assert b == 8
+    end
+
     test "exception formatting with no calls" do
       patch(AssertCalled, :example, :patched)
 
