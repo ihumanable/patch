@@ -4,7 +4,7 @@ defmodule Patch.MixProject do
   def project do
     [
       app: :patch,
-      version: "0.16.0",
+      version: "0.16.1",
       elixir: "~> 1.9",
       erlc_paths: erlc_paths(Mix.env()),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -25,7 +25,7 @@ defmodule Patch.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, "~> 0.34.2", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.34.2", only: :dev, runtime: false}
     ]
   end
 

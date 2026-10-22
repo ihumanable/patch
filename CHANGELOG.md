@@ -1,5 +1,14 @@
 # Change Log
 
+## 0.16.1 (2026-10-22)
+
+Bugfix inspired by [Deven Wen](https://github.com/DevenWen) who reported a bug where patch would incorrectly handle callable stacks in OTP 28+.
+
+### Bugfixes
+
+- 🐞 - Fixed a bug when partially patching function clauses in OTP 28+
+
+
 ## 0.16.0 (2025-06-03)
 
 No new functionality in this release but an update to the CI/CD versions and bugfix.
