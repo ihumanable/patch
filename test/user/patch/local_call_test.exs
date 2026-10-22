@@ -13,6 +13,14 @@ defmodule Patch.Test.User.Patch.LocalCallTest do
       assert LocalCall.public_caller(:test_argument) == {:original, :patched}
     end
 
+    test "can be patched in a string interpolation" do
+      assert LocalCall.public_caller_string_interpolation(:test_argument) == {:original, "{:public, :test_argument}"}
+
+      patch(LocalCall, :public_function, :patched)
+
+      assert LocalCall.public_caller_string_interpolation(:test_argument) == {:original, ":patched"}
+    end
+
     test "can be assert_called" do
       assert LocalCall.public_caller(:test_argument) == {:original, {:public, :test_argument}}
 
@@ -39,6 +47,14 @@ defmodule Patch.Test.User.Patch.LocalCallTest do
       patch(LocalCall, :private_function, :patched)
 
       assert LocalCall.private_caller(:test_argument) == {:original, :patched}
+    end
+
+    test "can be patched in a string interpolation" do
+      assert LocalCall.private_caller_string_interpolation(:test_argument) == {:original, "{:private, :test_argument}"}
+
+      patch(LocalCall, :private_function, :patched)
+
+      assert LocalCall.private_caller_string_interpolation(:test_argument) == {:original, ":patched"}
     end
 
     test "can be assert_called" do

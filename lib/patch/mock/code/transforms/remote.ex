@@ -54,6 +54,14 @@ defmodule Patch.Mock.Code.Transforms.Remote do
     end
   end
 
+  defp expression({:bin, anno, body}, module, exports) do
+    {:bin, anno, expressions(body, module, exports)}
+  end
+
+  defp expression({:bin_element, anno, body, size, types}, module, exports) do
+    {:bin_element, anno, expression(body, module, exports), size, types}
+  end
+
   defp expression({:block, anno, body}, module, exports) do
     {:block, anno, expressions(body, module, exports)}
   end
