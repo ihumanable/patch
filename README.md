@@ -54,7 +54,7 @@ Add patch to your mix.exs
 ```elixir
 def deps do
   [
-    {:patch, "~> 0.16.0", only: [:dev, :test]}
+    {:patch, "~> 0.16.1", only: [:dev, :test]}
   ]
 end
 ```
@@ -213,6 +213,8 @@ Patch is made better everyday by developers requesting new features.
   - Reported an issue with warning being emitted by the library on Elixir 1.16 which served as the basis for a bugfix in v0.13.1
 - [Steve Cohen](https://github.com/scohen)
   - Reported an issue with incorrect export handling which served as the basis for a bugfix in v0.16.0
+- [Deven Wen](https://github.com/devenwen)
+  - Reported an issue with incorrect FunctionClauseError handling in OTP 28+ when partially patching a function
 
 If you have a suggestion for improvements to this library, please open an issue.
 
