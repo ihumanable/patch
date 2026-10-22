@@ -38,6 +38,13 @@ defmodule Patch.Apply do
 
   defp direct_exception?(function, %FunctionClauseError{} = error) do
     info = Function.info(function)
-    info[:arity] == error.arity and info[:name] == error.function
+    info[:arity] == error.arity and normalize_name(info[:name]) == normalize_name(error.function)
+  end
+
+  defp normalize_name(name) do
+    name
+    |> Atom.to_string()
+    |> String.replace(~r"-fun-[\d\-]+$", "")
+    |> String.replace(~r"-inlined-[\d\-]+$", "")
   end
 end
