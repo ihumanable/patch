@@ -3,6 +3,10 @@ defmodule Patch.Test.Support.User.Patch.LocalCall do
     {:original, public_function(a)}
   end
 
+  def public_caller_string_interpolation(a) do
+    {:original, "#{inspect(public_function(a))}"}
+  end
+
   def public_function(a) do
     {:public, a}
   end
@@ -17,6 +21,10 @@ defmodule Patch.Test.Support.User.Patch.LocalCall do
 
   def private_caller(a) do
     {:original, private_function(a)}
+  end
+
+  def private_caller_string_interpolation(a) do
+    {:original, "#{inspect(private_function(a))}"}
   end
 
   ## Private
