@@ -1,0 +1,7 @@
+defmodule Patch.Test.Support.Unit.Cover.ExportRecordsLongerThanTwoHundredFiftyFiveBytesAfterCompressionCarryASizeRecordInFrontOfThem do
+  def counts_calls_through_a_function_whose_name_is_long_enough_that_cover_frames_each_of_its_counters_with_a_size_record_in_the_export_file_because_the_compressed_bump_key_holding_both_the_module_and_the_function_atoms_exceeds_one_length_byte(
+        value
+      ) do
+    value + 1
+  end
+end

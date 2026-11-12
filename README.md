@@ -43,6 +43,7 @@ For more information about Patch's Super Powers see the [Super Powers Documentat
   - [Customizing Imports](#customizing-imports)
 - [Guide Book](#guide-book)
 - [Support Matrix](#support-matrix)
+- [Code Coverage](#code-coverage)
 - [Limitations](#limitations)
 - [Prior Art](#prior-art)
 - [Changelog](#changelog)
@@ -180,6 +181,17 @@ Tests automatically run against a matrix of OTP and Elixir Versions, see the [ci
 | 27           | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   | ✅   | ✅   | ✅   | ✅   |
 | 28           | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   | ✅   | ✅   |
 | 29           | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   | ✅   |
+
+## Code Coverage
+
+Patch works with `mix test --cover`.  A module keeps its coverage while a test patches it: the lines of the module that run during the patch are counted, and so are the counts from before and after it.
+
+Two kinds of counts are lost.
+
+- Calls from other processes in the moment Patch replaces or restores the module.
+- Counts that remote cover nodes gather while the module is patched.
+
+When Patch cannot keep the coverage of a module, it logs a warning that names the module and the reason, and the test continues.
 
 ## Limitations
 
