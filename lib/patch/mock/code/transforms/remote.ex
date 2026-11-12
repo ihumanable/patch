@@ -1,8 +1,6 @@
 defmodule Patch.Mock.Code.Transforms.Remote do
   alias Patch.Mock.Code
 
-  @generated [generated: true]
-
   @doc """
   Transforms the provided forms to rewrite any local call into a remote call to
   the provided `module`.
@@ -43,7 +41,9 @@ defmodule Patch.Mock.Code.Transforms.Remote do
     case local do
       {:atom, _, name} ->
         if {name, arity} in exports do
-          {:call, anno, {:remote, @generated, {:atom, @generated, module}, local},
+          generated = :erl_anno.set_generated(true, anno)
+
+          {:call, anno, {:remote, generated, {:atom, generated, module}, local},
            expressions(arguments, module, exports)}
         else
           {:call, anno, local, expressions(arguments, module, exports)}
@@ -71,9 +71,11 @@ defmodule Patch.Mock.Code.Transforms.Remote do
   end
 
   defp expression({:fun, anno, {:function, name, arity}}, module, _) do
+    generated = :erl_anno.set_generated(true, anno)
+
     {:fun, anno,
-     {:function, {:atom, @generated, module}, {:atom, @generated, name},
-      {:integer, @generated, arity}}}
+     {:function, {:atom, generated, module}, {:atom, generated, name},
+      {:integer, generated, arity}}}
   end
 
   defp expression({:fun, anno, {:clauses, clauses}}, module, exports) do
