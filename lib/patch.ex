@@ -107,6 +107,22 @@ defmodule Patch do
   assert_called Example.function(4, 5, 6)   # fails
   assert_called Example.function(4, _, 6)   # fails
   ```
+
+  If a pattern would match multiple calls, the latest call will be bound.
+
+  ```elixir
+  patch(Example, :function, :patch)
+
+  Example.function(1, 2, 3)
+
+  assert_called Example.function(a, b, c)   # passes
+  IO.inspect([a, b, c])                     # prints "[1, 2, 3]"
+
+  Example.function(4, 5, 6)
+  Example.function(7, 8, 9)
+
+  assert_called Example.function(a, b, c)   # passes
+  IO.inspect([a, b, c])                     # prints "[7, 8, 9]"
   """
   @spec assert_called(Macro.t()) :: Macro.t()
   defmacro assert_called(call) do
