@@ -1,7 +1,10 @@
 defmodule Patch.Test.Unit.Patch.Mock.Code.CoverTest do
   use ExUnit.Case, async: false
 
+  import ExUnit.CaptureLog
+
   alias Patch.Mock.Code.Cover
+  alias Patch.Mock.Naming
   alias Patch.Test.Support.Coverage
 
   alias Patch.Test.Support.Unit.Cover.ExportRecordsLongerThanTwoHundredFiftyFiveBytesAfterCompressionCarryASizeRecordInFrontOfThem,
@@ -142,6 +145,144 @@ defmodule Patch.Test.Unit.Patch.Mock.Code.CoverTest do
     end
   end
 
+  describe "export_module/1" do
+    test "keeps nothing and warns when the beam file that cover compiled the module from is gone" do
+      :ok = Coverage.start_cover()
+      copy_path = Coverage.compile_module_copy(Source)
+      File.rm!(copy_path)
+      cover_server = Process.whereis(:cover_server)
+
+      log = capture_log(fn -> assert Cover.export_module(Source) == nil end)
+
+      assert log =~ "coverage of #{inspect(Source)}"
+      assert log =~ inspect({:file_error, String.to_charlist(copy_path), :enoent})
+      assert Process.whereis(:cover_server) == cover_server
+    end
+
+    test "keeps nothing and warns when the beam file holds another module" do
+      :ok = Coverage.start_cover()
+      copy_path = Coverage.compile_module_copy(Source)
+      File.cp!(:code.where_is_file(~c"#{Target}.beam"), copy_path)
+      cover_server = Process.whereis(:cover_server)
+
+      log = capture_log(fn -> assert Cover.export_module(Source) == nil end)
+
+      assert log =~ "coverage of #{inspect(Source)}"
+      assert log =~ inspect({:unusable_beam_file, String.to_charlist(copy_path)})
+      assert Process.whereis(:cover_server) == cover_server
+    end
+
+    test "keeps nothing and warns when the module is loaded under the cover tag but cover does not know it" do
+      :ok = Coverage.start_cover()
+      :ok = Coverage.compile_module(Target)
+      forget_module(Target)
+      on_exit(fn -> Coverage.compile_module(Target) end)
+      beam = File.read!(:code.where_is_file(~c"#{Target}.beam"))
+      {:module, Target} = :code.load_binary(Target, :cover_compiled, beam)
+      cover_server = Process.whereis(:cover_server)
+
+      log = capture_log(fn -> assert Cover.export_module(Target) == nil end)
+
+      assert log =~ "coverage of #{inspect(Target)}"
+      assert log =~ inspect({:is_compiled, false})
+      assert Process.whereis(:cover_server) == cover_server
+    end
+
+    test "keeps nothing and warns when cover compiled the module from Erlang source", ctx do
+      %{directory: directory} = ctx
+
+      :ok = Coverage.start_cover()
+      source_path = Path.join(directory, "patch_cover_erlang_source.erl")
+      File.write!(source_path, "-module(patch_cover_erlang_source).\n")
+      on_exit(fn -> forget_module(:patch_cover_erlang_source) end)
+      {:ok, :patch_cover_erlang_source} = :cover.compile_module(String.to_charlist(source_path))
+      cover_server = Process.whereis(:cover_server)
+
+      log = capture_log(fn -> assert Cover.export_module(:patch_cover_erlang_source) == nil end)
+
+      assert log =~ "coverage of :patch_cover_erlang_source"
+      assert log =~ inspect({:unusable_beam_file, String.to_charlist(source_path)})
+      assert Process.whereis(:cover_server) == cover_server
+    end
+  end
+
+  describe "compile_original/2" do
+    test "loads the original as plain code and warns when cover cannot compile it" do
+      :ok = Coverage.start_cover()
+      :ok = Coverage.compile_module(Source)
+      cover = Cover.export_module(Source)
+      original = Naming.original(Source)
+      on_exit(fn -> remove_original(cover) end)
+      binary = compile_without_debug_info(original)
+      cover_server = Process.whereis(:cover_server)
+
+      log = capture_log(fn -> assert Cover.compile_original(cover, binary) == :ok end)
+
+      assert apply(original, :double, [2]) == 4
+      assert :code.which(original) != :cover_compiled
+      assert log =~ "coverage of #{inspect(Source)}"
+      assert log =~ ":no_abstract_code"
+      assert Process.whereis(:cover_server) == cover_server
+    end
+  end
+
+  describe "export_original/1" do
+    test "adds no export and logs nothing for an original loaded as plain code" do
+      :ok = Coverage.start_cover()
+      :ok = Coverage.compile_module(Source)
+      cover = Cover.export_module(Source)
+      on_exit(fn -> remove_original(cover) end)
+      binary = compile_without_debug_info(Naming.original(Source))
+      capture_log(fn -> :ok = Cover.compile_original(cover, binary) end)
+
+      log = capture_log(fn -> assert Cover.export_original(cover) == cover end)
+
+      assert log == ""
+    end
+  end
+
+  describe "restore_module/1" do
+    test "leaves out terms of an unknown shape with a warning and imports the counts" do
+      :ok = Coverage.start_cover()
+      :ok = Coverage.compile_module(Source)
+      call_functions(Source)
+      {:ok, expected_counts} = :cover.analyse(Source, :calls, :line)
+      cover = Cover.export_module(Source)
+      [{Source, export_path}] = cover.exports
+      {:ok, terms} = Cover.read_terms(export_path)
+      unknown_term = {:unknown_shape, Source}
+      :ok = Cover.write_terms(export_path, terms ++ [unknown_term])
+      cover_server = Process.whereis(:cover_server)
+
+      log = capture_log(fn -> assert Cover.restore_module(cover) == :ok end)
+
+      assert log =~ "coverage of #{inspect(Source)}"
+      assert log =~ inspect([unknown_term])
+      assert Process.whereis(:cover_server) == cover_server
+      assert :cover.analyse(Source, :calls, :line) == {:ok, expected_counts}
+    end
+
+    test "warns about an export it cannot read and an import it cannot write, and keeps the module cover-compiled" do
+      :ok = Coverage.start_cover()
+      :ok = Coverage.compile_module(Source)
+      {:ok, counts_without_calls} = :cover.analyse(Source, :calls, :line)
+      call_functions(Source)
+      cover = Cover.export_module(Source)
+      [{Source, export_path}] = cover.exports
+      File.rm_rf!(cover.directory)
+      cover_server = Process.whereis(:cover_server)
+
+      log = capture_log(fn -> assert Cover.restore_module(cover) == :ok end)
+
+      assert count_warnings(log, Source) == 2
+      assert log =~ export_path
+      assert log =~ inspect(:enoent)
+      assert Process.whereis(:cover_server) == cover_server
+      assert :code.which(Source) == :cover_compiled
+      assert :cover.analyse(Source, :calls, :line) == {:ok, counts_without_calls}
+    end
+  end
+
   defp call_functions(module) do
     module.double(1)
     module.double(2)
@@ -158,6 +299,40 @@ defmodule Patch.Test.Unit.Patch.Mock.Code.CoverTest do
     :ok = Cover.write_terms(import_path, retargeted)
 
     import_path
+  end
+
+  defp compile_without_debug_info(module) do
+    forms = [
+      {:attribute, 1, :module, module},
+      {:attribute, 1, :export, [double: 1]},
+      {:function, 1, :double, 1,
+       [
+         {:clause, 1, [{:var, 1, :Value}], [],
+          [{:op, 1, :*, {:var, 1, :Value}, {:integer, 1, 2}}]}
+       ]}
+    ]
+
+    {:ok, ^module, binary} = :compile.forms(forms)
+    binary
+  end
+
+  defp remove_original(cover) do
+    cover.module
+    |> Naming.original()
+    |> Patch.Mock.Code.purge()
+
+    File.rm_rf!(cover.directory)
+  end
+
+  defp count_warnings(log, module) do
+    matches = :binary.matches(log, "coverage of #{inspect(module)}")
+    length(matches)
+  end
+
+  # Asked about a module that is no longer loaded, cover forgets it.
+  defp forget_module(module) do
+    Patch.Mock.Code.purge(module)
+    false = :cover.is_compiled(module)
   end
 
   # term_to_binary leaves a binary of distinct bytes uncompressed, so its

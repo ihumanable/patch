@@ -183,9 +183,11 @@ defmodule Patch.Mock.Code do
   """
 
   alias Patch.Mock
+  alias Patch.Mock.Code.Cover
   alias Patch.Mock.Code.Generate
   alias Patch.Mock.Code.Query
   alias Patch.Mock.Code.Unit
+  alias Patch.Mock.Naming
 
   @type binary_error ::
           :badfile
@@ -292,15 +294,8 @@ defmodule Patch.Mock.Code do
           | {:error, binary_error()}
           | {:error, {:abstract_forms_invalid, [form()], term()}}
   def compile(abstract_forms, compiler_options \\ []) do
-    case :compile.forms(abstract_forms, [:return_errors | compiler_options]) do
-      {:ok, module, binary} ->
-        load_binary(module, binary)
-
-      {:ok, module, binary, _} ->
-        load_binary(module, binary)
-
-      errors ->
-        {:error, {:abstract_forms_invalid, abstract_forms, errors}}
+    with {:ok, module, binary} <- compile_binary(abstract_forms, compiler_options) do
+      load_binary(module, binary)
     end
   end
 
@@ -405,11 +400,13 @@ defmodule Patch.Mock.Code do
          facade_forms = Generate.facade(abstract_forms, module, remote_exports),
          original_forms = Generate.original(abstract_forms, module, local_exports),
          :ok <- compile(delegate_forms),
-         :ok <- compile(original_forms, compiler_options),
-         :ok <- compile(facade_forms) do
+         cover = export_cover_counts(module),
+         :ok <-
+           compile_original_and_facade(original_forms, facade_forms, compiler_options, cover) do
       unit = %Unit{
         abstract_forms: abstract_forms,
         compiler_options: compiler_options,
+        cover: cover,
         module: module,
         sticky?: sticky?
       }
@@ -456,6 +453,19 @@ defmodule Patch.Mock.Code do
 
   ## Private
 
+  @spec abandon_cover_counts(cover :: Cover.t() | nil) :: :ok
+  defp abandon_cover_counts(nil) do
+    :ok
+  end
+
+  defp abandon_cover_counts(%Cover{} = cover) do
+    cover.module
+    |> Naming.original()
+    |> purge()
+
+    Cover.abandon(cover)
+  end
+
   @spec binary(module :: module()) :: {:ok, binary()} | {:error, :binary_unavailable}
   defp binary(module) do
     case :code.get_object_code(module) do
@@ -467,10 +477,82 @@ defmodule Patch.Mock.Code do
     end
   end
 
+  @spec compile_binary(abstract_forms :: [form()], compiler_options :: [compiler_option()]) ::
+          {:ok, module(), binary()}
+          | {:error, {:abstract_forms_invalid, [form()], term()}}
+  defp compile_binary(abstract_forms, compiler_options) do
+    case :compile.forms(abstract_forms, [:return_errors | compiler_options]) do
+      {:ok, module, binary} ->
+        {:ok, module, binary}
+
+      {:ok, module, binary, _} ->
+        {:ok, module, binary}
+
+      errors ->
+        {:error, {:abstract_forms_invalid, abstract_forms, errors}}
+    end
+  end
+
+  @spec compile_original(
+          original_forms :: [form()],
+          compiler_options :: [compiler_option()],
+          cover :: Cover.t() | nil
+        ) ::
+          :ok
+          | {:error, binary_error()}
+          | {:error, {:abstract_forms_invalid, [form()], term()}}
+  defp compile_original(original_forms, compiler_options, nil) do
+    compile(original_forms, compiler_options)
+  end
+
+  defp compile_original(original_forms, compiler_options, cover) do
+    # Cover compiles a module from the abstract code in its beam file. An
+    # original that a killed mock server leaves cover-compiled gets a page in
+    # the HTML report, and cover finds its source through the source in its
+    # compile info. The original has the lines of the module, which is not
+    # replaced yet, so it takes the source of the module.
+    module_compile_info = cover.module.module_info(:compile)
+    source_options = Keyword.take(module_compile_info, [:source])
+    cover_compiler_options = [:debug_info | source_options ++ compiler_options]
+
+    with {:ok, _original, binary} <- compile_binary(original_forms, cover_compiler_options) do
+      Cover.compile_original(cover, binary)
+    end
+  end
+
+  @spec compile_original_and_facade(
+          original_forms :: [form()],
+          facade_forms :: [form()],
+          compiler_options :: [compiler_option()],
+          cover :: Cover.t() | nil
+        ) ::
+          :ok
+          | {:error, binary_error()}
+          | {:error, {:abstract_forms_invalid, [form()], term()}}
+  defp compile_original_and_facade(original_forms, facade_forms, compiler_options, cover) do
+    # Until the facade is loaded the module holds its own counts, so a patch
+    # that fails before that drops its export and its cover-compiled original.
+    with :ok <- compile_original(original_forms, compiler_options, cover),
+         :ok <- compile(facade_forms) do
+      :ok
+    else
+      error ->
+        :ok = abandon_cover_counts(cover)
+        error
+    end
+  end
+
   @spec ensure_loaded(module :: module()) :: :ok | {:error, load_error()}
   defp ensure_loaded(module) do
     with {:module, ^module} <- Code.ensure_loaded(module) do
       :ok
+    end
+  end
+
+  @spec export_cover_counts(module :: module()) :: Cover.t() | nil
+  defp export_cover_counts(module) do
+    if Cover.compiled?(module) do
+      Cover.export_module(module)
     end
   end
 
