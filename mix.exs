@@ -10,6 +10,7 @@ defmodule Patch.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      xref: xref(),
       docs: docs(),
       package: package()
     ]
@@ -36,6 +37,15 @@ defmodule Patch.MixProject do
   # Specifies which elixir paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
+
+  # Patch calls :cover only while cover runs, so it does not depend on :tools.
+  # Elixir 1.11 to 1.14 warn about such calls unless :cover is excluded from
+  # xref, and Elixir 1.20 deprecates the option.
+  defp xref do
+    if Version.match?(System.version(), "< 1.15.0"),
+      do: [exclude: [:cover]],
+      else: []
+  end
 
   defp docs do
     [
@@ -78,6 +88,7 @@ defmodule Patch.MixProject do
         ],
         "Mock Code": [
           Patch.Mock.Code,
+          Patch.Mock.Code.Cover,
           Patch.Mock.Code.Freezer,
           Patch.Mock.Code.Generate,
           Patch.Mock.Code.Query,
